@@ -243,6 +243,7 @@ export const getUnopenedPacks = query({
 });
 
 // Appraise cards (calculate sell values without selling)
+// Returns one entry per card instance (expanded by quantity)
 export const appraiseCards = query({
   args: { clerkId: v.string() },
   handler: async (ctx, { clerkId }) => {
@@ -251,28 +252,41 @@ export const appraiseCards = query({
       .withIndex("by_userId", (q) => q.eq("userId", clerkId))
       .collect();
 
-    const appraisals = await Promise.all(
-      inventoryItems.map(async (item) => {
-        const card = await ctx.db.get(item.cardId);
-        if (!card) return null;
+    const appraisals: Array<{
+      inventoryId: string;
+      instanceIndex: number;
+      cardId: Id<"cards">;
+      name: string;
+      rarity: string;
+      attack: number;
+      defense: number;
+      sellPrice: number;
+    }> = [];
 
-        // Use acquiredAt as seed for deterministic pricing
-        const sellPrice = calculateSellPrice(card.rarity, item.acquiredAt);
+    for (const item of inventoryItems) {
+      const card = await ctx.db.get(item.cardId);
+      if (!card) continue;
 
-        return {
-          inventoryId: item._id,
+      // Expand each inventory item by its quantity
+      // Each instance gets a unique identifier (inventoryId + instanceIndex)
+      for (let i = 0; i < item.quantity; i++) {
+        // Use acquiredAt + instance index as seed for deterministic pricing
+        const sellPrice = calculateSellPrice(card.rarity, item.acquiredAt + i);
+
+        appraisals.push({
+          inventoryId: `${item._id}:${i}`,
+          instanceIndex: i,
           cardId: item.cardId,
-          quantity: item.quantity,
           name: card.name,
           rarity: card.rarity,
           attack: card.attack,
           defense: card.defense,
           sellPrice,
-        };
-      })
-    );
+        });
+      }
+    }
 
-    return appraisals.filter((item) => item !== null);
+    return appraisals;
   },
 });
 
@@ -376,11 +390,12 @@ export const openPack = mutation({
   },
 });
 
-// Sell cards from inventory (sells 1 of each selected card)
+// Sell cards from inventory
+// inventoryIds are now in format "inventoryId:instanceIndex"
 export const sellCards = mutation({
   args: {
     clerkId: v.string(),
-    inventoryIds: v.array(v.id("inventory")),
+    inventoryIds: v.array(v.string()),
   },
   handler: async (ctx, { clerkId, inventoryIds }) => {
     const user = await ctx.db
@@ -392,16 +407,33 @@ export const sellCards = mutation({
       throw new Error("User not found");
     }
 
+    // Group by actual inventory ID and count how many to sell from each
+    const sellCounts = new Map<Id<"inventory">, { count: number; instanceIndices: number[] }>();
+
+    for (const compositeId of inventoryIds) {
+      const [inventoryIdStr, instanceIndexStr] = compositeId.split(":");
+      const inventoryId = inventoryIdStr as Id<"inventory">;
+      const instanceIndex = parseInt(instanceIndexStr ?? "0", 10);
+
+      const existing = sellCounts.get(inventoryId);
+      if (existing) {
+        existing.count += 1;
+        existing.instanceIndices.push(instanceIndex);
+      } else {
+        sellCounts.set(inventoryId, { count: 1, instanceIndices: [instanceIndex] });
+      }
+    }
+
     let totalEarned = 0;
     const now = Date.now();
 
-    for (const inventoryId of inventoryIds) {
+    for (const [inventoryId, { count, instanceIndices }] of sellCounts) {
       const inventoryItem = await ctx.db.get(inventoryId);
       if (!inventoryItem || inventoryItem.userId !== clerkId) {
         throw new Error("Invalid inventory item");
       }
 
-      if (inventoryItem.quantity < 1) {
+      if (inventoryItem.quantity < count) {
         throw new Error("Insufficient quantity");
       }
 
@@ -410,16 +442,19 @@ export const sellCards = mutation({
         throw new Error("Card not found");
       }
 
-      // Calculate sell price
-      const pricePerCard = calculateSellPrice(card.rarity, inventoryItem.acquiredAt);
-      totalEarned += pricePerCard;
+      // Calculate sell price for each instance being sold
+      for (const instanceIndex of instanceIndices) {
+        const pricePerCard = calculateSellPrice(card.rarity, inventoryItem.acquiredAt + instanceIndex);
+        totalEarned += pricePerCard;
+      }
 
       // Update inventory
-      if (inventoryItem.quantity === 1) {
+      const newQuantity = inventoryItem.quantity - count;
+      if (newQuantity <= 0) {
         await ctx.db.delete(inventoryId);
       } else {
         await ctx.db.patch(inventoryId, {
-          quantity: inventoryItem.quantity - 1,
+          quantity: newQuantity,
         });
       }
     }

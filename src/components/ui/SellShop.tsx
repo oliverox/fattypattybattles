@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { useUser } from '@clerk/tanstack-react-start'
 import { api } from '../../../convex/_generated/api'
-import { Id } from '../../../convex/_generated/dataModel'
 import { useGameStore } from '@/stores/gameStore'
 
 const rarityColors: Record<string, string> = {
@@ -74,7 +73,7 @@ export function SellShop() {
     try {
       await sellCards({
         clerkId: user.id,
-        inventoryIds: Array.from(selectedCards) as Id<"inventory">[],
+        inventoryIds: Array.from(selectedCards),
       })
       setSelectedCards(new Set())
     } catch (err) {
