@@ -8,6 +8,7 @@ dist
 .next
 .vercel
 .vinxi
+.output
 
 # code coverage
 coverage

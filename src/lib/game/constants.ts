@@ -26,3 +26,37 @@ export const CAMERA = {
   height: 6,
   smoothness: 0.08,
 }
+
+// Shop constants
+export const SHOP = {
+  interactionDistance: 5,
+  npcPosition: [20, 0, 20] as [number, number, number],
+}
+
+// Pack prices in Pattycoins
+export const PACK_PRICES = {
+  small: 30,
+  normal: 60,
+  big: 90,
+  premium: 120,
+  deluxe: 150,
+} as const
+
+// Sell NPC constants
+export const SELL_NPC = {
+  interactionDistance: 5,
+  npcPosition: [-20, 0, 20] as [number, number, number],
+}
+
+// Card sell prices by rarity (Pattycoins)
+export const SELL_PRICES: Record<string, { min: number; max: number }> = {
+  common: { min: 10, max: 30 },
+  uncommon: { min: 30, max: 60 },
+  rare: { min: 60, max: 90 },
+  legendary: { min: 90, max: 120 },
+  mythical: { min: 120, max: 150 },
+  divine: { min: 150, max: 180 },
+  prismatic: { min: 180, max: 210 },
+  transcendent: { min: 210, max: 240 },
+  secret: { min: 240, max: 270 },
+}

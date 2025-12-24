@@ -22,9 +22,10 @@ export function ThirdPersonCamera({ rigidBodyRef, orbitAngle, zoomDistance }: Th
     const angle = orbitAngle.current
     const distance = zoomDistance.current
 
-    // Calculate target camera position (orbit around player based on angle and zoom)
+    // Calculate target camera position (always behind the player)
+    // Player faces direction (sin(angle), -cos(angle)), so camera should be opposite
     targetPosition.current.set(
-      playerPos.x + Math.sin(angle) * distance,
+      playerPos.x - Math.sin(angle) * distance,
       playerPos.y + CAMERA.height,
       playerPos.z + Math.cos(angle) * distance
     )

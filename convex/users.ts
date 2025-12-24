@@ -40,6 +40,9 @@ export const createUserProfile = mutation({
       throw new Error("Username already taken");
     }
 
+    const now = Date.now();
+    const starterPack = [{ packType: "small", quantity: 1, acquiredAt: now }];
+
     // Create or update user record
     if (existingUser) {
       await ctx.db.patch(existingUser._id, {
@@ -47,8 +50,9 @@ export const createUserProfile = mutation({
         gender: args.gender,
         avatarConfig: args.avatarConfig,
         pattyCoins: 10, // Starting coins
-        createdAt: Date.now(),
-        lastActiveAt: Date.now(),
+        unopenedPacks: starterPack, // Starter pack
+        createdAt: now,
+        lastActiveAt: now,
       });
       return existingUser._id;
     } else {
@@ -59,8 +63,9 @@ export const createUserProfile = mutation({
         gender: args.gender,
         avatarConfig: args.avatarConfig,
         pattyCoins: 10, // Starting coins
-        createdAt: Date.now(),
-        lastActiveAt: Date.now(),
+        unopenedPacks: starterPack, // Starter pack
+        createdAt: now,
+        lastActiveAt: now,
       });
       return userId;
     }
@@ -131,6 +136,52 @@ export const checkUsername = query({
       .first();
 
     return { available: !existing };
+  },
+});
+
+// Ensure user has starter pack (for existing users before this feature)
+export const ensureStarterPack = mutation({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return { granted: false };
+    }
+
+    const clerkId = identity.subject;
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", clerkId))
+      .first();
+
+    if (!user || !user.username) {
+      return { granted: false };
+    }
+
+    // If user already has packs, don't grant again
+    if (user.unopenedPacks && user.unopenedPacks.length > 0) {
+      return { granted: false, reason: "already_has_packs" };
+    }
+
+    // Check if user has any cards in inventory
+    const userInventory = await ctx.db
+      .query("inventory")
+      .withIndex("by_userId", (q) => q.eq("userId", clerkId))
+      .first();
+
+    // If user has cards, they already opened a pack successfully
+    if (userInventory) {
+      return { granted: false, reason: "has_cards" };
+    }
+
+    // Grant starter pack (user has no packs and no cards)
+    const now = Date.now();
+    const starterPack = [{ packType: "small", quantity: 1, acquiredAt: now }];
+
+    await ctx.db.patch(user._id, {
+      unopenedPacks: starterPack,
+    });
+
+    return { granted: true };
   },
 });
 

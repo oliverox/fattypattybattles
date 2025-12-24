@@ -15,6 +15,17 @@ export default defineSchema({
       hairColor: v.string(),
     })),
     pattyCoins: v.optional(v.number()),
+    luckBoosts: v.optional(v.array(v.object({
+      type: v.string(),
+      multiplier: v.number(),
+      expiresAt: v.number(),
+    }))),
+    unopenedPacks: v.optional(v.array(v.object({
+      packType: v.string(),
+      quantity: v.number(),
+      acquiredAt: v.number(),
+    }))),
+    heldCardId: v.optional(v.string()),
     createdAt: v.optional(v.number()),
     lastActiveAt: v.optional(v.number()),
   })
@@ -98,6 +109,15 @@ export default defineSchema({
       transcendent: v.number(),
       secret: v.number(),
     }),
+  }),
+
+  // Luck Shop - available luck boost types
+  luckShop: defineTable({
+    name: v.string(),
+    description: v.string(),
+    cost: v.number(),
+    multiplier: v.number(),
+    durationHours: v.number(),
   }),
 
   // Battles - battle records (post-MVP)

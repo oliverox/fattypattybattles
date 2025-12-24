@@ -7,7 +7,11 @@ import { NeonObelisk } from './structures/NeonObelisk'
 import { RetroBuilding } from './structures/RetroBuilding'
 import { NeonPalmTree } from './structures/NeonPalmTree'
 import { FloatingShapes } from './structures/FloatingShapes'
-import { COLORS } from '@/lib/game/constants'
+import { ShopBuilding } from './structures/ShopBuilding'
+import { SellBuilding } from './structures/SellBuilding'
+import { Shopkeeper } from './npc/Shopkeeper'
+import { SellNPC } from './npc/SellNPC'
+import { COLORS, SHOP, SELL_NPC } from '@/lib/game/constants'
 
 export function SynthwaveEnvironment() {
   return (
@@ -23,6 +27,24 @@ export function SynthwaveEnvironment() {
       {/* Static ground collider */}
       <RigidBody type="fixed" position={[0, -0.1, 0]}>
         <CuboidCollider args={[100, 0.1, 100]} />
+      </RigidBody>
+
+      {/* Invisible boundary walls at map edges */}
+      {/* North wall (positive Z) */}
+      <RigidBody type="fixed" position={[0, 10, 100]}>
+        <CuboidCollider args={[100, 10, 0.5]} />
+      </RigidBody>
+      {/* South wall (negative Z) */}
+      <RigidBody type="fixed" position={[0, 10, -100]}>
+        <CuboidCollider args={[100, 10, 0.5]} />
+      </RigidBody>
+      {/* East wall (positive X) */}
+      <RigidBody type="fixed" position={[100, 10, 0]}>
+        <CuboidCollider args={[0.5, 10, 100]} />
+      </RigidBody>
+      {/* West wall (negative X) */}
+      <RigidBody type="fixed" position={[-100, 10, 0]}>
+        <CuboidCollider args={[0.5, 10, 100]} />
       </RigidBody>
 
       {/* Central Pyramid */}
@@ -49,6 +71,14 @@ export function SynthwaveEnvironment() {
 
       {/* Floating shapes above the plaza */}
       <FloatingShapes />
+
+      {/* Shop building and NPC */}
+      <ShopBuilding position={[SHOP.npcPosition[0], 0, SHOP.npcPosition[2] + 6]} />
+      <Shopkeeper position={SHOP.npcPosition} />
+
+      {/* Sell building and NPC */}
+      <SellBuilding position={[SELL_NPC.npcPosition[0], 0, SELL_NPC.npcPosition[2] + 6]} />
+      <SellNPC position={SELL_NPC.npcPosition} />
     </group>
   )
 }

@@ -4,9 +4,10 @@ import { useKeyboardControls } from '@react-three/drei'
 import { RigidBody, CapsuleCollider, type RapierRigidBody, useRapier } from '@react-three/rapier'
 import { Vector3 } from 'three'
 import { Controls } from '@/lib/game/controls'
-import { PHYSICS, CAMERA } from '@/lib/game/constants'
+import { PHYSICS, CAMERA, SHOP, SELL_NPC } from '@/lib/game/constants'
 import { PlayerMesh } from './PlayerMesh'
 import { ThirdPersonCamera } from './ThirdPersonCamera'
+import { useGameStore } from '@/stores/gameStore'
 
 export function PlayerController() {
   const rigidBodyRef = useRef<RapierRigidBody>(null)
@@ -21,11 +22,66 @@ export function PlayerController() {
   const zoomDistance = useRef(CAMERA.distance)
   // Track if jump key was pressed last frame (to prevent holding jump)
   const jumpPressed = useRef(false)
+  // Track if interact key was pressed last frame
+  const interactPressed = useRef(false)
+  // Track if inventory key was pressed last frame
+  const inventoryPressed = useRef(false)
+  // NPC positions for proximity check
+  const npcPosition = useRef(new Vector3(...SHOP.npcPosition))
+  const sellNpcPosition = useRef(new Vector3(...SELL_NPC.npcPosition))
 
   useFrame(() => {
     if (!rigidBodyRef.current) return
 
-    const { forward, backward, left, right, rotateLeft, rotateRight, jump, zoomIn, zoomOut } = getKeys()
+    const { forward, backward, left, right, rotateLeft, rotateRight, jump, zoomIn, zoomOut, interact, inventory } = getKeys()
+    const state = useGameStore.getState()
+    const {
+      dialogueOpen, shopOpen, nearNPC, setNearNPC, setDialogueOpen,
+      nearSellNPC, setNearSellNPC, setSellDialogueOpen,
+      sellDialogueOpen, sellShopOpen, inventoryOpen, setInventoryOpen
+    } = state
+
+    // Check proximity to Shop NPC
+    const position = rigidBodyRef.current.translation()
+    const playerPos = new Vector3(position.x, position.y, position.z)
+    const distanceToNPC = playerPos.distanceTo(npcPosition.current)
+    const isNearNPC = distanceToNPC < SHOP.interactionDistance
+
+    if (isNearNPC !== nearNPC) {
+      setNearNPC(isNearNPC)
+    }
+
+    // Check proximity to Sell NPC
+    const distanceToSellNPC = playerPos.distanceTo(sellNpcPosition.current)
+    const isNearSellNPC = distanceToSellNPC < SELL_NPC.interactionDistance
+
+    if (isNearSellNPC !== nearSellNPC) {
+      setNearSellNPC(isNearSellNPC)
+    }
+
+    // Check if any UI is open
+    const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen
+
+    // Handle inventory key (B) - toggle inventory
+    if (inventory && !inventoryPressed.current && !anyUIOpen) {
+      setInventoryOpen(true)
+    }
+    inventoryPressed.current = inventory
+
+    // Handle interact key (T) - only trigger on key down, not hold
+    if (interact && !interactPressed.current && !anyUIOpen) {
+      if (isNearNPC) {
+        setDialogueOpen(true)
+      } else if (isNearSellNPC) {
+        setSellDialogueOpen(true)
+      }
+    }
+    interactPressed.current = interact
+
+    // Skip movement if any UI is open
+    if (anyUIOpen) {
+      return
+    }
 
     // Handle camera orbit with Q/E keys
     const rotationSpeed = 0.05
@@ -103,7 +159,7 @@ export function PlayerController() {
       colliders={false}
     >
       <CapsuleCollider args={[0.5, 0.5]} />
-      <PlayerMesh />
+      <PlayerMesh facingAngle={orbitAngle} />
       <ThirdPersonCamera rigidBodyRef={rigidBodyRef} orbitAngle={orbitAngle} zoomDistance={zoomDistance} />
     </RigidBody>
   )

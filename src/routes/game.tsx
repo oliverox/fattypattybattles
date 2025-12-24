@@ -1,8 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { UserButton, useAuth } from '@clerk/tanstack-react-start'
-import { useQuery } from 'convex/react'
+import { useQuery, useMutation } from 'convex/react'
+import { useEffect, useRef } from 'react'
 import { api } from '../../convex/_generated/api'
 import { GameCanvas } from '@/components/game/GameCanvas'
+import { InteractionPrompt } from '@/components/ui/InteractionPrompt'
+import { ShopDialogue } from '@/components/ui/ShopDialogue'
+import { PacksShop } from '@/components/ui/PacksShop'
+import { LuckShop } from '@/components/ui/LuckShop'
+import { Inventory } from '@/components/ui/Inventory'
+import { SellDialogue } from '@/components/ui/SellDialogue'
+import { SellShop } from '@/components/ui/SellShop'
 
 export const Route = createFileRoute('/game')({
   component: GamePage,
@@ -11,6 +19,28 @@ export const Route = createFileRoute('/game')({
 function GamePage() {
   const { isLoaded, isSignedIn } = useAuth()
   const currentUser = useQuery(api.users.getCurrentUser)
+  const ensureStarterPack = useMutation(api.users.ensureStarterPack)
+  const seedCards = useMutation(api.inventory.seedCards)
+  const initChecked = useRef(false)
+
+  // Seed cards and ensure existing users get their starter pack
+  useEffect(() => {
+    if (currentUser && !initChecked.current) {
+      initChecked.current = true
+      // First seed the cards database
+      seedCards().then((result) => {
+        if (result.seeded) {
+          console.log(`Seeded ${result.count} cards!`)
+        }
+      })
+      // Then ensure user has starter pack
+      ensureStarterPack().then((result) => {
+        if (result.granted) {
+          console.log('Starter pack granted!')
+        }
+      })
+    }
+  }, [currentUser, ensureStarterPack, seedCards])
 
   // Wait for auth to load
   if (!isLoaded) {
@@ -55,6 +85,15 @@ function GamePage() {
         <p className="text-sm">PattyCoins: {currentUser.pattyCoins}</p>
       </div>
       <GameCanvas />
+
+      {/* UI overlays */}
+      <InteractionPrompt />
+      <Inventory />
+      <ShopDialogue />
+      <PacksShop />
+      <LuckShop />
+      <SellDialogue />
+      <SellShop />
     </div>
   )
 }
