@@ -13,6 +13,8 @@ import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as GameRouteImport } from './routes/game'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SignUpSplatRouteImport } from './routes/sign-up.$'
+import { Route as SignInSplatRouteImport } from './routes/sign-in.$'
 
 const SignUpRoute = SignUpRouteImport.update({
   id: '/sign-up',
@@ -34,39 +36,68 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SignUpSplatRoute = SignUpSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => SignUpRoute,
+} as any)
+const SignInSplatRoute = SignInSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => SignInRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/game': typeof GameRoute
-  '/sign-in': typeof SignInRoute
-  '/sign-up': typeof SignUpRoute
+  '/sign-in': typeof SignInRouteWithChildren
+  '/sign-up': typeof SignUpRouteWithChildren
+  '/sign-in/$': typeof SignInSplatRoute
+  '/sign-up/$': typeof SignUpSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/game': typeof GameRoute
-  '/sign-in': typeof SignInRoute
-  '/sign-up': typeof SignUpRoute
+  '/sign-in': typeof SignInRouteWithChildren
+  '/sign-up': typeof SignUpRouteWithChildren
+  '/sign-in/$': typeof SignInSplatRoute
+  '/sign-up/$': typeof SignUpSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/game': typeof GameRoute
-  '/sign-in': typeof SignInRoute
-  '/sign-up': typeof SignUpRoute
+  '/sign-in': typeof SignInRouteWithChildren
+  '/sign-up': typeof SignUpRouteWithChildren
+  '/sign-in/$': typeof SignInSplatRoute
+  '/sign-up/$': typeof SignUpSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/game' | '/sign-in' | '/sign-up'
+  fullPaths:
+    | '/'
+    | '/game'
+    | '/sign-in'
+    | '/sign-up'
+    | '/sign-in/$'
+    | '/sign-up/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/game' | '/sign-in' | '/sign-up'
-  id: '__root__' | '/' | '/game' | '/sign-in' | '/sign-up'
+  to: '/' | '/game' | '/sign-in' | '/sign-up' | '/sign-in/$' | '/sign-up/$'
+  id:
+    | '__root__'
+    | '/'
+    | '/game'
+    | '/sign-in'
+    | '/sign-up'
+    | '/sign-in/$'
+    | '/sign-up/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   GameRoute: typeof GameRoute
-  SignInRoute: typeof SignInRoute
-  SignUpRoute: typeof SignUpRoute
+  SignInRoute: typeof SignInRouteWithChildren
+  SignUpRoute: typeof SignUpRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -99,14 +130,50 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sign-up/$': {
+      id: '/sign-up/$'
+      path: '/$'
+      fullPath: '/sign-up/$'
+      preLoaderRoute: typeof SignUpSplatRouteImport
+      parentRoute: typeof SignUpRoute
+    }
+    '/sign-in/$': {
+      id: '/sign-in/$'
+      path: '/$'
+      fullPath: '/sign-in/$'
+      preLoaderRoute: typeof SignInSplatRouteImport
+      parentRoute: typeof SignInRoute
+    }
   }
 }
+
+interface SignInRouteChildren {
+  SignInSplatRoute: typeof SignInSplatRoute
+}
+
+const SignInRouteChildren: SignInRouteChildren = {
+  SignInSplatRoute: SignInSplatRoute,
+}
+
+const SignInRouteWithChildren =
+  SignInRoute._addFileChildren(SignInRouteChildren)
+
+interface SignUpRouteChildren {
+  SignUpSplatRoute: typeof SignUpSplatRoute
+}
+
+const SignUpRouteChildren: SignUpRouteChildren = {
+  SignUpSplatRoute: SignUpSplatRoute,
+}
+
+const SignUpRouteWithChildren =
+  SignUpRoute._addFileChildren(SignUpRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   GameRoute: GameRoute,
-  SignInRoute: SignInRoute,
-  SignUpRoute: SignUpRoute,
+  SignInRoute: SignInRouteWithChildren,
+  SignUpRoute: SignUpRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
