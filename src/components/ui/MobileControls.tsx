@@ -49,6 +49,7 @@ function ControlButton({ inputKey, children, className = '' }: ControlButtonProp
 export function MobileControls() {
   const touchControlsVisible = useGameStore((state) => state.touchControlsVisible)
   const toggleTouchControls = useGameStore((state) => state.toggleTouchControls)
+  const setInventoryOpen = useGameStore((state) => state.setInventoryOpen)
 
   // Check if near an NPC
   const nearNPC = useGameStore((state) => state.nearNPC)
@@ -66,24 +67,44 @@ export function MobileControls() {
 
   return (
     <div className="fixed inset-0 pointer-events-none z-40">
-      {/* Toggle Button - Always visible */}
-      <button
-        onClick={toggleTouchControls}
-        className="
-          pointer-events-auto
-          absolute top-20 left-4
-          w-12 h-12
-          bg-black/40 hover:bg-black/60
-          border-2 border-white/30
-          rounded-xl
-          flex items-center justify-center
-          text-white text-xl
-          transition-colors
-        "
-        title={touchControlsVisible ? 'Hide Controls' : 'Show Controls'}
-      >
-        {touchControlsVisible ? '🎮' : '👆'}
-      </button>
+      {/* Top Left Buttons */}
+      <div className="absolute top-20 left-4 flex flex-col gap-2 pointer-events-auto">
+        {/* Toggle Button - Always visible */}
+        <button
+          onClick={toggleTouchControls}
+          className="
+            w-12 h-12
+            bg-black/40 hover:bg-black/60
+            border-2 border-white/30
+            rounded-xl
+            flex items-center justify-center
+            text-white text-xl
+            transition-colors
+          "
+          title={touchControlsVisible ? 'Hide Controls' : 'Show Controls'}
+        >
+          {touchControlsVisible ? '🎮' : '👆'}
+        </button>
+
+        {/* Inventory Button - Only show when touch controls visible and no UI open */}
+        {touchControlsVisible && !anyUIOpen && (
+          <button
+            onClick={() => setInventoryOpen(true)}
+            className="
+              w-12 h-12
+              bg-black/40 hover:bg-black/60
+              border-2 border-purple-400/50
+              rounded-xl
+              flex items-center justify-center
+              text-white text-xl
+              transition-colors
+            "
+            title="Inventory"
+          >
+            🎒
+          </button>
+        )}
+      </div>
 
       {/* Controls - Only show when visible and no UI is open */}
       {touchControlsVisible && !anyUIOpen && (
