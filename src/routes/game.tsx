@@ -11,6 +11,7 @@ import { LuckShop } from '@/components/ui/LuckShop'
 import { Inventory } from '@/components/ui/Inventory'
 import { SellDialogue } from '@/components/ui/SellDialogue'
 import { SellShop } from '@/components/ui/SellShop'
+import { MobileControls } from '@/components/ui/MobileControls'
 
 export const Route = createFileRoute('/game')({
   component: GamePage,
@@ -94,6 +95,9 @@ function GamePage() {
       <LuckShop />
       <SellDialogue />
       <SellShop />
+
+      {/* Mobile touch controls */}
+      <MobileControls />
     </div>
   )
 }

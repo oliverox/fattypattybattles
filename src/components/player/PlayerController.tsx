@@ -33,13 +33,27 @@ export function PlayerController() {
   useFrame(() => {
     if (!rigidBodyRef.current) return
 
-    const { forward, backward, left, right, rotateLeft, rotateRight, jump, zoomIn, zoomOut, interact, inventory } = getKeys()
+    const keys = getKeys()
     const state = useGameStore.getState()
     const {
       dialogueOpen, shopOpen, nearNPC, setNearNPC, setDialogueOpen,
       nearSellNPC, setNearSellNPC, setSellDialogueOpen,
-      sellDialogueOpen, sellShopOpen, inventoryOpen, setInventoryOpen
+      sellDialogueOpen, sellShopOpen, inventoryOpen, setInventoryOpen,
+      touchInput
     } = state
+
+    // Combine keyboard and touch input
+    const forward = keys.forward || touchInput.forward
+    const backward = keys.backward || touchInput.backward
+    const left = keys.left || touchInput.left
+    const right = keys.right || touchInput.right
+    const rotateLeft = keys.rotateLeft || touchInput.turnLeft
+    const rotateRight = keys.rotateRight || touchInput.turnRight
+    const jump = keys.jump || touchInput.jump
+    const zoomIn = keys.zoomIn || touchInput.zoomIn
+    const zoomOut = keys.zoomOut || touchInput.zoomOut
+    const interact = keys.interact
+    const inventory = keys.inventory
 
     // Check proximity to Shop NPC
     const position = rigidBodyRef.current.translation()

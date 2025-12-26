@@ -1,6 +1,18 @@
 import { create } from 'zustand'
 import { Vector3 } from 'three'
 
+interface TouchInput {
+  forward: boolean
+  backward: boolean
+  left: boolean
+  right: boolean
+  turnLeft: boolean
+  turnRight: boolean
+  jump: boolean
+  zoomIn: boolean
+  zoomOut: boolean
+}
+
 interface GameState {
   playerPosition: Vector3
   isMoving: boolean
@@ -17,6 +29,9 @@ interface GameState {
   // Inventory
   inventoryOpen: boolean
   heldCardId: string | null
+  // Mobile Touch Controls
+  touchControlsVisible: boolean
+  touchInput: TouchInput
   // Setters
   setPlayerPosition: (position: Vector3) => void
   setIsMoving: (moving: boolean) => void
@@ -32,6 +47,10 @@ interface GameState {
   setHeldCardId: (cardId: string | null) => void
   closeAllShopUI: () => void
   closeAllUI: () => void
+  // Touch Controls
+  setTouchControlsVisible: (visible: boolean) => void
+  toggleTouchControls: () => void
+  setTouchInput: (key: keyof TouchInput, pressed: boolean) => void
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -50,6 +69,19 @@ export const useGameStore = create<GameState>((set) => ({
   // Inventory
   inventoryOpen: false,
   heldCardId: null,
+  // Mobile Touch Controls
+  touchControlsVisible: true,
+  touchInput: {
+    forward: false,
+    backward: false,
+    left: false,
+    right: false,
+    turnLeft: false,
+    turnRight: false,
+    jump: false,
+    zoomIn: false,
+    zoomOut: false,
+  },
   // Setters
   setPlayerPosition: (position) => set({ playerPosition: position }),
   setIsMoving: (moving) => set({ isMoving: moving }),
@@ -73,4 +105,10 @@ export const useGameStore = create<GameState>((set) => ({
     activeSellView: null,
     inventoryOpen: false,
   }),
+  // Touch Controls
+  setTouchControlsVisible: (visible) => set({ touchControlsVisible: visible }),
+  toggleTouchControls: () => set((state) => ({ touchControlsVisible: !state.touchControlsVisible })),
+  setTouchInput: (key, pressed) => set((state) => ({
+    touchInput: { ...state.touchInput, [key]: pressed }
+  })),
 }))
