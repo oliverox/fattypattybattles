@@ -8,10 +8,12 @@ export function InteractionPrompt() {
   const sellDialogueOpen = useGameStore((state) => state.sellDialogueOpen)
   const sellShopOpen = useGameStore((state) => state.sellShopOpen)
   const inventoryOpen = useGameStore((state) => state.inventoryOpen)
+  const touchControlsVisible = useGameStore((state) => state.touchControlsVisible)
 
   const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen
 
-  if (anyUIOpen) {
+  // Hide prompt when any UI is open or when touch controls are visible (mobile mode)
+  if (anyUIOpen || touchControlsVisible) {
     return null
   }
 
