@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useGameStore } from '@/stores/gameStore'
 
-type TouchInputKey = 'forward' | 'backward' | 'left' | 'right' | 'turnLeft' | 'turnRight' | 'jump' | 'zoomIn' | 'zoomOut'
+type TouchInputKey = 'forward' | 'backward' | 'left' | 'right' | 'turnLeft' | 'turnRight' | 'jump' | 'zoomIn' | 'zoomOut' | 'interact'
 
 interface ControlButtonProps {
   inputKey: TouchInputKey
@@ -49,6 +49,11 @@ function ControlButton({ inputKey, children, className = '' }: ControlButtonProp
 export function MobileControls() {
   const touchControlsVisible = useGameStore((state) => state.touchControlsVisible)
   const toggleTouchControls = useGameStore((state) => state.toggleTouchControls)
+
+  // Check if near an NPC
+  const nearNPC = useGameStore((state) => state.nearNPC)
+  const nearSellNPC = useGameStore((state) => state.nearSellNPC)
+  const canInteract = nearNPC || nearSellNPC
 
   // Check if any UI is open - hide controls when UI is open
   const dialogueOpen = useGameStore((state) => state.dialogueOpen)
@@ -135,6 +140,15 @@ export function MobileControls() {
             </ControlButton>
           </div>
         </>
+      )}
+
+      {/* Interact Button - Only shows when near an NPC and no UI is open */}
+      {canInteract && !anyUIOpen && (
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-auto">
+          <ControlButton inputKey="interact" className="px-8 py-4 text-xl bg-yellow-500/60 border-yellow-400 hover:bg-yellow-500/80">
+            💬 Talk
+          </ControlButton>
+        </div>
       )}
     </div>
   )

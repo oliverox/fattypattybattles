@@ -11,6 +11,7 @@ interface TouchInput {
   jump: boolean
   zoomIn: boolean
   zoomOut: boolean
+  interact: boolean
 }
 
 interface GameState {
@@ -81,6 +82,7 @@ export const useGameStore = create<GameState>((set) => ({
     jump: false,
     zoomIn: false,
     zoomOut: false,
+    interact: false,
   },
   // Setters
   setPlayerPosition: (position) => set({ playerPosition: position }),

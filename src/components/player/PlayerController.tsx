@@ -52,7 +52,7 @@ export function PlayerController() {
     const jump = keys.jump || touchInput.jump
     const zoomIn = keys.zoomIn || touchInput.zoomIn
     const zoomOut = keys.zoomOut || touchInput.zoomOut
-    const interact = keys.interact
+    const interact = keys.interact || touchInput.interact
     const inventory = keys.inventory
 
     // Check proximity to Shop NPC
