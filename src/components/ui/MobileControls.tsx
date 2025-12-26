@@ -142,8 +142,8 @@ export function MobileControls() {
         </>
       )}
 
-      {/* Interact Button - Only shows when near an NPC and no UI is open */}
-      {canInteract && !anyUIOpen && (
+      {/* Interact Button - Only shows when near an NPC, touch controls visible, and no UI is open */}
+      {touchControlsVisible && canInteract && !anyUIOpen && (
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-auto">
           <ControlButton inputKey="interact" className="px-8 py-4 text-xl bg-yellow-500/60 border-yellow-400 hover:bg-yellow-500/80">
             💬 Talk
