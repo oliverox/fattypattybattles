@@ -5,60 +5,72 @@ import { Id } from "./_generated/dataModel";
 // Sample cards for seeding the database
 const SAMPLE_CARDS = [
   // Common cards (10)
-  { name: "Patty Slapper", rarity: "common", cost: 1, attack: 2, defense: 1, description: "A basic slap attack" },
-  { name: "Grease Shield", rarity: "common", cost: 1, attack: 1, defense: 3, description: "Blocks with burger grease" },
-  { name: "Fry Fighter", rarity: "common", cost: 1, attack: 2, defense: 2, description: "Crispy combat skills" },
-  { name: "Bun Basher", rarity: "common", cost: 2, attack: 3, defense: 1, description: "Soft but deadly" },
-  { name: "Pickle Poker", rarity: "common", cost: 1, attack: 2, defense: 1, description: "Sour strikes" },
-  { name: "Ketchup Kid", rarity: "common", cost: 1, attack: 1, defense: 2, description: "Red and ready" },
-  { name: "Mustard Minion", rarity: "common", cost: 1, attack: 2, defense: 1, description: "Yellow menace" },
-  { name: "Onion Ring Ranger", rarity: "common", cost: 2, attack: 2, defense: 2, description: "Crispy defender" },
-  { name: "Lettuce Lancer", rarity: "common", cost: 1, attack: 1, defense: 2, description: "Fresh fighter" },
-  { name: "Tomato Tosser", rarity: "common", cost: 1, attack: 2, defense: 1, description: "Juicy projectiles" },
+  { name: "astro-patty", rarity: "common", cost: 1, attack: 2, defense: 1, description: "space is the best" },
+  { name: "catty patty", rarity: "common", cost: 1, attack: 1, defense: 3, description: "meowwww" },
+  { name: "water patty", rarity: "common", cost: 1, attack: 2, defense: 2, description: "wet as a fish" },
+  { name: "daytime patty", rarity: "common", cost: 2, attack: 3, defense: 1, description: "i'm getting sunburned" },
+  { name: "nighttime patty", rarity: "common", cost: 1, attack: 2, defense: 1, description: "nightburned lol" },
+  { name: "juice patty", rarity: "common", cost: 1, attack: 1, defense: 2, description: "tastier than water" },
+  { name: "doggy patty", rarity: "common", cost: 1, attack: 2, defense: 1, description: "team dogs" },
+  { name: "zebra crossing patty", rarity: "common", cost: 2, attack: 2, defense: 2, description: "CAR INCOMING!!!" },
+  { name: "compass patty", rarity: "common", cost: 1, attack: 1, defense: 2, description: "north = north lol" },
+  { name: "card patty", rarity: "common", cost: 1, attack: 2, defense: 1, description: "to pencil patty" },
 
   // Uncommon cards (8)
-  { name: "Double Patty", rarity: "uncommon", cost: 3, attack: 4, defense: 3, description: "Twice the power" },
-  { name: "Cheese Champion", rarity: "uncommon", cost: 2, attack: 3, defense: 3, description: "Melty mayhem" },
-  { name: "Bacon Blaster", rarity: "uncommon", cost: 3, attack: 5, defense: 2, description: "Sizzling strikes" },
-  { name: "Shake Shaker", rarity: "uncommon", cost: 2, attack: 2, defense: 4, description: "Thick defense" },
-  { name: "Cola Crusher", rarity: "uncommon", cost: 3, attack: 4, defense: 2, description: "Fizzy fury" },
-  { name: "Napkin Ninja", rarity: "uncommon", cost: 2, attack: 3, defense: 2, description: "Clean cuts" },
-  { name: "Tray Warrior", rarity: "uncommon", cost: 3, attack: 3, defense: 4, description: "Serves justice" },
-  { name: "Straw Striker", rarity: "uncommon", cost: 2, attack: 4, defense: 1, description: "Piercing attacks" },
+  { name: "cacti patty", rarity: "uncommon", cost: 3, attack: 4, defense: 3, description: "thorny" },
+  { name: "abyss patty", rarity: "uncommon", cost: 2, attack: 3, defense: 3, description: "never ending" },
+  { name: "jail patty", rarity: "uncommon", cost: 3, attack: 5, defense: 2, description: "LET ME OUT!!" },
+  { name: "artist patty", rarity: "uncommon", cost: 2, attack: 2, defense: 4, description: "i'm so good" },
+  { name: "cleaning patty", rarity: "uncommon", cost: 3, attack: 4, defense: 2, description: "BORING" },
+  { name: "coco-patty", rarity: "uncommon", cost: 2, attack: 3, defense: 2, description: "coconut" },
+  { name: "pencil patty", rarity: "uncommon", cost: 3, attack: 3, defense: 4, description: "write write write" },
+  { name: "spongey patty", rarity: "uncommon", cost: 2, attack: 4, defense: 1, description: "squishy patty" },
 
   // Rare cards (6)
-  { name: "Triple Stack", rarity: "rare", cost: 4, attack: 6, defense: 4, description: "Tower of power" },
-  { name: "Golden Fries", rarity: "rare", cost: 4, attack: 5, defense: 5, description: "Perfectly crispy" },
-  { name: "Secret Sauce", rarity: "rare", cost: 3, attack: 4, defense: 5, description: "Mystery ingredients" },
-  { name: "Drive-Thru Dragon", rarity: "rare", cost: 5, attack: 7, defense: 3, description: "Fast and fierce" },
-  { name: "Grill Master", rarity: "rare", cost: 4, attack: 5, defense: 5, description: "Flame wielder" },
-  { name: "Ice Cream Wizard", rarity: "rare", cost: 4, attack: 4, defense: 6, description: "Frozen magic" },
+  { name: "rainbow patty", rarity: "rare", cost: 4, attack: 6, defense: 4, description: "7 colors" },
+  { name: "galaxy patty", rarity: "rare", cost: 4, attack: 5, defense: 5, description: "biggest patty" },
+  { name: "car patty", rarity: "rare", cost: 3, attack: 4, defense: 5, description: "VROOM" },
+  { name: "ice cream patty", rarity: "rare", cost: 5, attack: 7, defense: 3, description: "colder than ice?" },
+  { name: "ruler patty", rarity: "rare", cost: 4, attack: 5, defense: 5, description: "RULER OF RULERS" },
+  { name: "chess patty", rarity: "rare", cost: 4, attack: 4, defense: 6, description: "smart" },
 
   // Legendary cards (4)
-  { name: "The Big Patty", rarity: "legendary", cost: 6, attack: 8, defense: 6, description: "Legendary burger boss" },
-  { name: "Fryer Phoenix", rarity: "legendary", cost: 6, attack: 9, defense: 5, description: "Rises from hot oil" },
-  { name: "Condiment King", rarity: "legendary", cost: 5, attack: 7, defense: 7, description: "Rules all sauces" },
-  { name: "Mega Meal", rarity: "legendary", cost: 7, attack: 8, defense: 8, description: "Complete combo" },
+  { name: "hot-air-balloon patty", rarity: "legendary", cost: 6, attack: 8, defense: 6, description: "balloon is hot" },
+  { name: "money patty", rarity: "legendary", cost: 6, attack: 9, defense: 5, description: "I'M RICH" },
+  { name: "satellite patty", rarity: "legendary", cost: 5, attack: 7, defense: 7, description: "i see astro-patty" },
+  { name: "mountain patty", rarity: "legendary", cost: 7, attack: 8, defense: 8, description: "tallll" },
 
   // Mythical cards (3)
-  { name: "Cosmic Burger", rarity: "mythical", cost: 8, attack: 10, defense: 8, description: "From another dimension" },
-  { name: "Eternal Flame Grill", rarity: "mythical", cost: 7, attack: 9, defense: 9, description: "Never stops cooking" },
-  { name: "The Original Recipe", rarity: "mythical", cost: 8, attack: 8, defense: 10, description: "Ancient secrets" },
+  { name: "pyramid patty", rarity: "mythical", cost: 8, attack: 10, defense: 8, description: "ancient times..." },
+  { name: "medal patty", rarity: "mythical", cost: 7, attack: 9, defense: 9, description: "I WIN !!!" },
+  { name: "lucky patty", rarity: "mythical", cost: 8, attack: 8, defense: 10, description: "luckkkkkkky" },
 
-  // Divine cards (2)
-  { name: "Burger Deity", rarity: "divine", cost: 9, attack: 11, defense: 10, description: "Divine deliciousness" },
-  { name: "Fast Food Titan", rarity: "divine", cost: 10, attack: 12, defense: 9, description: "Titan of taste" },
+  // Divine cards (3)
+  { name: "police patty", rarity: "divine", cost: 9, attack: 11, defense: 10, description: "UNDER ARREST" },
+  { name: "motorbike patty", rarity: "divine", cost: 10, attack: 12, defense: 9, description: "fasst" },
+  { name: "rocket patty", rarity: "divine", cost: 10, attack: 11, defense: 10, description: "TO THE MOON" },
 
   // Prismatic cards (2)
-  { name: "Rainbow Shake", rarity: "prismatic", cost: 9, attack: 10, defense: 11, description: "All flavors combined" },
-  { name: "Holographic Menu", rarity: "prismatic", cost: 10, attack: 11, defense: 11, description: "Every item at once" },
+  { name: "kung-fu patty", rarity: "prismatic", cost: 9, attack: 10, defense: 11, description: "defense attack" },
+  { name: "ice patty", rarity: "prismatic", cost: 10, attack: 11, defense: 11, description: "Colddddd" },
 
   // Transcendent cards (1)
-  { name: "The Perfect Order", rarity: "transcendent", cost: 12, attack: 13, defense: 12, description: "Flawless execution" },
+  { name: "armor patty", rarity: "transcendent", cost: 12, attack: 13, defense: 12, description: "i'm better than kung-fu patty" },
 
   // Secret cards (1)
-  { name: "???", rarity: "secret", cost: 15, attack: 15, defense: 15, description: "Unknown power" },
+  { name: "patty combinasion", rarity: "secret", cost: 15, attack: 15, defense: 15, description: "5 in 1!?" },
 ] as const;
+
+// Clear all cards from the database
+export const clearCards = mutation({
+  handler: async (ctx) => {
+    const allCards = await ctx.db.query("cards").collect();
+    for (const card of allCards) {
+      await ctx.db.delete(card._id);
+    }
+    return { cleared: true, count: allCards.length };
+  },
+});
 
 // Seed the cards table with sample cards
 export const seedCards = mutation({
