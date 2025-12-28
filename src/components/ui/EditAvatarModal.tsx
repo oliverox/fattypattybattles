@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { Button } from './Button';
@@ -30,13 +30,25 @@ export function EditAvatarModal({ isOpen, onClose, currentConfig }: EditAvatarMo
   const [hairStyle, setHairStyle] = useState(currentConfig?.hairStyle ?? HAIR_STYLES[0]);
   const [hairColor, setHairColor] = useState(currentConfig?.hairColor ?? HAIR_COLORS[0]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const updateAvatarConfig = useMutation(api.users.updateAvatarConfig);
+
+  // Sync state when currentConfig changes or modal opens
+  useEffect(() => {
+    if (isOpen && currentConfig) {
+      setSkinColor(currentConfig.skinColor);
+      setHairStyle(currentConfig.hairStyle);
+      setHairColor(currentConfig.hairColor);
+      setError('');
+    }
+  }, [isOpen, currentConfig]);
 
   if (!isOpen) return null;
 
   const handleSave = async () => {
     setLoading(true);
+    setError('');
     try {
       await updateAvatarConfig({
         avatarConfig: {
@@ -48,6 +60,7 @@ export function EditAvatarModal({ isOpen, onClose, currentConfig }: EditAvatarMo
       onClose();
     } catch (err) {
       console.error('Failed to update avatar:', err);
+      setError(err instanceof Error ? err.message : 'Failed to save. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -66,6 +79,12 @@ export function EditAvatarModal({ isOpen, onClose, currentConfig }: EditAvatarMo
         <h2 className="text-2xl font-bold text-center text-blue-600 mb-4">
           Edit Avatar
         </h2>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+            {error}
+          </div>
+        )}
 
         {/* Avatar Preview */}
         <div className="flex justify-center mb-6">
