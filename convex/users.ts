@@ -5,7 +5,6 @@ import { mutation, query } from "./_generated/server";
 export const createUserProfile = mutation({
   args: {
     username: v.string(),
-    gender: v.union(v.literal("male"), v.literal("female"), v.literal("other")),
     avatarConfig: v.object({
       skinColor: v.string(),
       hairStyle: v.string(),
@@ -47,7 +46,6 @@ export const createUserProfile = mutation({
     if (existingUser) {
       await ctx.db.patch(existingUser._id, {
         username: args.username,
-        gender: args.gender,
         avatarConfig: args.avatarConfig,
         pattyCoins: 10, // Starting coins
         unopenedPacks: starterPack, // Starter pack
@@ -60,7 +58,6 @@ export const createUserProfile = mutation({
         clerkId,
         email: identity.email || "",
         username: args.username,
-        gender: args.gender,
         avatarConfig: args.avatarConfig,
         pattyCoins: 10, // Starting coins
         unopenedPacks: starterPack, // Starter pack
@@ -182,6 +179,39 @@ export const ensureStarterPack = mutation({
     });
 
     return { granted: true };
+  },
+});
+
+// Update user's avatar config
+export const updateAvatarConfig = mutation({
+  args: {
+    avatarConfig: v.object({
+      skinColor: v.string(),
+      hairStyle: v.string(),
+      hairColor: v.string(),
+    }),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const clerkId = identity.subject;
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", clerkId))
+      .first();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    await ctx.db.patch(user._id, {
+      avatarConfig: args.avatarConfig,
+    });
+
+    return { success: true };
   },
 });
 

@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { UserButton, useAuth } from '@clerk/tanstack-react-start'
 import { useQuery, useMutation } from 'convex/react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api } from '../../convex/_generated/api'
 import { GameCanvas } from '@/components/game/GameCanvas'
 import { InteractionPrompt } from '@/components/ui/InteractionPrompt'
@@ -12,6 +12,7 @@ import { Inventory } from '@/components/ui/Inventory'
 import { SellDialogue } from '@/components/ui/SellDialogue'
 import { SellShop } from '@/components/ui/SellShop'
 import { MobileControls } from '@/components/ui/MobileControls'
+import { EditAvatarModal } from '@/components/ui/EditAvatarModal'
 
 export const Route = createFileRoute('/game')({
   component: GamePage,
@@ -23,6 +24,7 @@ function GamePage() {
   const ensureStarterPack = useMutation(api.users.ensureStarterPack)
   const seedCards = useMutation(api.inventory.seedCards)
   const initChecked = useRef(false)
+  const [editAvatarOpen, setEditAvatarOpen] = useState(false)
 
   // Seed cards and ensure existing users get their starter pack
   useEffect(() => {
@@ -82,10 +84,18 @@ function GamePage() {
         <UserButton />
       </div>
       <div className="absolute top-4 left-4 z-50 text-white bg-black/50 p-3 rounded-lg">
-        <p className="font-bold">{currentUser.username}</p>
+        <div className="flex items-center gap-2">
+          <p className="font-bold">{currentUser.username}</p>
+          <button
+            onClick={() => setEditAvatarOpen(true)}
+            className="text-xs bg-blue-500 hover:bg-blue-600 px-2 py-1 rounded transition-colors"
+          >
+            Edit Avatar
+          </button>
+        </div>
         <p className="text-sm">PattyCoins: {currentUser.pattyCoins}</p>
       </div>
-      <GameCanvas />
+      <GameCanvas avatarConfig={currentUser.avatarConfig} />
 
       {/* UI overlays */}
       <InteractionPrompt />
@@ -98,6 +108,13 @@ function GamePage() {
 
       {/* Mobile touch controls */}
       <MobileControls />
+
+      {/* Edit Avatar Modal */}
+      <EditAvatarModal
+        isOpen={editAvatarOpen}
+        onClose={() => setEditAvatarOpen(false)}
+        currentConfig={currentUser.avatarConfig}
+      />
     </div>
   )
 }

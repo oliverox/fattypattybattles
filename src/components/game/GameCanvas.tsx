@@ -1,8 +1,13 @@
 import { Canvas } from '@react-three/fiber'
 import { Scene } from './Scene'
 import { COLORS } from '@/lib/game/constants'
+import type { AvatarConfig } from '@/components/player/PlayerMesh'
 
-export function GameCanvas() {
+interface GameCanvasProps {
+  avatarConfig?: AvatarConfig
+}
+
+export function GameCanvas({ avatarConfig }: GameCanvasProps) {
   return (
     <Canvas
       camera={{ position: [0, 5, 15], fov: 60 }}
@@ -15,7 +20,7 @@ export function GameCanvas() {
       shadows
     >
       <color attach="background" args={[COLORS.darkPurple]} />
-      <Scene />
+      <Scene avatarConfig={avatarConfig} />
     </Canvas>
   )
 }

@@ -6,8 +6,13 @@ import { PHYSICS, COLORS } from '@/lib/game/constants'
 import { PlayerController } from '@/components/player/PlayerController'
 import { SynthwaveEnvironment } from '@/components/world/SynthwaveEnvironment'
 import { PostProcessing } from './PostProcessing'
+import type { AvatarConfig } from '@/components/player/PlayerMesh'
 
-export function Scene() {
+interface SceneProps {
+  avatarConfig?: AvatarConfig
+}
+
+export function Scene({ avatarConfig }: SceneProps) {
   return (
     <KeyboardControls map={controlsMap}>
       <Suspense fallback={null}>
@@ -23,7 +28,7 @@ export function Scene() {
           />
 
           {/* Player */}
-          <PlayerController />
+          <PlayerController avatarConfig={avatarConfig} />
 
           {/* Environment */}
           <SynthwaveEnvironment />

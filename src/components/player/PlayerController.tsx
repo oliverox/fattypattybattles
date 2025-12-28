@@ -5,11 +5,15 @@ import { RigidBody, CapsuleCollider, type RapierRigidBody, useRapier } from '@re
 import { Vector3 } from 'three'
 import { Controls } from '@/lib/game/controls'
 import { PHYSICS, CAMERA, SHOP, SELL_NPC } from '@/lib/game/constants'
-import { PlayerMesh } from './PlayerMesh'
+import { PlayerMesh, type AvatarConfig } from './PlayerMesh'
 import { ThirdPersonCamera } from './ThirdPersonCamera'
 import { useGameStore } from '@/stores/gameStore'
 
-export function PlayerController() {
+interface PlayerControllerProps {
+  avatarConfig?: AvatarConfig
+}
+
+export function PlayerController({ avatarConfig }: PlayerControllerProps) {
   const rigidBodyRef = useRef<RapierRigidBody>(null)
   const [, getKeys] = useKeyboardControls<Controls>()
   const { world } = useRapier()
@@ -173,7 +177,7 @@ export function PlayerController() {
       colliders={false}
     >
       <CapsuleCollider args={[0.5, 0.5]} />
-      <PlayerMesh facingAngle={orbitAngle} />
+      <PlayerMesh facingAngle={orbitAngle} avatarConfig={avatarConfig} />
       <ThirdPersonCamera rigidBodyRef={rigidBodyRef} orbitAngle={orbitAngle} zoomDistance={zoomDistance} />
     </RigidBody>
   )

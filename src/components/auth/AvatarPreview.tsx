@@ -1,23 +1,11 @@
-import { useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
-import { Mesh, Color, Group } from 'three'
-import { HeldCard } from './HeldCard'
+import { Canvas } from '@react-three/fiber'
+import { OrbitControls } from '@react-three/drei'
+import { Color } from 'three'
 
-export interface AvatarConfig {
+interface AvatarPreviewProps {
   skinColor: string
   hairStyle: string
   hairColor: string
-}
-
-interface PlayerMeshProps {
-  facingAngle: React.RefObject<number>
-  avatarConfig?: AvatarConfig
-}
-
-const DEFAULT_AVATAR: AvatarConfig = {
-  skinColor: '#FFE0BD',
-  hairStyle: 'short',
-  hairColor: '#000000',
 }
 
 function HairMesh({ style, color }: { style: string; color: string }) {
@@ -25,10 +13,9 @@ function HairMesh({ style, color }: { style: string; color: string }) {
 
   switch (style) {
     case 'spiky':
-      // Multiple cones pointing up
       return (
         <group position={[0, 1, 0]}>
-          <mesh position={[0, 0.15, 0]} rotation={[0, 0, 0]}>
+          <mesh position={[0, 0.15, 0]}>
             <coneGeometry args={[0.12, 0.4, 6]} />
             <meshStandardMaterial color={color} emissive={hairColor} emissiveIntensity={0.2} />
           </mesh>
@@ -51,7 +38,6 @@ function HairMesh({ style, color }: { style: string; color: string }) {
         </group>
       )
     case 'long':
-      // Elongated capsule hanging down back
       return (
         <group position={[0, 0.7, 0.3]}>
           <mesh rotation={[0.5, 0, 0]}>
@@ -61,7 +47,6 @@ function HairMesh({ style, color }: { style: string; color: string }) {
         </group>
       )
     case 'curly':
-      // Multiple small spheres clustered on top
       return (
         <group position={[0, 1, 0]}>
           {[
@@ -83,7 +68,6 @@ function HairMesh({ style, color }: { style: string; color: string }) {
         </group>
       )
     case 'short':
-      // Small hemisphere on top
       return (
         <mesh position={[0, 1.05, 0]}>
           <sphereGeometry args={[0.35, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
@@ -96,45 +80,44 @@ function HairMesh({ style, color }: { style: string; color: string }) {
   }
 }
 
-export function PlayerMesh({ facingAngle, avatarConfig }: PlayerMeshProps) {
-  const meshRef = useRef<Mesh>(null)
-  const groupRef = useRef<Group>(null)
-
-  const config = avatarConfig ?? DEFAULT_AVATAR
-  const skinColor = new Color(config.skinColor)
-
-  // Pulsing glow effect and rotation
-  useFrame(({ clock }) => {
-    if (meshRef.current) {
-      const pulse = Math.sin(clock.elapsedTime * 2) * 0.3 + 0.7
-      const material = meshRef.current.material as any
-      if (material.emissiveIntensity !== undefined) {
-        material.emissiveIntensity = pulse
-      }
-    }
-
-    // Rotate to face the direction of movement
-    if (groupRef.current) {
-      groupRef.current.rotation.y = -facingAngle.current
-    }
-  })
+function AvatarModel({ skinColor, hairStyle, hairColor }: AvatarPreviewProps) {
+  const skin = new Color(skinColor)
 
   return (
-    <group ref={groupRef}>
-      {/* Body - uses skin color */}
-      <mesh ref={meshRef} castShadow>
+    <group>
+      {/* Body */}
+      <mesh castShadow>
         <capsuleGeometry args={[0.5, 1, 4, 16]} />
         <meshStandardMaterial
-          color={config.skinColor}
-          emissive={skinColor}
-          emissiveIntensity={0.5}
+          color={skinColor}
+          emissive={skin}
+          emissiveIntensity={0.3}
           metalness={0.3}
           roughness={0.5}
         />
       </mesh>
       {/* Hair */}
-      <HairMesh style={config.hairStyle} color={config.hairColor} />
-      <HeldCard />
+      <HairMesh style={hairStyle} color={hairColor} />
     </group>
+  )
+}
+
+export function AvatarPreview({ skinColor, hairStyle, hairColor }: AvatarPreviewProps) {
+  return (
+    <div className="w-32 h-32 rounded-lg overflow-hidden border-4 border-gray-300 bg-gradient-to-b from-purple-900 to-purple-950">
+      <Canvas camera={{ position: [0, 0.5, 3.5], fov: 50 }}>
+        <ambientLight intensity={0.6} />
+        <directionalLight position={[2, 3, 2]} intensity={0.8} />
+        <AvatarModel skinColor={skinColor} hairStyle={hairStyle} hairColor={hairColor} />
+        <OrbitControls
+          enableZoom={false}
+          enablePan={false}
+          autoRotate
+          autoRotateSpeed={2}
+          minPolarAngle={Math.PI / 3}
+          maxPolarAngle={Math.PI / 2}
+        />
+      </Canvas>
+    </div>
   )
 }

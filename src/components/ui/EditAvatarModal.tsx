@@ -1,9 +1,8 @@
-import { useState, type FormEvent } from 'react';
-import { useMutation, useQuery } from 'convex/react';
+import { useState } from 'react';
+import { useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { AvatarPreview } from './AvatarPreview';
+import { Button } from './Button';
+import { AvatarPreview } from '../auth/AvatarPreview';
 
 const SKIN_COLORS = [
   '#FFECD4', '#FFE0BD', '#FFD5B8', '#F1C27D', '#E0AC69',
@@ -16,93 +15,68 @@ const HAIR_COLORS = [
   '#FF69B4', '#4B0082', '#6A5ACD', '#00CED1', '#32CD32',
 ];
 
-export function ProfileForm() {
+interface EditAvatarModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  currentConfig?: {
+    skinColor: string;
+    hairStyle: string;
+    hairColor: string;
+  };
+}
+
+export function EditAvatarModal({ isOpen, onClose, currentConfig }: EditAvatarModalProps) {
+  const [skinColor, setSkinColor] = useState(currentConfig?.skinColor ?? SKIN_COLORS[0]);
+  const [hairStyle, setHairStyle] = useState(currentConfig?.hairStyle ?? HAIR_STYLES[0]);
+  const [hairColor, setHairColor] = useState(currentConfig?.hairColor ?? HAIR_COLORS[0]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [username, setUsername] = useState('');
-  const [skinColor, setSkinColor] = useState(SKIN_COLORS[0]);
-  const [hairStyle, setHairStyle] = useState(HAIR_STYLES[0]);
-  const [hairColor, setHairColor] = useState(HAIR_COLORS[0]);
 
-  const createUserProfile = useMutation(api.users.createUserProfile);
-  const checkUsername = useQuery(api.users.checkUsername,
-    username ? { username } : "skip"
-  );
+  const updateAvatarConfig = useMutation(api.users.updateAvatarConfig);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError('');
+  if (!isOpen) return null;
 
-    // Validate username
-    if (username.length < 3) {
-      setError('Username must be at least 3 characters');
-      return;
-    }
-
-    if (checkUsername && !checkUsername.available) {
-      setError('Username is already taken');
-      return;
-    }
-
+  const handleSave = async () => {
     setLoading(true);
-
     try {
-      await createUserProfile({
-        username,
+      await updateAvatarConfig({
         avatarConfig: {
           skinColor,
           hairStyle,
           hairColor,
         },
       });
-      // Profile created successfully - Convex will automatically update the UI via reactive queries
+      onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Profile creation failed');
+      console.error('Failed to update avatar:', err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
-        </div>
-      )}
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/70"
+        onClick={onClose}
+      />
 
-      <form onSubmit={handleSubmit}>
-        {/* Avatar Preview - Centered at top */}
-        <div className="flex flex-col items-center mb-6">
+      {/* Modal */}
+      <div className="relative bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <h2 className="text-2xl font-bold text-center text-blue-600 mb-4">
+          Edit Avatar
+        </h2>
+
+        {/* Avatar Preview */}
+        <div className="flex justify-center mb-6">
           <AvatarPreview
             skinColor={skinColor}
             hairStyle={hairStyle}
             hairColor={hairColor}
           />
-          <p className="text-sm text-gray-600 text-center mt-3">
-            Welcome, <strong>{username || 'Player'}</strong>!<br />
-            You'll start with <strong>10 PattyCoins</strong> and <strong>3 starter cards</strong>
-          </p>
         </div>
 
-        {/* Username */}
-        <div className="mb-6">
-          <Input
-            label="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            placeholder="CoolPlayer123"
-            minLength={3}
-            error={
-              checkUsername && !checkUsername.available
-                ? 'Username taken'
-                : undefined
-            }
-          />
-        </div>
-
-        {/* Avatar Customization */}
+        {/* Customization Options */}
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -127,7 +101,7 @@ export function ProfileForm() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Hair Style
             </label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {HAIR_STYLES.map((style) => (
                 <button
                   key={style}
@@ -165,14 +139,23 @@ export function ProfileForm() {
           </div>
         </div>
 
-        <Button
-          type="submit"
-          disabled={loading || (checkUsername && !checkUsername.available)}
-          className="w-full mt-6"
-        >
-          {loading ? 'Creating Character...' : 'Start Playing!'}
-        </Button>
-      </form>
+        {/* Buttons */}
+        <div className="flex gap-3 mt-6">
+          <Button
+            onClick={onClose}
+            className="flex-1 bg-gray-500 hover:bg-gray-600"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={loading}
+            className="flex-1"
+          >
+            {loading ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
