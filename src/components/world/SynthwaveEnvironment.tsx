@@ -9,9 +9,11 @@ import { NeonPalmTree } from './structures/NeonPalmTree'
 import { FloatingShapes } from './structures/FloatingShapes'
 import { ShopBuilding } from './structures/ShopBuilding'
 import { SellBuilding } from './structures/SellBuilding'
+import { BattleArenaStructure } from './structures/BattleArenaStructure'
 import { Shopkeeper } from './npc/Shopkeeper'
 import { SellNPC } from './npc/SellNPC'
-import { COLORS, SHOP, SELL_NPC } from '@/lib/game/constants'
+import { BattleNPC } from './npc/BattleNPC'
+import { COLORS, SHOP, SELL_NPC, BATTLE_NPC } from '@/lib/game/constants'
 
 export function SynthwaveEnvironment() {
   return (
@@ -79,6 +81,10 @@ export function SynthwaveEnvironment() {
       {/* Sell building and NPC */}
       <SellBuilding position={[SELL_NPC.npcPosition[0], 0, SELL_NPC.npcPosition[2] + 6]} />
       <SellNPC position={SELL_NPC.npcPosition} />
+
+      {/* Battle arena and NPC */}
+      <BattleArenaStructure position={[BATTLE_NPC.npcPosition[0], 0, BATTLE_NPC.npcPosition[2] + 6]} />
+      <BattleNPC position={BATTLE_NPC.npcPosition} />
     </group>
   )
 }

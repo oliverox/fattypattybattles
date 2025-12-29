@@ -1,4 +1,5 @@
 onlyBuiltDependencies:
   - '@clerk/shared'
+  - '@parcel/watcher'
   - esbuild
   - sharp
