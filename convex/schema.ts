@@ -26,6 +26,8 @@ export default defineSchema({
       acquiredAt: v.number(),
     }))),
     heldCardId: v.optional(v.string()),
+    battleWins: v.optional(v.number()),
+    battleLosses: v.optional(v.number()),
     createdAt: v.optional(v.number()),
     lastActiveAt: v.optional(v.number()),
   })

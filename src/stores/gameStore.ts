@@ -14,6 +14,37 @@ interface TouchInput {
   interact: boolean
 }
 
+interface BattleCard {
+  cardId: string
+  name: string
+  attack: number
+  defense: number
+  rarity: string
+  position: number
+}
+
+interface BattleData {
+  playerCards: BattleCard[]
+  npcCards: BattleCard[]
+  battleId: string
+}
+
+interface BattleResult {
+  winner: 'player' | 'npc'
+  playerWins: number
+  npcWins: number
+  rounds: Array<{
+    round: number
+    playerCard: BattleCard & { currentDefense: number }
+    npcCard: BattleCard & { currentDefense: number }
+    winner: 'player' | 'npc' | 'draw'
+    damage: number
+  }>
+  coinsWon: number
+  packWon: string | null
+  newBalance: number
+}
+
 interface GameState {
   playerPosition: Vector3
   isMoving: boolean
@@ -27,6 +58,14 @@ interface GameState {
   sellDialogueOpen: boolean
   sellShopOpen: boolean
   activeSellView: 'appraise' | 'sell' | null
+  // Battle NPC
+  nearBattleNPC: boolean
+  battleDialogueOpen: boolean
+  battleCardSelectOpen: boolean
+  battleArenaOpen: boolean
+  selectedBattleCards: Array<{ cardId: string; position: number }>
+  battleData: BattleData | null
+  battleResult: BattleResult | null
   // Inventory
   inventoryOpen: boolean
   heldCardId: string | null
@@ -44,6 +83,15 @@ interface GameState {
   setSellDialogueOpen: (open: boolean) => void
   setSellShopOpen: (open: boolean) => void
   setActiveSellView: (view: 'appraise' | 'sell' | null) => void
+  // Battle NPC
+  setNearBattleNPC: (near: boolean) => void
+  setBattleDialogueOpen: (open: boolean) => void
+  setBattleCardSelectOpen: (open: boolean) => void
+  setBattleArenaOpen: (open: boolean) => void
+  setSelectedBattleCards: (cards: Array<{ cardId: string; position: number }>) => void
+  setBattleData: (data: BattleData | null) => void
+  setBattleResult: (result: BattleResult | null) => void
+  closeBattleUI: () => void
   setInventoryOpen: (open: boolean) => void
   setHeldCardId: (cardId: string | null) => void
   closeAllShopUI: () => void
@@ -67,6 +115,14 @@ export const useGameStore = create<GameState>((set) => ({
   sellDialogueOpen: false,
   sellShopOpen: false,
   activeSellView: null,
+  // Battle NPC
+  nearBattleNPC: false,
+  battleDialogueOpen: false,
+  battleCardSelectOpen: false,
+  battleArenaOpen: false,
+  selectedBattleCards: [],
+  battleData: null,
+  battleResult: null,
   // Inventory
   inventoryOpen: false,
   heldCardId: null,
@@ -95,6 +151,22 @@ export const useGameStore = create<GameState>((set) => ({
   setSellDialogueOpen: (open) => set({ sellDialogueOpen: open }),
   setSellShopOpen: (open) => set({ sellShopOpen: open }),
   setActiveSellView: (view) => set({ activeSellView: view }),
+  // Battle NPC
+  setNearBattleNPC: (near) => set({ nearBattleNPC: near }),
+  setBattleDialogueOpen: (open) => set({ battleDialogueOpen: open }),
+  setBattleCardSelectOpen: (open) => set({ battleCardSelectOpen: open }),
+  setBattleArenaOpen: (open) => set({ battleArenaOpen: open }),
+  setSelectedBattleCards: (cards) => set({ selectedBattleCards: cards }),
+  setBattleData: (data) => set({ battleData: data }),
+  setBattleResult: (result) => set({ battleResult: result }),
+  closeBattleUI: () => set({
+    battleDialogueOpen: false,
+    battleCardSelectOpen: false,
+    battleArenaOpen: false,
+    selectedBattleCards: [],
+    battleData: null,
+    battleResult: null,
+  }),
   setInventoryOpen: (open) => set({ inventoryOpen: open }),
   setHeldCardId: (cardId) => set({ heldCardId: cardId }),
   closeAllShopUI: () => set({ dialogueOpen: false, shopOpen: false, activeShop: null }),
@@ -105,6 +177,12 @@ export const useGameStore = create<GameState>((set) => ({
     sellDialogueOpen: false,
     sellShopOpen: false,
     activeSellView: null,
+    battleDialogueOpen: false,
+    battleCardSelectOpen: false,
+    battleArenaOpen: false,
+    selectedBattleCards: [],
+    battleData: null,
+    battleResult: null,
     inventoryOpen: false,
   }),
   // Touch Controls

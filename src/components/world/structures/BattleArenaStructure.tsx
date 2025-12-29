@@ -1,0 +1,158 @@
+import { useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
+import { Text } from '@react-three/drei'
+import { Group, Color } from 'three'
+import { RigidBody, CuboidCollider } from '@react-three/rapier'
+import { COLORS } from '@/lib/game/constants'
+
+interface BattleArenaStructureProps {
+  position?: [number, number, number]
+  rotation?: [number, number, number]
+}
+
+export function BattleArenaStructure({ position = [0, 0, 0], rotation = [0, 0, 0] }: BattleArenaStructureProps) {
+  const signRef = useRef<Group>(null)
+
+  const accentColor = '#ff3333'
+  const darkMetal = '#222222'
+
+  useFrame(({ clock }) => {
+    if (signRef.current) {
+      // Pulse the sign aggressively
+      const pulse = 1 + Math.sin(clock.elapsedTime * 4) * 0.08
+      signRef.current.scale.set(pulse, pulse, 1)
+    }
+  })
+
+  return (
+    <RigidBody type="fixed" position={position} rotation={rotation}>
+      <CuboidCollider args={[4, 5, 4]} position={[0, 5, 0]} />
+      <group>
+        {/* Main building body - darker, more industrial */}
+        <mesh position={[0, 5, 0]}>
+          <boxGeometry args={[8, 10, 8]} />
+          <meshStandardMaterial color={darkMetal} metalness={0.8} roughness={0.3} />
+        </mesh>
+
+        {/* Red neon outline strips - vertical corners */}
+        {([
+          [-4, -4],
+          [4, -4],
+          [-4, 4],
+          [4, 4],
+        ] as const).map(([x, z], i) => (
+          <mesh key={`v${i}`} position={[x, 5, z]}>
+            <boxGeometry args={[0.2, 10, 0.2]} />
+            <meshBasicMaterial color={accentColor} />
+          </mesh>
+        ))}
+
+        {/* Horizontal neon strips at top and bottom */}
+        {[0.1, 10].map((y, i) => (
+          <group key={`h${i}`}>
+            <mesh position={[0, y, 4]}>
+              <boxGeometry args={[8, 0.2, 0.1]} />
+              <meshBasicMaterial color={accentColor} />
+            </mesh>
+            <mesh position={[0, y, -4]}>
+              <boxGeometry args={[8, 0.2, 0.1]} />
+              <meshBasicMaterial color={accentColor} />
+            </mesh>
+            <mesh position={[4, y, 0]}>
+              <boxGeometry args={[0.1, 0.2, 8]} />
+              <meshBasicMaterial color={accentColor} />
+            </mesh>
+            <mesh position={[-4, y, 0]}>
+              <boxGeometry args={[0.1, 0.2, 8]} />
+              <meshBasicMaterial color={accentColor} />
+            </mesh>
+          </group>
+        ))}
+
+        {/* Battle entrance - glowing red portal */}
+        <mesh position={[0, 3, 4.1]}>
+          <planeGeometry args={[5, 5]} />
+          <meshStandardMaterial
+            color={accentColor}
+            emissive={new Color(accentColor)}
+            emissiveIntensity={0.5}
+            transparent
+            opacity={0.6}
+          />
+        </mesh>
+
+        {/* Crossed swords decoration above entrance */}
+        <group position={[0, 7, 4.2]}>
+          {/* Left sword */}
+          <mesh position={[-0.5, 0, 0]} rotation={[0, 0, 0.5]}>
+            <boxGeometry args={[0.15, 3, 0.1]} />
+            <meshStandardMaterial
+              color={accentColor}
+              emissive={new Color(accentColor)}
+              emissiveIntensity={0.8}
+            />
+          </mesh>
+          {/* Right sword */}
+          <mesh position={[0.5, 0, 0]} rotation={[0, 0, -0.5]}>
+            <boxGeometry args={[0.15, 3, 0.1]} />
+            <meshStandardMaterial
+              color={accentColor}
+              emissive={new Color(accentColor)}
+              emissiveIntensity={0.8}
+            />
+          </mesh>
+        </group>
+
+        {/* BATTLE sign on roof */}
+        <group position={[0, 12, 0]}>
+          {/* Sign backing */}
+          <mesh position={[0, 0, 0]}>
+            <boxGeometry args={[7, 2.5, 0.5]} />
+            <meshStandardMaterial color={darkMetal} metalness={0.8} />
+          </mesh>
+
+          {/* Neon BATTLE text */}
+          <Text
+            ref={signRef}
+            position={[0, 0, 0.3]}
+            fontSize={1.5}
+            color={accentColor}
+            anchorX="center"
+            anchorY="middle"
+          >
+            BATTLE
+            <meshBasicMaterial color={accentColor} toneMapped={false} />
+          </Text>
+
+          {/* Sign frame - red accents */}
+          <mesh position={[0, 1.35, 0]}>
+            <boxGeometry args={[7.2, 0.15, 0.6]} />
+            <meshBasicMaterial color={accentColor} />
+          </mesh>
+          <mesh position={[0, -1.35, 0]}>
+            <boxGeometry args={[7.2, 0.15, 0.6]} />
+            <meshBasicMaterial color={accentColor} />
+          </mesh>
+          <mesh position={[-3.55, 0, 0]}>
+            <boxGeometry args={[0.15, 2.5, 0.6]} />
+            <meshBasicMaterial color={accentColor} />
+          </mesh>
+          <mesh position={[3.55, 0, 0]}>
+            <boxGeometry args={[0.15, 2.5, 0.6]} />
+            <meshBasicMaterial color={accentColor} />
+          </mesh>
+
+          {/* Sign poles */}
+          <mesh position={[-2.5, -1.25, 0]}>
+            <cylinderGeometry args={[0.1, 0.1, 2.5]} />
+            <meshBasicMaterial color={accentColor} />
+          </mesh>
+          <mesh position={[2.5, -1.25, 0]}>
+            <cylinderGeometry args={[0.1, 0.1, 2.5]} />
+            <meshBasicMaterial color={accentColor} />
+          </mesh>
+        </group>
+      </group>
+    </RigidBody>
+  )
+}

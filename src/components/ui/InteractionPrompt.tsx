@@ -3,14 +3,18 @@ import { useGameStore } from '@/stores/gameStore'
 export function InteractionPrompt() {
   const nearNPC = useGameStore((state) => state.nearNPC)
   const nearSellNPC = useGameStore((state) => state.nearSellNPC)
+  const nearBattleNPC = useGameStore((state) => state.nearBattleNPC)
   const dialogueOpen = useGameStore((state) => state.dialogueOpen)
   const shopOpen = useGameStore((state) => state.shopOpen)
   const sellDialogueOpen = useGameStore((state) => state.sellDialogueOpen)
   const sellShopOpen = useGameStore((state) => state.sellShopOpen)
+  const battleDialogueOpen = useGameStore((state) => state.battleDialogueOpen)
+  const battleCardSelectOpen = useGameStore((state) => state.battleCardSelectOpen)
+  const battleArenaOpen = useGameStore((state) => state.battleArenaOpen)
   const inventoryOpen = useGameStore((state) => state.inventoryOpen)
   const touchControlsVisible = useGameStore((state) => state.touchControlsVisible)
 
-  const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen
+  const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen || battleDialogueOpen || battleCardSelectOpen || battleArenaOpen
 
   // Hide prompt when any UI is open or when touch controls are visible (mobile mode)
   if (anyUIOpen || touchControlsVisible) {
@@ -35,6 +39,18 @@ export function InteractionPrompt() {
         <div className="bg-black/80 border-2 border-orange-400 rounded-lg px-6 py-3 shadow-lg shadow-orange-400/20">
           <p className="text-orange-400 text-lg font-bold tracking-wide">
             Press <span className="text-yellow-400 bg-yellow-400/20 px-2 py-1 rounded mx-1">T</span> to talk to Merchant
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (nearBattleNPC) {
+    return (
+      <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-50">
+        <div className="bg-black/80 border-2 border-red-400 rounded-lg px-6 py-3 shadow-lg shadow-red-400/20">
+          <p className="text-red-400 text-lg font-bold tracking-wide">
+            Press <span className="text-yellow-400 bg-yellow-400/20 px-2 py-1 rounded mx-1">T</span> to challenge Battle Bot
           </p>
         </div>
       </div>

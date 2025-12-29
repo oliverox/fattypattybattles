@@ -4,7 +4,7 @@ import { useKeyboardControls } from '@react-three/drei'
 import { RigidBody, CapsuleCollider, type RapierRigidBody, useRapier } from '@react-three/rapier'
 import { Vector3 } from 'three'
 import { Controls } from '@/lib/game/controls'
-import { PHYSICS, CAMERA, SHOP, SELL_NPC } from '@/lib/game/constants'
+import { PHYSICS, CAMERA, SHOP, SELL_NPC, BATTLE_NPC } from '@/lib/game/constants'
 import { PlayerMesh, type AvatarConfig } from './PlayerMesh'
 import { ThirdPersonCamera } from './ThirdPersonCamera'
 import { useGameStore } from '@/stores/gameStore'
@@ -33,6 +33,7 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
   // NPC positions for proximity check
   const npcPosition = useRef(new Vector3(...SHOP.npcPosition))
   const sellNpcPosition = useRef(new Vector3(...SELL_NPC.npcPosition))
+  const battleNpcPosition = useRef(new Vector3(...BATTLE_NPC.npcPosition))
 
   useFrame(() => {
     if (!rigidBodyRef.current) return
@@ -43,6 +44,8 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
       dialogueOpen, shopOpen, nearNPC, setNearNPC, setDialogueOpen,
       nearSellNPC, setNearSellNPC, setSellDialogueOpen,
       sellDialogueOpen, sellShopOpen, inventoryOpen, setInventoryOpen,
+      nearBattleNPC, setNearBattleNPC, setBattleDialogueOpen,
+      battleDialogueOpen, battleCardSelectOpen, battleArenaOpen,
       touchInput
     } = state
 
@@ -77,8 +80,16 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
       setNearSellNPC(isNearSellNPC)
     }
 
+    // Check proximity to Battle NPC
+    const distanceToBattleNPC = playerPos.distanceTo(battleNpcPosition.current)
+    const isNearBattleNPC = distanceToBattleNPC < BATTLE_NPC.interactionDistance
+
+    if (isNearBattleNPC !== nearBattleNPC) {
+      setNearBattleNPC(isNearBattleNPC)
+    }
+
     // Check if any UI is open
-    const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen
+    const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen || battleDialogueOpen || battleCardSelectOpen || battleArenaOpen
 
     // Handle inventory key (B) - toggle inventory
     if (inventory && !inventoryPressed.current && !anyUIOpen) {
@@ -92,6 +103,8 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
         setDialogueOpen(true)
       } else if (isNearSellNPC) {
         setSellDialogueOpen(true)
+      } else if (isNearBattleNPC) {
+        setBattleDialogueOpen(true)
       }
     }
     interactPressed.current = interact
@@ -117,8 +130,12 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
     if (jump && !jumpPressed.current) {
       const position = rigidBodyRef.current.translation()
       // Simple ground check: raycast downward
+      const rayOrigin = { x: position.x, y: position.y, z: position.z }
+      const rayDir = { x: 0, y: -1, z: 0 }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rayObj = { origin: rayOrigin, dir: rayDir } as any
       const ray = world.castRay(
-        { origin: { x: position.x, y: position.y, z: position.z }, dir: { x: 0, y: -1, z: 0 } },
+        rayObj,
         1.5, // Max distance to check
         true, // Solid
         undefined,

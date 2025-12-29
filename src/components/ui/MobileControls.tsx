@@ -54,16 +54,20 @@ export function MobileControls() {
   // Check if near an NPC
   const nearNPC = useGameStore((state) => state.nearNPC)
   const nearSellNPC = useGameStore((state) => state.nearSellNPC)
-  const canInteract = nearNPC || nearSellNPC
+  const nearBattleNPC = useGameStore((state) => state.nearBattleNPC)
+  const canInteract = nearNPC || nearSellNPC || nearBattleNPC
 
   // Check if any UI is open - hide controls when UI is open
   const dialogueOpen = useGameStore((state) => state.dialogueOpen)
   const shopOpen = useGameStore((state) => state.shopOpen)
   const sellDialogueOpen = useGameStore((state) => state.sellDialogueOpen)
   const sellShopOpen = useGameStore((state) => state.sellShopOpen)
+  const battleDialogueOpen = useGameStore((state) => state.battleDialogueOpen)
+  const battleCardSelectOpen = useGameStore((state) => state.battleCardSelectOpen)
+  const battleArenaOpen = useGameStore((state) => state.battleArenaOpen)
   const inventoryOpen = useGameStore((state) => state.inventoryOpen)
 
-  const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen
+  const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen || battleDialogueOpen || battleCardSelectOpen || battleArenaOpen
 
   return (
     <div className="fixed inset-0 pointer-events-none z-40">

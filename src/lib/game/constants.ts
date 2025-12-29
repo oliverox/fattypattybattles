@@ -60,3 +60,14 @@ export const SELL_PRICES: Record<string, { min: number; max: number }> = {
   transcendent: { min: 210, max: 240 },
   secret: { min: 240, max: 270 },
 }
+
+// Battle NPC constants
+export const BATTLE_NPC = {
+  interactionDistance: 5,
+  npcPosition: [-25, 0, 0] as [number, number, number],
+  entryCost: 15,
+  minCards: 3,
+  rewardMin: 30,
+  rewardMax: 50,
+  packChance: 0.15, // 15% chance to win a pack
+}

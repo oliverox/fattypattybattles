@@ -11,6 +11,9 @@ import { LuckShop } from '@/components/ui/LuckShop'
 import { Inventory } from '@/components/ui/Inventory'
 import { SellDialogue } from '@/components/ui/SellDialogue'
 import { SellShop } from '@/components/ui/SellShop'
+import { BattleDialogue } from '@/components/ui/BattleDialogue'
+import { BattleCardSelect } from '@/components/ui/BattleCardSelect'
+import { BattleArena } from '@/components/ui/BattleArena'
 import { MobileControls } from '@/components/ui/MobileControls'
 import { EditAvatarModal } from '@/components/ui/EditAvatarModal'
 
@@ -105,6 +108,9 @@ function GamePage() {
       <LuckShop />
       <SellDialogue />
       <SellShop />
+      <BattleDialogue />
+      <BattleCardSelect />
+      <BattleArena />
 
       {/* Mobile touch controls */}
       <MobileControls />

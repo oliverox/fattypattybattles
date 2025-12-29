@@ -7,13 +7,17 @@ import { AvatarPreview } from '../auth/AvatarPreview';
 const SKIN_COLORS = [
   '#FFECD4', '#FFE0BD', '#FFD5B8', '#F1C27D', '#E0AC69',
   '#C68642', '#8D5524', '#6B4423', '#5C4033', '#3B2F2F',
-];
-const HAIR_STYLES = ['short', 'long', 'spiky', 'bald', 'curly'];
+] as const;
+const HAIR_STYLES = ['short', 'long', 'spiky', 'bald', 'curly'] as const;
 const HAIR_COLORS = [
   '#000000', '#1C1C1C', '#3D2314', '#8B4513', '#A0522D',
   '#D2691E', '#FFD700', '#F4A460', '#FF6347', '#DC143C',
   '#FF69B4', '#4B0082', '#6A5ACD', '#00CED1', '#32CD32',
-];
+] as const;
+
+const DEFAULT_SKIN_COLOR = SKIN_COLORS[0];
+const DEFAULT_HAIR_STYLE = HAIR_STYLES[0];
+const DEFAULT_HAIR_COLOR = HAIR_COLORS[0];
 
 interface EditAvatarModalProps {
   isOpen: boolean;
@@ -26,9 +30,9 @@ interface EditAvatarModalProps {
 }
 
 export function EditAvatarModal({ isOpen, onClose, currentConfig }: EditAvatarModalProps) {
-  const [skinColor, setSkinColor] = useState(currentConfig?.skinColor ?? SKIN_COLORS[0]);
-  const [hairStyle, setHairStyle] = useState(currentConfig?.hairStyle ?? HAIR_STYLES[0]);
-  const [hairColor, setHairColor] = useState(currentConfig?.hairColor ?? HAIR_COLORS[0]);
+  const [skinColor, setSkinColor] = useState<string>(currentConfig?.skinColor ?? DEFAULT_SKIN_COLOR);
+  const [hairStyle, setHairStyle] = useState<string>(currentConfig?.hairStyle ?? DEFAULT_HAIR_STYLE);
+  const [hairColor, setHairColor] = useState<string>(currentConfig?.hairColor ?? DEFAULT_HAIR_COLOR);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
