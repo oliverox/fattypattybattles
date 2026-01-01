@@ -9,14 +9,14 @@ export function ReflectiveFloor() {
         blur={[300, 100]}
         resolution={512}
         mixBlur={1}
-        mixStrength={40}
+        mixStrength={20}
         roughness={1}
         depthScale={1.2}
         minDepthThreshold={0.4}
         maxDepthThreshold={1.4}
-        color={COLORS.darkPurple}
-        metalness={0.5}
-        mirror={0.5}
+        color="#228B22"
+        metalness={0.1}
+        mirror={0.2}
       />
     </mesh>
   )
