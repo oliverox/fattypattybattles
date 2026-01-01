@@ -14,32 +14,32 @@ function EyeMesh({ color }: { color: string }) {
   const eyeColor = new Color(color)
 
   return (
-    <group position={[0, 0.65, -0.35]}>
-      {/* Left eye */}
-      <mesh position={[-0.15, 0, 0]}>
-        <sphereGeometry args={[0.08, 12, 12]} />
+    <group position={[0, 0.55, -0.48]}>
+      {/* Left eye - oval shaped */}
+      <mesh position={[-0.12, 0, 0]} scale={[1, 1.4, 0.5]}>
+        <sphereGeometry args={[0.05, 12, 12]} />
         <meshStandardMaterial color="#FFFFFF" />
       </mesh>
-      <mesh position={[-0.15, 0, -0.04]}>
-        <sphereGeometry args={[0.05, 12, 12]} />
-        <meshStandardMaterial color={color} emissive={eyeColor} emissiveIntensity={0.2} />
+      <mesh position={[-0.12, 0, -0.02]} scale={[1, 1.4, 0.5]}>
+        <sphereGeometry args={[0.035, 12, 12]} />
+        <meshStandardMaterial color={color} emissive={eyeColor} emissiveIntensity={0.3} />
       </mesh>
-      <mesh position={[-0.15, 0, -0.06]}>
-        <sphereGeometry args={[0.025, 8, 8]} />
+      <mesh position={[-0.12, 0, -0.03]}>
+        <sphereGeometry args={[0.015, 8, 8]} />
         <meshBasicMaterial color="#000000" />
       </mesh>
 
-      {/* Right eye */}
-      <mesh position={[0.15, 0, 0]}>
-        <sphereGeometry args={[0.08, 12, 12]} />
+      {/* Right eye - oval shaped */}
+      <mesh position={[0.12, 0, 0]} scale={[1, 1.4, 0.5]}>
+        <sphereGeometry args={[0.05, 12, 12]} />
         <meshStandardMaterial color="#FFFFFF" />
       </mesh>
-      <mesh position={[0.15, 0, -0.04]}>
-        <sphereGeometry args={[0.05, 12, 12]} />
-        <meshStandardMaterial color={color} emissive={eyeColor} emissiveIntensity={0.2} />
+      <mesh position={[0.12, 0, -0.02]} scale={[1, 1.4, 0.5]}>
+        <sphereGeometry args={[0.035, 12, 12]} />
+        <meshStandardMaterial color={color} emissive={eyeColor} emissiveIntensity={0.3} />
       </mesh>
-      <mesh position={[0.15, 0, -0.06]}>
-        <sphereGeometry args={[0.025, 8, 8]} />
+      <mesh position={[0.12, 0, -0.03]}>
+        <sphereGeometry args={[0.015, 8, 8]} />
         <meshBasicMaterial color="#000000" />
       </mesh>
     </group>
@@ -50,43 +50,43 @@ function MouthMesh({ style }: { style: string }) {
   switch (style) {
     case 'smile':
       return (
-        <group position={[0, 0.35, -0.42]}>
-          {[-0.1, -0.05, 0, 0.05, 0.1].map((x, i) => (
-            <mesh key={i} position={[x, -Math.abs(x) * 0.5, 0]}>
-              <sphereGeometry args={[0.025, 8, 8]} />
-              <meshBasicMaterial color="#CC5555" />
+        <group position={[0, 0.3, -0.5]}>
+          {[-0.08, -0.04, 0, 0.04, 0.08].map((x, i) => (
+            <mesh key={i} position={[x, -Math.abs(x) * 0.4, 0]}>
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshBasicMaterial color="#222222" />
             </mesh>
           ))}
         </group>
       )
     case 'open':
       return (
-        <mesh position={[0, 0.35, -0.42]}>
-          <sphereGeometry args={[0.08, 12, 12]} />
+        <mesh position={[0, 0.3, -0.5]}>
+          <sphereGeometry args={[0.06, 12, 12]} />
           <meshBasicMaterial color="#330000" />
         </mesh>
       )
     case 'surprised':
       return (
-        <mesh position={[0, 0.35, -0.42]}>
-          <torusGeometry args={[0.06, 0.02, 8, 16]} />
-          <meshBasicMaterial color="#CC5555" />
+        <mesh position={[0, 0.3, -0.5]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.04, 0.015, 8, 16]} />
+          <meshBasicMaterial color="#222222" />
         </mesh>
       )
     case 'flat':
       return (
-        <mesh position={[0, 0.35, -0.42]}>
-          <boxGeometry args={[0.15, 0.02, 0.02]} />
-          <meshBasicMaterial color="#CC5555" />
+        <mesh position={[0, 0.3, -0.5]}>
+          <boxGeometry args={[0.12, 0.015, 0.015]} />
+          <meshBasicMaterial color="#222222" />
         </mesh>
       )
     case 'grin':
       return (
-        <group position={[0, 0.35, -0.42]}>
-          {[-0.12, -0.06, 0, 0.06, 0.12].map((x, i) => (
-            <mesh key={i} position={[x, -Math.abs(x) * 0.3, 0]}>
-              <sphereGeometry args={[0.03, 8, 8]} />
-              <meshBasicMaterial color="#CC5555" />
+        <group position={[0, 0.3, -0.5]}>
+          {[-0.1, -0.05, 0, 0.05, 0.1].map((x, i) => (
+            <mesh key={i} position={[x, -Math.abs(x) * 0.25, 0]}>
+              <sphereGeometry args={[0.025, 8, 8]} />
+              <meshBasicMaterial color="#222222" />
             </mesh>
           ))}
         </group>
@@ -172,7 +172,7 @@ function AvatarModel({ skinColor, hairStyle, hairColor, eyeColor, mouthStyle }: 
   const skin = new Color(skinColor)
 
   return (
-    <group>
+    <group rotation={[0, Math.PI, 0]}>
       {/* Body */}
       <mesh castShadow>
         <capsuleGeometry args={[0.5, 1, 4, 16]} />
@@ -200,12 +200,11 @@ export function AvatarPreview({ skinColor, hairStyle, hairColor, eyeColor, mouth
       <Canvas camera={{ position: [0, 0.5, 3.5], fov: 50 }}>
         <ambientLight intensity={0.6} />
         <directionalLight position={[2, 3, 2]} intensity={0.8} />
+        <directionalLight position={[0, 1, 3]} intensity={0.5} />
         <AvatarModel skinColor={skinColor} hairStyle={hairStyle} hairColor={hairColor} eyeColor={eyeColor} mouthStyle={mouthStyle} />
         <OrbitControls
           enableZoom={false}
           enablePan={false}
-          autoRotate
-          autoRotateSpeed={2}
           minPolarAngle={Math.PI / 3}
           maxPolarAngle={Math.PI / 2}
         />
