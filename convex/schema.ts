@@ -13,6 +13,8 @@ export default defineSchema({
       skinColor: v.string(),
       hairStyle: v.string(),
       hairColor: v.string(),
+      eyeColor: v.optional(v.string()),
+      mouthStyle: v.optional(v.string()),
     })),
     pattyCoins: v.optional(v.number()),
     luckBoosts: v.optional(v.array(v.object({
@@ -42,6 +44,8 @@ export default defineSchema({
       skinColor: v.string(),
       hairStyle: v.string(),
       hairColor: v.string(),
+      eyeColor: v.optional(v.string()),
+      mouthStyle: v.optional(v.string()),
     })),
     x: v.number(),
     y: v.number(),

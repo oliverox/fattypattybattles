@@ -15,10 +15,17 @@ const HAIR_COLORS = [
   '#D2691E', '#FFD700', '#F4A460', '#FF6347', '#DC143C',
   '#FF69B4', '#4B0082', '#6A5ACD', '#00CED1', '#32CD32',
 ] as const;
+const EYE_COLORS = [
+  '#4A4A4A', '#634E34', '#2E536F', '#3D671D', '#497665',
+  '#1C7847', '#7F7F7F', '#00CED1', '#FF69B4', '#FFD700',
+] as const;
+const MOUTH_STYLES = ['smile', 'grin', 'flat', 'open', 'surprised'] as const;
 
 const DEFAULT_SKIN_COLOR = SKIN_COLORS[0];
 const DEFAULT_HAIR_STYLE = HAIR_STYLES[0];
 const DEFAULT_HAIR_COLOR = HAIR_COLORS[0];
+const DEFAULT_EYE_COLOR = EYE_COLORS[0];
+const DEFAULT_MOUTH_STYLE = MOUTH_STYLES[0];
 
 export function ProfileForm() {
   const [loading, setLoading] = useState(false);
@@ -27,6 +34,8 @@ export function ProfileForm() {
   const [skinColor, setSkinColor] = useState<string>(DEFAULT_SKIN_COLOR);
   const [hairStyle, setHairStyle] = useState<string>(DEFAULT_HAIR_STYLE);
   const [hairColor, setHairColor] = useState<string>(DEFAULT_HAIR_COLOR);
+  const [eyeColor, setEyeColor] = useState<string>(DEFAULT_EYE_COLOR);
+  const [mouthStyle, setMouthStyle] = useState<string>(DEFAULT_MOUTH_STYLE);
 
   const createUserProfile = useMutation(api.users.createUserProfile);
   const checkUsername = useQuery(api.users.checkUsername,
@@ -57,6 +66,8 @@ export function ProfileForm() {
           skinColor,
           hairStyle,
           hairColor,
+          eyeColor,
+          mouthStyle,
         },
       });
       // Profile created successfully - Convex will automatically update the UI via reactive queries
@@ -82,6 +93,8 @@ export function ProfileForm() {
             skinColor={skinColor}
             hairStyle={hairStyle}
             hairColor={hairColor}
+            eyeColor={eyeColor}
+            mouthStyle={mouthStyle}
           />
           <p className="text-sm text-gray-600 text-center mt-3">
             Welcome, <strong>{username || 'Player'}</strong>!<br />
@@ -164,6 +177,47 @@ export function ProfileForm() {
                   }`}
                   style={{ backgroundColor: color }}
                 />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Eye Color
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {EYE_COLORS.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  onClick={() => setEyeColor(color)}
+                  className={`w-9 h-9 rounded-full border-2 transition-all ${
+                    eyeColor === color ? 'border-blue-500 scale-110' : 'border-gray-300'
+                  }`}
+                  style={{ backgroundColor: color }}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mouth Style
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {MOUTH_STYLES.map((style) => (
+                <button
+                  key={style}
+                  type="button"
+                  onClick={() => setMouthStyle(style)}
+                  className={`px-4 py-2 rounded-lg border-2 transition-colors capitalize ${
+                    mouthStyle === style
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  {style}
+                </button>
               ))}
             </div>
           </div>

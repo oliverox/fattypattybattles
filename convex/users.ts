@@ -9,6 +9,8 @@ export const createUserProfile = mutation({
       skinColor: v.string(),
       hairStyle: v.string(),
       hairColor: v.string(),
+      eyeColor: v.optional(v.string()),
+      mouthStyle: v.optional(v.string()),
     }),
   },
   handler: async (ctx, args) => {
@@ -189,6 +191,8 @@ export const updateAvatarConfig = mutation({
       skinColor: v.string(),
       hairStyle: v.string(),
       hairColor: v.string(),
+      eyeColor: v.optional(v.string()),
+      mouthStyle: v.optional(v.string()),
     }),
   },
   handler: async (ctx, args) => {
