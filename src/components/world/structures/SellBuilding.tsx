@@ -26,7 +26,7 @@ export function SellBuilding({ position = [0, 0, 0], rotation = [0, 0, 0] }: Sel
       <CuboidCollider args={[4, 5, 4]} position={[0, 5, 0]} />
       <group>
         {/* Main building body */}
-        <mesh position={[0, 5, 0]}>
+        <mesh position={[0, 5, 0]} castShadow receiveShadow>
           <boxGeometry args={[8, 10, 8]} />
           <meshStandardMaterial color={COLORS.darkPurple} />
         </mesh>

@@ -29,7 +29,7 @@ export function BattleArenaStructure({ position = [0, 0, 0], rotation = [0, 0, 0
       <CuboidCollider args={[4, 5, 4]} position={[0, 5, 0]} />
       <group>
         {/* Main building body - darker, more industrial */}
-        <mesh position={[0, 5, 0]}>
+        <mesh position={[0, 5, 0]} castShadow receiveShadow>
           <boxGeometry args={[8, 10, 8]} />
           <meshStandardMaterial color={darkMetal} metalness={0.8} roughness={0.3} />
         </mesh>

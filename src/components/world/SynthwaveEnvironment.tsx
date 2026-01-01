@@ -20,11 +20,10 @@ export function SynthwaveEnvironment() {
     <group>
       {/* Sky and atmosphere */}
       <SynthwaveSky />
-      <fog attach="fog" args={[COLORS.darkPurple, 30, 150]} />
+      <fog attach="fog" args={['#87CEEB', 50, 200]} />
 
       {/* Ground */}
       <ReflectiveFloor />
-      <NeonGrid />
 
       {/* Static ground collider */}
       <RigidBody type="fixed" position={[0, -0.1, 0]}>

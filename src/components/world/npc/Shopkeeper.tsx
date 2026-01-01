@@ -46,7 +46,7 @@ export function Shopkeeper({ position = [0, 0, 0] }: ShopkeeperProps) {
       <Float speed={2} rotationIntensity={0} floatIntensity={0.3}>
         <group ref={groupRef}>
           {/* Body - Dodecahedron */}
-          <mesh position={[0, 1.2, 0]}>
+          <mesh position={[0, 1.2, 0]} castShadow>
             <dodecahedronGeometry args={[0.8]} />
             <meshStandardMaterial
               color={COLORS.neonPurple}
@@ -105,7 +105,7 @@ export function Shopkeeper({ position = [0, 0, 0] }: ShopkeeperProps) {
           </mesh>
 
           {/* Base/pedestal */}
-          <mesh position={[0, 0.15, 0]}>
+          <mesh position={[0, 0.15, 0]} castShadow>
             <cylinderGeometry args={[0.5, 0.6, 0.3, 8]} />
             <meshStandardMaterial
               color={COLORS.darkPurple}

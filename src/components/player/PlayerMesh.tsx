@@ -122,7 +122,7 @@ export function PlayerMesh({ facingAngle, avatarConfig }: PlayerMeshProps) {
   return (
     <group ref={groupRef}>
       {/* Body - uses skin color */}
-      <mesh ref={meshRef} castShadow>
+      <mesh ref={meshRef} castShadow receiveShadow>
         <capsuleGeometry args={[0.5, 1, 4, 16]} />
         <meshStandardMaterial
           color={config.skinColor}

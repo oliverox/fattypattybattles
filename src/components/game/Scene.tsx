@@ -18,14 +18,23 @@ export function Scene({ avatarConfig }: SceneProps) {
     <KeyboardControls map={controlsMap}>
       <Suspense fallback={null}>
         <Physics gravity={[PHYSICS.gravity.x, PHYSICS.gravity.y, PHYSICS.gravity.z]}>
-          {/* Ambient lighting with purple tint */}
-          <ambientLight intensity={0.3} color={COLORS.neonPurple} />
+          {/* Ambient lighting */}
+          <ambientLight intensity={0.4} color="#ffffff" />
 
-          {/* Sun light from horizon */}
+          {/* Sun light with shadows */}
           <directionalLight
-            position={[0, 50, -100]}
-            intensity={0.5}
-            color={COLORS.sunOrange}
+            position={[50, 100, 50]}
+            intensity={1}
+            color="#ffffff"
+            castShadow
+            shadow-mapSize-width={2048}
+            shadow-mapSize-height={2048}
+            shadow-camera-far={200}
+            shadow-camera-left={-100}
+            shadow-camera-right={100}
+            shadow-camera-top={100}
+            shadow-camera-bottom={-100}
+            shadow-bias={-0.0001}
           />
 
           {/* Player */}

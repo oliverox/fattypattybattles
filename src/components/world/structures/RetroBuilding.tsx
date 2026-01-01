@@ -30,7 +30,7 @@ export function RetroBuilding({ position = [0, 0, 0], rotation = [0, 0, 0] }: Re
       <CuboidCollider args={[8, 15, 5]} position={[0, 15, 0]} />
       <group>
         {/* Main building body */}
-        <mesh position={[0, 15, 0]}>
+        <mesh position={[0, 15, 0]} castShadow receiveShadow>
           <boxGeometry args={[16, 30, 10]} />
           <meshStandardMaterial color={COLORS.darkPurple} />
         </mesh>

@@ -160,12 +160,12 @@ export function RemotePlayer({
       {/* Player body */}
       <group>
         {/* Body - uses skin color */}
-        <mesh castShadow>
+        <mesh castShadow receiveShadow>
           <capsuleGeometry args={[0.5, 1, 4, 16]} />
           <meshStandardMaterial
             color={config.skinColor}
             emissive={skinColor}
-            emissiveIntensity={0.5}
+            emissiveIntensity={0.3}
             metalness={0.3}
             roughness={0.5}
           />

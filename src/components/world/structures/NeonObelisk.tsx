@@ -26,13 +26,13 @@ export function NeonObelisk({ position = [0, 0, 0] }: NeonObeliskProps) {
       <CuboidCollider args={[1, 10, 1]} position={[0, 10, 0]} />
       <group>
         {/* Main obelisk body */}
-        <mesh position={[0, 10, 0]}>
+        <mesh position={[0, 10, 0]} castShadow receiveShadow>
           <boxGeometry args={[2, 20, 2]} />
           <meshStandardMaterial color={COLORS.darkPurple} />
         </mesh>
 
         {/* Pointed top */}
-        <mesh position={[0, 21, 0]}>
+        <mesh position={[0, 21, 0]} castShadow>
           <coneGeometry args={[1.4, 2, 4]} />
           <meshStandardMaterial color={COLORS.darkPurple} />
         </mesh>

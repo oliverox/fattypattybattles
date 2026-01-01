@@ -25,7 +25,7 @@ export function NeonPyramid({ position = [0, 0, 0], scale = 1 }: NeonPyramidProp
       <ConeCollider args={[5 * scale, 5 * scale]} position={[0, 5 * scale, 0]} />
       <group scale={scale}>
         {/* Solid pyramid base */}
-        <mesh position={[0, 5, 0]}>
+        <mesh position={[0, 5, 0]} castShadow receiveShadow>
           <coneGeometry args={[5, 10, 4]} />
           <meshStandardMaterial
             color={COLORS.darkPurple}

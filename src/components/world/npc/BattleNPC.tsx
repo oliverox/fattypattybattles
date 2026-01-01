@@ -52,7 +52,7 @@ export function BattleNPC({ position = [0, 0, 0] }: BattleNPCProps) {
       <Float speed={1.5} rotationIntensity={0} floatIntensity={0.2}>
         <group ref={groupRef}>
           {/* Head - Box shape */}
-          <mesh position={[0, 2, 0]}>
+          <mesh position={[0, 2, 0]} castShadow>
             <boxGeometry args={[0.8, 0.6, 0.7]} />
             <meshStandardMaterial
               color={robotColor}
@@ -88,7 +88,7 @@ export function BattleNPC({ position = [0, 0, 0] }: BattleNPCProps) {
           </group>
 
           {/* Body - Torso */}
-          <mesh position={[0, 1.2, 0]}>
+          <mesh position={[0, 1.2, 0]} castShadow>
             <boxGeometry args={[1, 1.2, 0.6]} />
             <meshStandardMaterial
               color={robotColor}
@@ -170,7 +170,7 @@ export function BattleNPC({ position = [0, 0, 0] }: BattleNPCProps) {
           </mesh>
 
           {/* Base/pedestal */}
-          <mesh position={[0, 0.15, 0]}>
+          <mesh position={[0, 0.15, 0]} castShadow>
             <cylinderGeometry args={[0.6, 0.7, 0.3, 8]} />
             <meshStandardMaterial
               color={COLORS.darkPurple}

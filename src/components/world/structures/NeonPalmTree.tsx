@@ -23,7 +23,7 @@ export function NeonPalmTree({ position = [0, 0, 0] }: NeonPalmTreeProps) {
       <CylinderCollider args={[4, 0.3]} position={[0, 4, 0]} />
       <group>
         {/* Trunk */}
-        <mesh position={[0, 4, 0]}>
+        <mesh position={[0, 4, 0]} castShadow receiveShadow>
           <cylinderGeometry args={[0.3, 0.5, 8, 8]} />
           <meshStandardMaterial color="#2d1b4e" />
         </mesh>
