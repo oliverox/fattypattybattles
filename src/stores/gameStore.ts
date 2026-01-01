@@ -12,6 +12,7 @@ interface TouchInput {
   zoomIn: boolean
   zoomOut: boolean
   interact: boolean
+  chat: boolean
 }
 
 interface BattleCard {
@@ -69,6 +70,8 @@ interface GameState {
   // Inventory
   inventoryOpen: boolean
   heldCardId: string | null
+  // Chat
+  chatOpen: boolean
   // Mobile Touch Controls
   touchControlsVisible: boolean
   touchInput: TouchInput
@@ -94,6 +97,7 @@ interface GameState {
   closeBattleUI: () => void
   setInventoryOpen: (open: boolean) => void
   setHeldCardId: (cardId: string | null) => void
+  setChatOpen: (open: boolean) => void
   closeAllShopUI: () => void
   closeAllUI: () => void
   // Touch Controls
@@ -126,6 +130,8 @@ export const useGameStore = create<GameState>((set) => ({
   // Inventory
   inventoryOpen: false,
   heldCardId: null,
+  // Chat
+  chatOpen: false,
   // Mobile Touch Controls
   touchControlsVisible: true,
   touchInput: {
@@ -139,6 +145,7 @@ export const useGameStore = create<GameState>((set) => ({
     zoomIn: false,
     zoomOut: false,
     interact: false,
+    chat: false,
   },
   // Setters
   setPlayerPosition: (position) => set({ playerPosition: position }),
@@ -169,6 +176,7 @@ export const useGameStore = create<GameState>((set) => ({
   }),
   setInventoryOpen: (open) => set({ inventoryOpen: open }),
   setHeldCardId: (cardId) => set({ heldCardId: cardId }),
+  setChatOpen: (open) => set({ chatOpen: open }),
   closeAllShopUI: () => set({ dialogueOpen: false, shopOpen: false, activeShop: null }),
   closeAllUI: () => set({
     dialogueOpen: false,
@@ -184,6 +192,7 @@ export const useGameStore = create<GameState>((set) => ({
     battleData: null,
     battleResult: null,
     inventoryOpen: false,
+    chatOpen: false,
   }),
   // Touch Controls
   setTouchControlsVisible: (visible) => set({ touchControlsVisible: visible }),

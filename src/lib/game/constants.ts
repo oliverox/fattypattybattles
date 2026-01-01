@@ -71,3 +71,12 @@ export const BATTLE_NPC = {
   rewardMax: 50,
   packChance: 0.15, // 15% chance to win a pack
 }
+
+// Multiplayer constants
+export const MULTIPLAYER = {
+  maxPlayers: 15,
+  positionUpdateRate: 100, // ms between position updates
+  chatMaxLength: 500,
+  interpolationSpeed: 0.1, // lerp factor for remote player movement
+  defaultMapId: 'main',
+}

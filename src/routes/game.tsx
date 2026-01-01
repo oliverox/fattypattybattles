@@ -16,6 +16,8 @@ import { BattleCardSelect } from '@/components/ui/BattleCardSelect'
 import { BattleArena } from '@/components/ui/BattleArena'
 import { MobileControls } from '@/components/ui/MobileControls'
 import { EditAvatarModal } from '@/components/ui/EditAvatarModal'
+import { ChatUI } from '@/components/ui/ChatUI'
+import { MULTIPLAYER } from '@/lib/game/constants'
 
 export const Route = createFileRoute('/game')({
   component: GamePage,
@@ -111,6 +113,7 @@ function GamePage() {
       <BattleDialogue />
       <BattleCardSelect />
       <BattleArena />
+      <ChatUI mapId={MULTIPLAYER.defaultMapId} />
 
       {/* Mobile touch controls */}
       <MobileControls />

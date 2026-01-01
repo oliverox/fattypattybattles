@@ -34,9 +34,15 @@ export default defineSchema({
     .index("by_clerkId", ["clerkId"])
     .index("by_username", ["username"]),
 
-  // Player Positions - real-time world state
+  // Player Positions - real-time world state for multiplayer
   playerPositions: defineTable({
     userId: v.string(),
+    username: v.string(),
+    avatarConfig: v.optional(v.object({
+      skinColor: v.string(),
+      hairStyle: v.string(),
+      hairColor: v.string(),
+    })),
     x: v.number(),
     y: v.number(),
     z: v.number(),
@@ -47,6 +53,16 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_mapId", ["mapId", "isOnline"]),
+
+  // Chat Messages - real-time multiplayer chat
+  chatMessages: defineTable({
+    userId: v.string(),
+    username: v.string(),
+    message: v.string(),
+    mapId: v.string(),
+    timestamp: v.number(),
+  })
+    .index("by_mapId", ["mapId", "timestamp"]),
 
   // Cards - master card definitions
   cards: defineTable({

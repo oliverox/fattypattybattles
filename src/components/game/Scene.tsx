@@ -2,8 +2,9 @@ import { Suspense } from 'react'
 import { Physics } from '@react-three/rapier'
 import { KeyboardControls } from '@react-three/drei'
 import { controlsMap } from '@/lib/game/controls'
-import { PHYSICS, COLORS } from '@/lib/game/constants'
+import { PHYSICS, COLORS, MULTIPLAYER } from '@/lib/game/constants'
 import { PlayerController } from '@/components/player/PlayerController'
+import { RemotePlayersManager } from '@/components/player/RemotePlayersManager'
 import { SynthwaveEnvironment } from '@/components/world/SynthwaveEnvironment'
 import { PostProcessing } from './PostProcessing'
 import type { AvatarConfig } from '@/components/player/PlayerMesh'
@@ -29,6 +30,9 @@ export function Scene({ avatarConfig }: SceneProps) {
 
           {/* Player */}
           <PlayerController avatarConfig={avatarConfig} />
+
+          {/* Remote Players (Multiplayer) */}
+          <RemotePlayersManager mapId={MULTIPLAYER.defaultMapId} />
 
           {/* Environment */}
           <SynthwaveEnvironment />

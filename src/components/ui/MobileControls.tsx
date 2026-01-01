@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useGameStore } from '@/stores/gameStore'
 
-type TouchInputKey = 'forward' | 'backward' | 'left' | 'right' | 'turnLeft' | 'turnRight' | 'jump' | 'zoomIn' | 'zoomOut' | 'interact'
+type TouchInputKey = 'forward' | 'backward' | 'left' | 'right' | 'turnLeft' | 'turnRight' | 'jump' | 'zoomIn' | 'zoomOut' | 'interact' | 'chat'
 
 interface ControlButtonProps {
   inputKey: TouchInputKey
@@ -50,6 +50,7 @@ export function MobileControls() {
   const touchControlsVisible = useGameStore((state) => state.touchControlsVisible)
   const toggleTouchControls = useGameStore((state) => state.toggleTouchControls)
   const setInventoryOpen = useGameStore((state) => state.setInventoryOpen)
+  const setChatOpen = useGameStore((state) => state.setChatOpen)
 
   // Check if near an NPC
   const nearNPC = useGameStore((state) => state.nearNPC)
@@ -66,8 +67,9 @@ export function MobileControls() {
   const battleCardSelectOpen = useGameStore((state) => state.battleCardSelectOpen)
   const battleArenaOpen = useGameStore((state) => state.battleArenaOpen)
   const inventoryOpen = useGameStore((state) => state.inventoryOpen)
+  const chatOpen = useGameStore((state) => state.chatOpen)
 
-  const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen || battleDialogueOpen || battleCardSelectOpen || battleArenaOpen
+  const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen || battleDialogueOpen || battleCardSelectOpen || battleArenaOpen || chatOpen
 
   return (
     <div className="fixed inset-0 pointer-events-none z-40">
@@ -106,6 +108,25 @@ export function MobileControls() {
             title="Inventory"
           >
             🎒
+          </button>
+        )}
+
+        {/* Chat Button - Only show when touch controls visible and no UI open */}
+        {touchControlsVisible && !anyUIOpen && (
+          <button
+            onClick={() => setChatOpen(true)}
+            className="
+              w-12 h-12
+              bg-black/40 hover:bg-black/60
+              border-2 border-cyan-400/50
+              rounded-xl
+              flex items-center justify-center
+              text-white text-xl
+              transition-colors
+            "
+            title="Chat"
+          >
+            💬
           </button>
         )}
       </div>

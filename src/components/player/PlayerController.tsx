@@ -4,10 +4,11 @@ import { useKeyboardControls } from '@react-three/drei'
 import { RigidBody, CapsuleCollider, type RapierRigidBody, useRapier } from '@react-three/rapier'
 import { Vector3 } from 'three'
 import { Controls } from '@/lib/game/controls'
-import { PHYSICS, CAMERA, SHOP, SELL_NPC, BATTLE_NPC } from '@/lib/game/constants'
+import { PHYSICS, CAMERA, SHOP, SELL_NPC, BATTLE_NPC, MULTIPLAYER } from '@/lib/game/constants'
 import { PlayerMesh, type AvatarConfig } from './PlayerMesh'
 import { ThirdPersonCamera } from './ThirdPersonCamera'
 import { useGameStore } from '@/stores/gameStore'
+import { usePositionSync } from '@/hooks/usePositionSync'
 
 interface PlayerControllerProps {
   avatarConfig?: AvatarConfig
@@ -17,6 +18,7 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
   const rigidBodyRef = useRef<RapierRigidBody>(null)
   const [, getKeys] = useKeyboardControls<Controls>()
   const { world } = useRapier()
+  const { syncPosition } = usePositionSync(MULTIPLAYER.defaultMapId)
 
   // Movement direction vector (reused to avoid allocations)
   const direction = useRef(new Vector3())
@@ -30,6 +32,8 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
   const interactPressed = useRef(false)
   // Track if inventory key was pressed last frame
   const inventoryPressed = useRef(false)
+  // Track if chat key was pressed last frame
+  const chatPressed = useRef(false)
   // NPC positions for proximity check
   const npcPosition = useRef(new Vector3(...SHOP.npcPosition))
   const sellNpcPosition = useRef(new Vector3(...SELL_NPC.npcPosition))
@@ -46,6 +50,7 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
       sellDialogueOpen, sellShopOpen, inventoryOpen, setInventoryOpen,
       nearBattleNPC, setNearBattleNPC, setBattleDialogueOpen,
       battleDialogueOpen, battleCardSelectOpen, battleArenaOpen,
+      chatOpen, setChatOpen,
       touchInput
     } = state
 
@@ -61,6 +66,7 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
     const zoomOut = keys.zoomOut || touchInput.zoomOut
     const interact = keys.interact || touchInput.interact
     const inventory = keys.inventory
+    const chat = keys.chat || touchInput.chat
 
     // Check proximity to Shop NPC
     const position = rigidBodyRef.current.translation()
@@ -88,14 +94,23 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
       setNearBattleNPC(isNearBattleNPC)
     }
 
+    // Sync position to server for multiplayer
+    syncPosition(playerPos, orbitAngle.current)
+
     // Check if any UI is open
-    const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen || battleDialogueOpen || battleCardSelectOpen || battleArenaOpen
+    const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen || battleDialogueOpen || battleCardSelectOpen || battleArenaOpen || chatOpen
 
     // Handle inventory key (B) - toggle inventory
     if (inventory && !inventoryPressed.current && !anyUIOpen) {
       setInventoryOpen(true)
     }
     inventoryPressed.current = inventory
+
+    // Handle chat key (C) - toggle chat
+    if (chat && !chatPressed.current && !anyUIOpen) {
+      setChatOpen(true)
+    }
+    chatPressed.current = chat
 
     // Handle interact key (T) - only trigger on key down, not hold
     if (interact && !interactPressed.current && !anyUIOpen) {
