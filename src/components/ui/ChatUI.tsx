@@ -91,7 +91,7 @@ export function ChatUI({ mapId }: ChatUIProps) {
     if (recentMessages.length === 0) return null
 
     return (
-      <div className="fixed bottom-4 left-4 z-40 pointer-events-none">
+      <div className="fixed right-4 top-1/2 -translate-y-1/2 z-40 pointer-events-none">
         <div className="bg-black/40 rounded-lg p-2 max-w-xs">
           {recentMessages.map((msg) => (
             <div
@@ -107,7 +107,7 @@ export function ChatUI({ mapId }: ChatUIProps) {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 z-50 w-80">
+    <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50 w-80">
       {/* Chat container */}
       <div className="bg-black/80 border border-cyan-500/50 rounded-lg overflow-hidden">
         {/* Header */}
