@@ -4,7 +4,7 @@ import { COLORS } from '@/lib/game/constants'
 export function NeonGrid() {
   return (
     <Grid
-      position={[0, 0.01, 0]}
+      position={[0, 0.05, 0]}
       args={[200, 200]}
       cellSize={2}
       cellThickness={1}

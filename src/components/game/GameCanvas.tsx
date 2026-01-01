@@ -16,6 +16,7 @@ export function GameCanvas({ avatarConfig }: GameCanvasProps) {
         powerPreference: 'high-performance',
         antialias: true,
         alpha: false,
+        logarithmicDepthBuffer: true,
       }}
       shadows
     >
