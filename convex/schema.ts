@@ -92,6 +92,42 @@ export default defineSchema({
       position: v.number(),
     }))),
     battleStartedAt: v.optional(v.number()),
+    // Stored battle result - resolved once, read by both players
+    battleResult: v.optional(v.object({
+      winnerId: v.string(),
+      winnerUsername: v.string(),
+      loserId: v.string(),
+      loserUsername: v.string(),
+      winnerRole: v.union(v.literal("challenger"), v.literal("target")),
+      challengerWins: v.number(),
+      targetWins: v.number(),
+      rounds: v.array(v.object({
+        round: v.number(),
+        challengerCard: v.object({
+          cardId: v.id("cards"),
+          name: v.string(),
+          attack: v.number(),
+          defense: v.number(),
+          rarity: v.string(),
+          position: v.number(),
+          currentDefense: v.number(),
+        }),
+        targetCard: v.object({
+          cardId: v.id("cards"),
+          name: v.string(),
+          attack: v.number(),
+          defense: v.number(),
+          rarity: v.string(),
+          position: v.number(),
+          currentDefense: v.number(),
+        }),
+        winner: v.union(v.literal("challenger"), v.literal("target"), v.literal("draw")),
+        damage: v.number(),
+      })),
+      coinsWon: v.number(),
+      packWon: v.union(v.string(), v.null()),
+      winnerNewBalance: v.number(),
+    })),
   })
     .index("by_challengerId", ["challengerId", "status"])
     .index("by_targetId", ["targetId", "status"]),

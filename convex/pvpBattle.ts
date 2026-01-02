@@ -320,6 +320,11 @@ export const resolvePvpBattle = mutation({
       throw new Error("Both players must submit cards first");
     }
 
+    // If battle already resolved, return the stored result
+    if (request.battleResult) {
+      return request.battleResult;
+    }
+
     // Get card details for both players
     const getCardDetails = async (
       cards: Array<{ cardId: Id<"cards">; position: number }>
@@ -538,11 +543,12 @@ export const resolvePvpBattle = mutation({
       battleLog: rounds,
     });
 
-    return {
+    // Build result object
+    const battleResult = {
       winnerId,
-      winnerUsername: winner.username,
+      winnerUsername: winner.username ?? "Unknown",
       loserId,
-      loserUsername: loser.username,
+      loserUsername: loser.username ?? "Unknown",
       winnerRole,
       challengerWins,
       targetWins,
@@ -551,5 +557,10 @@ export const resolvePvpBattle = mutation({
       packWon,
       winnerNewBalance: (winner.pattyCoins ?? 0) + coinsWon,
     };
+
+    // Store result so both players see the same battle
+    await ctx.db.patch(requestId, { battleResult });
+
+    return battleResult;
   },
 });

@@ -48,9 +48,9 @@ interface BattleResult {
 
 interface PvpBattleResult {
   winnerId: string
-  winnerUsername: string | undefined
+  winnerUsername: string
   loserId: string
-  loserUsername: string | undefined
+  loserUsername: string
   winnerRole: 'challenger' | 'target'
   challengerWins: number
   targetWins: number
