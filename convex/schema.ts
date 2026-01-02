@@ -68,6 +68,34 @@ export default defineSchema({
   })
     .index("by_mapId", ["mapId", "timestamp"]),
 
+  // PvP Battle Requests - player-vs-player battle invitations
+  pvpBattleRequests: defineTable({
+    challengerId: v.string(),
+    challengerUsername: v.string(),
+    targetId: v.string(),
+    targetUsername: v.string(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("declined"),
+      v.literal("expired"),
+      v.literal("cancelled")
+    ),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+    challengerCards: v.optional(v.array(v.object({
+      cardId: v.id("cards"),
+      position: v.number(),
+    }))),
+    targetCards: v.optional(v.array(v.object({
+      cardId: v.id("cards"),
+      position: v.number(),
+    }))),
+    battleStartedAt: v.optional(v.number()),
+  })
+    .index("by_challengerId", ["challengerId", "status"])
+    .index("by_targetId", ["targetId", "status"]),
+
   // Cards - master card definitions
   cards: defineTable({
     name: v.string(),

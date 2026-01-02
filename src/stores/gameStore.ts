@@ -46,6 +46,31 @@ interface BattleResult {
   newBalance: number
 }
 
+interface PvpBattleResult {
+  winnerId: string
+  winnerUsername: string | undefined
+  loserId: string
+  loserUsername: string | undefined
+  winnerRole: 'challenger' | 'target'
+  challengerWins: number
+  targetWins: number
+  rounds: Array<{
+    round: number
+    challengerCard: BattleCard & { currentDefense: number }
+    targetCard: BattleCard & { currentDefense: number }
+    winner: 'challenger' | 'target' | 'draw'
+    damage: number
+  }>
+  coinsWon: number
+  packWon: string | null
+  winnerNewBalance: number
+}
+
+interface PvpTargetPlayer {
+  userId: string
+  username: string
+}
+
 interface GameState {
   playerPosition: Vector3
   isMoving: boolean
@@ -72,6 +97,16 @@ interface GameState {
   heldCardId: string | null
   // Chat
   chatOpen: boolean
+  // PvP Battle
+  pvpTargetPlayer: PvpTargetPlayer | null
+  pvpRequestDialogOpen: boolean
+  pvpIncomingDialogOpen: boolean
+  pvpIncomingRequestId: string | null
+  pvpWaitingForOpponent: boolean
+  pvpBattleRequestId: string | null
+  isPvpBattle: boolean
+  pvpOpponentUsername: string | null
+  pvpBattleResult: PvpBattleResult | null
   // Mobile Touch Controls
   touchControlsVisible: boolean
   touchInput: TouchInput
@@ -100,6 +135,17 @@ interface GameState {
   setChatOpen: (open: boolean) => void
   closeAllShopUI: () => void
   closeAllUI: () => void
+  // PvP Battle
+  setPvpTargetPlayer: (player: PvpTargetPlayer | null) => void
+  setPvpRequestDialogOpen: (open: boolean) => void
+  setPvpIncomingDialogOpen: (open: boolean) => void
+  setPvpIncomingRequestId: (id: string | null) => void
+  setPvpWaitingForOpponent: (waiting: boolean) => void
+  setPvpBattleRequestId: (id: string | null) => void
+  setIsPvpBattle: (isPvp: boolean) => void
+  setPvpOpponentUsername: (username: string | null) => void
+  setPvpBattleResult: (result: PvpBattleResult | null) => void
+  closePvpUI: () => void
   // Touch Controls
   setTouchControlsVisible: (visible: boolean) => void
   toggleTouchControls: () => void
@@ -132,6 +178,16 @@ export const useGameStore = create<GameState>((set) => ({
   heldCardId: null,
   // Chat
   chatOpen: false,
+  // PvP Battle
+  pvpTargetPlayer: null,
+  pvpRequestDialogOpen: false,
+  pvpIncomingDialogOpen: false,
+  pvpIncomingRequestId: null,
+  pvpWaitingForOpponent: false,
+  pvpBattleRequestId: null,
+  isPvpBattle: false,
+  pvpOpponentUsername: null,
+  pvpBattleResult: null,
   // Mobile Touch Controls
   touchControlsVisible: true,
   touchInput: {
@@ -178,6 +234,32 @@ export const useGameStore = create<GameState>((set) => ({
   setHeldCardId: (cardId) => set({ heldCardId: cardId }),
   setChatOpen: (open) => set({ chatOpen: open }),
   closeAllShopUI: () => set({ dialogueOpen: false, shopOpen: false, activeShop: null }),
+  // PvP Battle
+  setPvpTargetPlayer: (player) => set({ pvpTargetPlayer: player }),
+  setPvpRequestDialogOpen: (open) => set({ pvpRequestDialogOpen: open }),
+  setPvpIncomingDialogOpen: (open) => set({ pvpIncomingDialogOpen: open }),
+  setPvpIncomingRequestId: (id) => set({ pvpIncomingRequestId: id }),
+  setPvpWaitingForOpponent: (waiting) => set({ pvpWaitingForOpponent: waiting }),
+  setPvpBattleRequestId: (id) => set({ pvpBattleRequestId: id }),
+  setIsPvpBattle: (isPvp) => set({ isPvpBattle: isPvp }),
+  setPvpOpponentUsername: (username) => set({ pvpOpponentUsername: username }),
+  setPvpBattleResult: (result) => set({ pvpBattleResult: result }),
+  closePvpUI: () => set({
+    pvpTargetPlayer: null,
+    pvpRequestDialogOpen: false,
+    pvpIncomingDialogOpen: false,
+    pvpIncomingRequestId: null,
+    pvpWaitingForOpponent: false,
+    pvpBattleRequestId: null,
+    isPvpBattle: false,
+    pvpOpponentUsername: null,
+    pvpBattleResult: null,
+    battleCardSelectOpen: false,
+    battleArenaOpen: false,
+    selectedBattleCards: [],
+    battleData: null,
+    battleResult: null,
+  }),
   closeAllUI: () => set({
     dialogueOpen: false,
     shopOpen: false,
@@ -193,6 +275,16 @@ export const useGameStore = create<GameState>((set) => ({
     battleResult: null,
     inventoryOpen: false,
     chatOpen: false,
+    // PvP
+    pvpTargetPlayer: null,
+    pvpRequestDialogOpen: false,
+    pvpIncomingDialogOpen: false,
+    pvpIncomingRequestId: null,
+    pvpWaitingForOpponent: false,
+    pvpBattleRequestId: null,
+    isPvpBattle: false,
+    pvpOpponentUsername: null,
+    pvpBattleResult: null,
   }),
   // Touch Controls
   setTouchControlsVisible: (visible) => set({ touchControlsVisible: visible }),

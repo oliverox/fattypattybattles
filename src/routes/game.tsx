@@ -14,6 +14,9 @@ import { SellShop } from '@/components/ui/SellShop'
 import { BattleDialogue } from '@/components/ui/BattleDialogue'
 import { BattleCardSelect } from '@/components/ui/BattleCardSelect'
 import { BattleArena } from '@/components/ui/BattleArena'
+import { PvpRequestDialog } from '@/components/ui/PvpRequestDialog'
+import { PvpIncomingDialog } from '@/components/ui/PvpIncomingDialog'
+import { PvpWaitingScreen } from '@/components/ui/PvpWaitingScreen'
 import { MobileControls } from '@/components/ui/MobileControls'
 import { EditAvatarModal } from '@/components/ui/EditAvatarModal'
 import { ChatUI } from '@/components/ui/ChatUI'
@@ -113,6 +116,9 @@ function GamePage() {
       <BattleDialogue />
       <BattleCardSelect />
       <BattleArena />
+      <PvpRequestDialog />
+      <PvpIncomingDialog />
+      <PvpWaitingScreen />
       <ChatUI mapId={MULTIPLAYER.defaultMapId} />
 
       {/* Mobile touch controls */}

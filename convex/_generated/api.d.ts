@@ -11,6 +11,7 @@
 import type * as battle from "../battle.js";
 import type * as inventory from "../inventory.js";
 import type * as multiplayer from "../multiplayer.js";
+import type * as pvpBattle from "../pvpBattle.js";
 import type * as shop from "../shop.js";
 import type * as users from "../users.js";
 
@@ -24,6 +25,7 @@ declare const fullApi: ApiFromModules<{
   battle: typeof battle;
   inventory: typeof inventory;
   multiplayer: typeof multiplayer;
+  pvpBattle: typeof pvpBattle;
   shop: typeof shop;
   users: typeof users;
 }>;

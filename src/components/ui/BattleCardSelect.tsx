@@ -5,6 +5,8 @@ import { api } from '../../../convex/_generated/api'
 import { useGameStore } from '@/stores/gameStore'
 import { Id } from '../../../convex/_generated/dataModel'
 
+type PvpRequestId = Id<"pvpBattleRequests">
+
 const RARITY_COLORS: Record<string, string> = {
   common: 'border-gray-400 bg-gray-900',
   uncommon: 'border-green-400 bg-green-900/30',
@@ -30,16 +32,34 @@ export function BattleCardSelect() {
   const setBattleData = useGameStore((state) => state.setBattleData)
   const closeBattleUI = useGameStore((state) => state.closeBattleUI)
 
+  // PvP state
+  const isPvpBattle = useGameStore((state) => state.isPvpBattle)
+  const pvpBattleRequestId = useGameStore((state) => state.pvpBattleRequestId)
+  const pvpOpponentUsername = useGameStore((state) => state.pvpOpponentUsername)
+  const setPvpWaitingForOpponent = useGameStore((state) => state.setPvpWaitingForOpponent)
+  const closePvpUI = useGameStore((state) => state.closePvpUI)
+
   const [selectedCards, setSelectedCards] = useState<SelectedCard[]>([])
   const [isStarting, setIsStarting] = useState(false)
   const [error, setError] = useState('')
+  const [waitingForOpponent, setWaitingForOpponent] = useState(false)
 
   const playerCards = useQuery(
     api.battle.getPlayerCards,
     user?.id ? { clerkId: user.id } : 'skip'
   )
 
+  // Subscribe to PvP request status to know when both players are ready
+  const pvpRequestStatus = useQuery(
+    api.pvpBattle.getBattleRequestStatus,
+    isPvpBattle && pvpBattleRequestId
+      ? { requestId: pvpBattleRequestId as PvpRequestId }
+      : 'skip'
+  )
+
   const startBattle = useMutation(api.battle.startBattle)
+  const submitPvpCards = useMutation(api.pvpBattle.submitPvpCards)
+  const resolvePvpBattle = useMutation(api.pvpBattle.resolvePvpBattle)
 
   // Reset selection when modal opens
   useEffect(() => {
@@ -47,8 +67,23 @@ export function BattleCardSelect() {
       setSelectedCards([])
       setError('')
       setIsStarting(false)
+      setWaitingForOpponent(false)
     }
   }, [battleCardSelectOpen])
+
+  // Handle PvP battle when both players have selected cards
+  useEffect(() => {
+    if (!isPvpBattle || !pvpRequestStatus || !waitingForOpponent) return
+
+    const bothReady = pvpRequestStatus.challengerCards && pvpRequestStatus.targetCards
+
+    if (bothReady && pvpRequestStatus.battleStartedAt) {
+      // Both players ready - start the battle
+      setWaitingForOpponent(false)
+      setBattleCardSelectOpen(false)
+      setBattleArenaOpen(true)
+    }
+  }, [isPvpBattle, pvpRequestStatus, waitingForOpponent, setBattleCardSelectOpen, setBattleArenaOpen])
 
   const handleSelectCard = useCallback((cardId: string) => {
     setSelectedCards((prev) => {
@@ -104,36 +139,62 @@ export function BattleCardSelect() {
     setError('')
 
     try {
-      const result = await startBattle({
-        clerkId: user.id,
-        selectedCards: selectedCards.map((c) => ({
-          cardId: c.cardId as Id<'cards'>,
-          position: c.position,
-        })),
-      })
+      if (isPvpBattle && pvpBattleRequestId) {
+        // PvP battle - submit cards and wait for opponent
+        const result = await submitPvpCards({
+          requestId: pvpBattleRequestId as PvpRequestId,
+          selectedCards: selectedCards.map((c) => ({
+            cardId: c.cardId as Id<'cards'>,
+            position: c.position,
+          })),
+        })
 
-      setBattleData({
-        playerCards: result.playerCards.map((c) => ({
-          ...c,
-          cardId: c.cardId as string,
-        })),
-        npcCards: result.npcCards.map((c) => ({
-          ...c,
-          cardId: c.cardId as string,
-        })),
-        battleId: result.battleId,
-      })
-      setBattleCardSelectOpen(false)
-      setBattleArenaOpen(true)
+        if (result.bothReady) {
+          // Both players ready - transition to arena
+          setBattleCardSelectOpen(false)
+          setBattleArenaOpen(true)
+        } else {
+          // Waiting for opponent to select cards
+          setWaitingForOpponent(true)
+          setIsStarting(false)
+        }
+      } else {
+        // NPC battle
+        const result = await startBattle({
+          clerkId: user.id,
+          selectedCards: selectedCards.map((c) => ({
+            cardId: c.cardId as Id<'cards'>,
+            position: c.position,
+          })),
+        })
+
+        setBattleData({
+          playerCards: result.playerCards.map((c) => ({
+            ...c,
+            cardId: c.cardId as string,
+          })),
+          npcCards: result.npcCards.map((c) => ({
+            ...c,
+            cardId: c.cardId as string,
+          })),
+          battleId: result.battleId,
+        })
+        setBattleCardSelectOpen(false)
+        setBattleArenaOpen(true)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start battle')
       setIsStarting(false)
     }
-  }, [user, selectedCards, startBattle, setBattleData, setBattleCardSelectOpen, setBattleArenaOpen])
+  }, [user, selectedCards, isPvpBattle, pvpBattleRequestId, startBattle, submitPvpCards, setBattleData, setBattleCardSelectOpen, setBattleArenaOpen])
 
   const handleClose = useCallback(() => {
-    closeBattleUI()
-  }, [closeBattleUI])
+    if (isPvpBattle) {
+      closePvpUI()
+    } else {
+      closeBattleUI()
+    }
+  }, [isPvpBattle, closeBattleUI, closePvpUI])
 
   useEffect(() => {
     if (!battleCardSelectOpen) return
@@ -152,14 +213,34 @@ export function BattleCardSelect() {
     return null
   }
 
+  const borderColor = isPvpBattle ? 'border-cyan-500' : 'border-red-500'
+  const shadowColor = isPvpBattle ? 'shadow-cyan-500/20' : 'shadow-red-500/20'
+  const textColor = isPvpBattle ? 'text-cyan-400' : 'text-red-400'
+
   return (
     <div className="absolute inset-0 flex items-center justify-center z-50">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/70" onClick={handleClose} />
 
       {/* Modal */}
-      <div className="relative bg-gray-900/95 border-2 border-red-500 rounded-xl p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden shadow-2xl shadow-red-500/20 flex flex-col">
-        <h2 className="text-red-400 text-2xl font-bold mb-4">Select Your Battle Cards</h2>
+      <div className={`relative bg-gray-900/95 border-2 ${borderColor} rounded-xl p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden shadow-2xl ${shadowColor} flex flex-col`}>
+        <h2 className={`${textColor} text-2xl font-bold mb-2`}>
+          {isPvpBattle ? `Battle vs ${pvpOpponentUsername}` : 'Select Your Battle Cards'}
+        </h2>
+        {isPvpBattle && (
+          <p className="text-gray-400 text-sm mb-4">Choose your 3 best cards to battle!</p>
+        )}
+
+        {/* Waiting for opponent overlay */}
+        {waitingForOpponent && (
+          <div className="absolute inset-0 bg-gray-900/90 flex flex-col items-center justify-center z-10 rounded-xl">
+            <div className="w-16 h-16 border-4 border-cyan-500/30 rounded-full mb-4 relative">
+              <div className="absolute top-0 left-0 w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+            <h3 className="text-cyan-400 text-xl font-bold mb-2">Cards Submitted!</h3>
+            <p className="text-gray-400">Waiting for {pvpOpponentUsername} to select cards...</p>
+          </div>
+        )}
 
         {/* Selection slots */}
         <div className="flex gap-4 mb-4">
@@ -230,17 +311,20 @@ export function BattleCardSelect() {
                 const isSelected = selectedCards.some((c) => c.cardId === card.cardId)
                 const position = selectedCards.find((c) => c.cardId === card.cardId)?.position
 
+                const ringColor = isPvpBattle ? 'ring-cyan-400' : 'ring-red-400'
+                const badgeColor = isPvpBattle ? 'bg-cyan-500' : 'bg-red-500'
+
                 return (
                   <button
                     key={card.inventoryId}
                     onClick={() => handleSelectCard(card.cardId)}
                     className={`relative border-2 rounded-lg p-2 transition-all hover:scale-105
                       ${RARITY_COLORS[card.rarity] || RARITY_COLORS.common}
-                      ${isSelected ? 'ring-2 ring-red-400 ring-offset-2 ring-offset-gray-900' : ''}
+                      ${isSelected ? `ring-2 ${ringColor} ring-offset-2 ring-offset-gray-900` : ''}
                     `}
                   >
                     {isSelected && (
-                      <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
+                      <div className={`absolute -top-2 -right-2 ${badgeColor} text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold`}>
                         {position}
                       </div>
                     )}
@@ -276,10 +360,10 @@ export function BattleCardSelect() {
           </button>
           <button
             onClick={handleStartBattle}
-            disabled={selectedCards.length !== 3 || isStarting}
-            className="flex-1 bg-red-600 hover:bg-red-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-3 px-4 rounded-lg transition-colors font-bold"
+            disabled={selectedCards.length !== 3 || isStarting || waitingForOpponent}
+            className={`flex-1 ${isPvpBattle ? 'bg-cyan-600 hover:bg-cyan-500' : 'bg-red-600 hover:bg-red-500'} disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-3 px-4 rounded-lg transition-colors font-bold`}
           >
-            {isStarting ? 'Starting...' : `Start Battle (${selectedCards.length}/3)`}
+            {isStarting ? 'Submitting...' : waitingForOpponent ? 'Waiting...' : `${isPvpBattle ? 'Submit Cards' : 'Start Battle'} (${selectedCards.length}/3)`}
           </button>
         </div>
 

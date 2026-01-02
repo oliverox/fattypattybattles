@@ -1,5 +1,5 @@
-import { useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useRef, useCallback } from 'react'
+import { useFrame, ThreeEvent } from '@react-three/fiber'
 import { Text, Billboard } from '@react-three/drei'
 import { Group, Color, Vector3, MathUtils } from 'three'
 import { MULTIPLAYER, COLORS } from '@/lib/game/constants'
@@ -13,10 +13,12 @@ interface AvatarConfig {
 }
 
 interface RemotePlayerProps {
+  userId: string
   username: string
   position: { x: number; y: number; z: number }
   rotation: number
   avatarConfig?: AvatarConfig
+  onPlayerClick?: (userId: string, username: string) => void
 }
 
 const DEFAULT_AVATAR: AvatarConfig = {
@@ -186,10 +188,12 @@ function HairMesh({ style, color }: { style: string; color: string }) {
 }
 
 export function RemotePlayer({
+  userId,
   username,
   position,
   rotation,
   avatarConfig,
+  onPlayerClick,
 }: RemotePlayerProps) {
   const groupRef = useRef<Group>(null)
   const currentPosition = useRef(new Vector3(position.x, position.y, position.z))
@@ -197,6 +201,11 @@ export function RemotePlayer({
 
   const config = avatarConfig ?? DEFAULT_AVATAR
   const skinColor = new Color(config.skinColor)
+
+  const handleClick = useCallback((event: ThreeEvent<MouseEvent>) => {
+    event.stopPropagation()
+    onPlayerClick?.(userId, username)
+  }, [userId, username, onPlayerClick])
 
   // Smooth interpolation for position and rotation
   useFrame(() => {
@@ -232,7 +241,18 @@ export function RemotePlayer({
   })
 
   return (
-    <group ref={groupRef} position={[position.x, position.y, position.z]}>
+    <group
+      ref={groupRef}
+      position={[position.x, position.y, position.z]}
+      onClick={handleClick}
+      onPointerDown={handleClick}
+    >
+      {/* Invisible click target sphere for easier clicking */}
+      <mesh visible={false}>
+        <sphereGeometry args={[1.5, 8, 8]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+
       {/* Username tag - billboards to always face camera */}
       <Billboard position={[0, 2.5, 0]}>
         <Text

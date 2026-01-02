@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useMutation } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { useUser } from '@clerk/tanstack-react-start'
 import { api } from '../../../convex/_generated/api'
 import { useGameStore } from '@/stores/gameStore'
 import { Id } from '../../../convex/_generated/dataModel'
+
+type PvpRequestId = Id<"pvpBattleRequests">
 
 const RARITY_COLORS: Record<string, string> = {
   common: 'border-gray-400 bg-gray-900',
@@ -21,8 +23,8 @@ type BattlePhase = 'intro' | 'round' | 'result' | 'final'
 
 interface RoundResult {
   round: number
-  playerCard: { name: string; attack: number; defense: number; currentDefense: number }
-  npcCard: { name: string; attack: number; defense: number; currentDefense: number }
+  playerCard: { cardId: string; name: string; attack: number; defense: number; rarity: string; position: number; currentDefense: number }
+  npcCard: { cardId: string; name: string; attack: number; defense: number; rarity: string; position: number; currentDefense: number }
   winner: 'player' | 'npc' | 'draw'
   damage: number
 }
@@ -35,79 +37,167 @@ export function BattleArena() {
   const setBattleResult = useGameStore((state) => state.setBattleResult)
   const closeBattleUI = useGameStore((state) => state.closeBattleUI)
 
+  // PvP state
+  const isPvpBattle = useGameStore((state) => state.isPvpBattle)
+  const pvpBattleRequestId = useGameStore((state) => state.pvpBattleRequestId)
+  const pvpOpponentUsername = useGameStore((state) => state.pvpOpponentUsername)
+  const pvpBattleResult = useGameStore((state) => state.pvpBattleResult)
+  const setPvpBattleResult = useGameStore((state) => state.setPvpBattleResult)
+  const closePvpUI = useGameStore((state) => state.closePvpUI)
+
   const [phase, setPhase] = useState<BattlePhase>('intro')
   const [currentRound, setCurrentRound] = useState(0)
   const [roundResults, setRoundResults] = useState<RoundResult[]>([])
   const [isResolving, setIsResolving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Query PvP request status to get card data
+  const pvpRequestStatus = useQuery(
+    api.pvpBattle.getBattleRequestStatus,
+    isPvpBattle && pvpBattleRequestId
+      ? { requestId: pvpBattleRequestId as PvpRequestId }
+      : 'skip'
+  )
+
   const resolveBattle = useMutation(api.battle.resolveBattle)
+  const resolvePvpBattle = useMutation(api.pvpBattle.resolvePvpBattle)
 
   // Define resolveBattleAsync BEFORE the useEffect that uses it
   const resolveBattleAsync = useCallback(async () => {
-    if (!user?.id || !battleData) {
-      console.log('[Battle] resolveBattleAsync skipped - missing data:', { hasUser: !!user?.id, hasBattleData: !!battleData })
-      return
-    }
-
-    console.log('[Battle] Starting resolveBattle mutation...')
-    setIsResolving(true)
-    setError(null)
-
-    try {
-      const mutationArgs = {
-        clerkId: user.id,
-        playerCards: battleData.playerCards.map((c) => ({
-          cardId: c.cardId as Id<'cards'>,
-          name: c.name,
-          attack: c.attack,
-          defense: c.defense,
-          rarity: c.rarity,
-          position: c.position,
-        })),
-        npcCards: battleData.npcCards.map((c) => ({
-          cardId: c.cardId as Id<'cards'>,
-          name: c.name,
-          attack: c.attack,
-          defense: c.defense,
-          rarity: c.rarity,
-          position: c.position,
-        })),
+    if (isPvpBattle) {
+      // PvP battle resolution
+      if (!pvpBattleRequestId) {
+        console.log('[PvP Battle] skipped - missing requestId')
+        return
       }
 
-      console.log('[Battle] Mutation args:', JSON.stringify(mutationArgs, null, 2))
+      console.log('[PvP Battle] Starting resolvePvpBattle mutation...')
+      setIsResolving(true)
+      setError(null)
 
-      const result = await resolveBattle(mutationArgs)
+      try {
+        const result = await resolvePvpBattle({
+          requestId: pvpBattleRequestId as PvpRequestId,
+        })
 
-      console.log('[Battle] Mutation completed successfully!')
-      console.log('[Battle] Result:', JSON.stringify(result, null, 2))
+        console.log('[PvP Battle] Mutation completed successfully!')
 
-      setBattleResult(result)
-      setRoundResults(result.rounds)
+        setPvpBattleResult(result)
 
-      // Start animation sequence
-      setTimeout(() => setPhase('round'), 1500)
-    } catch (err) {
-      console.error('[Battle] Resolution failed:', err)
-      const errorMessage = err instanceof Error ? err.message : 'Battle failed - unknown error'
-      console.error('[Battle] Error message:', errorMessage)
-      setError(errorMessage)
-    } finally {
-      setIsResolving(false)
+        // Convert PvP round results to standard format for display
+        // Determine if current user is challenger or target
+        const isChallenger = result.winnerId === user?.id
+          ? result.winnerRole === 'challenger'
+          : result.winnerRole === 'target'
+
+        const convertedRounds: RoundResult[] = result.rounds.map((r) => {
+          const pCard = isChallenger ? r.challengerCard : r.targetCard
+          const oCard = isChallenger ? r.targetCard : r.challengerCard
+          return {
+            round: r.round,
+            playerCard: { ...pCard, cardId: pCard.cardId as string },
+            npcCard: { ...oCard, cardId: oCard.cardId as string },
+            winner: r.winner === 'draw'
+              ? 'draw'
+              : (isChallenger
+                  ? (r.winner === 'challenger' ? 'player' : 'npc')
+                  : (r.winner === 'target' ? 'player' : 'npc')),
+            damage: r.damage,
+          }
+        })
+
+        setRoundResults(convertedRounds)
+
+        // Also set regular battleResult for UI compatibility
+        const didWin = result.winnerId === user?.id
+        setBattleResult({
+          winner: didWin ? 'player' : 'npc',
+          playerWins: isChallenger ? result.challengerWins : result.targetWins,
+          npcWins: isChallenger ? result.targetWins : result.challengerWins,
+          rounds: convertedRounds,
+          coinsWon: didWin ? result.coinsWon : 0,
+          packWon: didWin ? result.packWon : null,
+          newBalance: didWin ? result.winnerNewBalance : 0,
+        })
+
+        // Start animation sequence
+        setTimeout(() => setPhase('round'), 1500)
+      } catch (err) {
+        console.error('[PvP Battle] Resolution failed:', err)
+        const errorMessage = err instanceof Error ? err.message : 'Battle failed - unknown error'
+        setError(errorMessage)
+      } finally {
+        setIsResolving(false)
+      }
+    } else {
+      // NPC battle resolution
+      if (!user?.id || !battleData) {
+        console.log('[Battle] resolveBattleAsync skipped - missing data:', { hasUser: !!user?.id, hasBattleData: !!battleData })
+        return
+      }
+
+      console.log('[Battle] Starting resolveBattle mutation...')
+      setIsResolving(true)
+      setError(null)
+
+      try {
+        const mutationArgs = {
+          clerkId: user.id,
+          playerCards: battleData.playerCards.map((c) => ({
+            cardId: c.cardId as Id<'cards'>,
+            name: c.name,
+            attack: c.attack,
+            defense: c.defense,
+            rarity: c.rarity,
+            position: c.position,
+          })),
+          npcCards: battleData.npcCards.map((c) => ({
+            cardId: c.cardId as Id<'cards'>,
+            name: c.name,
+            attack: c.attack,
+            defense: c.defense,
+            rarity: c.rarity,
+            position: c.position,
+          })),
+        }
+
+        console.log('[Battle] Mutation args:', JSON.stringify(mutationArgs, null, 2))
+
+        const result = await resolveBattle(mutationArgs)
+
+        console.log('[Battle] Mutation completed successfully!')
+        console.log('[Battle] Result:', JSON.stringify(result, null, 2))
+
+        setBattleResult(result)
+        setRoundResults(result.rounds)
+
+        // Start animation sequence
+        setTimeout(() => setPhase('round'), 1500)
+      } catch (err) {
+        console.error('[Battle] Resolution failed:', err)
+        const errorMessage = err instanceof Error ? err.message : 'Battle failed - unknown error'
+        console.error('[Battle] Error message:', errorMessage)
+        setError(errorMessage)
+      } finally {
+        setIsResolving(false)
+      }
     }
-  }, [user, battleData, resolveBattle, setBattleResult])
+  }, [user, battleData, isPvpBattle, pvpBattleRequestId, resolveBattle, resolvePvpBattle, setBattleResult, setPvpBattleResult])
 
   // Start battle resolution when arena opens
   useEffect(() => {
-    if (battleArenaOpen && battleData && !battleResult && !isResolving) {
-      console.log('[Battle] Arena opened, starting battle resolution...')
-      console.log('[Battle] battleData:', JSON.stringify(battleData, null, 2))
+    // For NPC battles, we need battleData. For PvP, we need pvpRequestStatus with both cards submitted.
+    const npcReady = !isPvpBattle && battleData && !battleResult && !isResolving
+    const pvpReady = isPvpBattle && pvpRequestStatus?.challengerCards && pvpRequestStatus?.targetCards && !pvpBattleResult && !isResolving
+
+    if (battleArenaOpen && (npcReady || pvpReady)) {
+      console.log('[Battle] Arena opened, starting battle resolution...', { isPvpBattle, npcReady, pvpReady })
       setPhase('intro')
       setCurrentRound(0)
       setRoundResults([])
       resolveBattleAsync()
     }
-  }, [battleArenaOpen, battleData, battleResult, isResolving, resolveBattleAsync])
+  }, [battleArenaOpen, battleData, battleResult, isResolving, resolveBattleAsync, isPvpBattle, pvpRequestStatus, pvpBattleResult])
 
   // Advance through rounds
   useEffect(() => {
@@ -137,28 +227,57 @@ export function BattleArena() {
   }, [phase, currentRound, roundResults])
 
   const handleClose = useCallback(() => {
-    closeBattleUI()
-  }, [closeBattleUI])
+    if (isPvpBattle) {
+      closePvpUI()
+    } else {
+      closeBattleUI()
+    }
+  }, [isPvpBattle, closePvpUI, closeBattleUI])
 
-  if (!battleArenaOpen || !battleData) {
+  // For NPC we need battleData, for PvP we need pvpRequestStatus or pvpBattleResult
+  const hasNpcData = !isPvpBattle && battleData
+  const hasPvpData = isPvpBattle && (pvpRequestStatus || pvpBattleResult)
+
+  if (!battleArenaOpen || (!hasNpcData && !hasPvpData)) {
     return null
   }
 
   const currentRoundData = roundResults[currentRound]
-  const firstPlayerCard = battleData.playerCards[0]
-  const firstNpcCard = battleData.npcCards[0]
 
-  // Guard against empty arrays (shouldn't happen in practice)
-  if (!firstPlayerCard || !firstNpcCard) {
-    return null
+  // Get card data for display - for intro phase we show placeholder until battle starts
+  let playerCard: { name: string; attack: number; defense: number; rarity: string; position: number }
+  let npcCard: { name: string; attack: number; defense: number; rarity: string; position: number }
+
+  if (isPvpBattle) {
+    // PvP battle - during intro, show placeholder text; during battle show from roundResults
+    if (phase === 'intro' || !currentRoundData) {
+      playerCard = { name: 'Your Card', attack: 0, defense: 0, rarity: 'common', position: 1 }
+      npcCard = { name: `${pvpOpponentUsername || 'Opponent'}'s Card`, attack: 0, defense: 0, rarity: 'common', position: 1 }
+    } else {
+      playerCard = { ...currentRoundData.playerCard, rarity: 'common', position: currentRound + 1 }
+      npcCard = { ...currentRoundData.npcCard, rarity: 'common', position: currentRound + 1 }
+    }
+  } else {
+    // NPC battle
+    const firstPlayerCard = battleData!.playerCards[0]
+    const firstNpcCard = battleData!.npcCards[0]
+
+    // Guard against empty arrays (shouldn't happen in practice)
+    if (!firstPlayerCard || !firstNpcCard) {
+      return null
+    }
+
+    playerCard = phase === 'intro'
+      ? firstPlayerCard
+      : battleData!.playerCards.find((c) => c.position === currentRound + 1) ?? firstPlayerCard
+    npcCard = phase === 'intro'
+      ? firstNpcCard
+      : battleData!.npcCards.find((c) => c.position === currentRound + 1) ?? firstNpcCard
   }
 
-  const playerCard = phase === 'intro'
-    ? firstPlayerCard
-    : battleData.playerCards.find((c) => c.position === currentRound + 1) ?? firstPlayerCard
-  const npcCard = phase === 'intro'
-    ? firstNpcCard
-    : battleData.npcCards.find((c) => c.position === currentRound + 1) ?? firstNpcCard
+  // Theme colors - cyan for PvP, red for NPC
+  const borderColor = isPvpBattle ? 'border-cyan-500' : 'border-red-500'
+  const opponentName = isPvpBattle ? pvpOpponentUsername || 'Opponent' : 'Enemy'
 
   return (
     <div className="absolute inset-0 flex items-center justify-center z-50">
@@ -184,17 +303,19 @@ export function BattleArena() {
         {/* Phase: Intro */}
         {phase === 'intro' && !error && (
           <div className="text-center animate-pulse">
-            <h1 className="text-4xl font-bold text-red-400 mb-4">BATTLE!</h1>
+            <h1 className={`text-4xl font-bold mb-4 ${isPvpBattle ? 'text-cyan-400' : 'text-red-400'}`}>
+              {isPvpBattle ? `VS ${pvpOpponentUsername}` : 'BATTLE!'}
+            </h1>
             <p className="text-gray-400">Preparing for combat...</p>
           </div>
         )}
 
         {/* Phase: Round or Result */}
         {(phase === 'round' || phase === 'result') && currentRoundData && (
-          <div className="bg-gray-900/95 border-2 border-red-500 rounded-xl p-6 shadow-2xl">
+          <div className={`bg-gray-900/95 border-2 ${borderColor} rounded-xl p-6 shadow-2xl`}>
             {/* Round indicator */}
             <div className="text-center mb-6">
-              <span className="text-red-400 text-xl font-bold">Round {currentRound + 1}</span>
+              <span className={`text-xl font-bold ${isPvpBattle ? 'text-cyan-400' : 'text-red-400'}`}>Round {currentRound + 1}</span>
             </div>
 
             {/* Battle display */}
@@ -224,12 +345,12 @@ export function BattleArena() {
               {/* VS indicator */}
               <div className="text-4xl font-bold text-yellow-400 animate-pulse">VS</div>
 
-              {/* NPC card */}
+              {/* Opponent card */}
               <div className={`flex-1 border-2 rounded-lg p-4 transition-all ${
                 RARITY_COLORS[npcCard.rarity] || RARITY_COLORS.common
               } ${phase === 'result' && currentRoundData.winner === 'npc' ? 'ring-4 ring-red-500' : ''}`}>
                 <div className="text-center">
-                  <span className="text-xs text-red-400 uppercase">Enemy Card</span>
+                  <span className={`text-xs uppercase ${isPvpBattle ? 'text-orange-400' : 'text-red-400'}`}>{opponentName}'s Card</span>
                   <h3 className="text-white font-bold text-lg mt-1">{currentRoundData.npcCard.name}</h3>
                   <div className="flex justify-center gap-4 mt-3">
                     <div className="text-center">
@@ -264,7 +385,7 @@ export function BattleArena() {
                     : 'text-yellow-400'
                 }`}>
                   {currentRoundData.winner === 'player' ? 'You Win This Round!' :
-                   currentRoundData.winner === 'npc' ? 'Enemy Wins This Round!' : 'Draw!'}
+                   currentRoundData.winner === 'npc' ? `${opponentName} Wins This Round!` : 'Draw!'}
                 </span>
               </div>
             )}
@@ -278,8 +399,8 @@ export function BattleArena() {
                 </div>
               </div>
               <div className="text-center">
-                <span className="text-gray-400 text-xs">Enemy</span>
-                <div className="text-2xl font-bold text-red-400">
+                <span className="text-gray-400 text-xs">{opponentName}</span>
+                <div className={`text-2xl font-bold ${isPvpBattle ? 'text-orange-400' : 'text-red-400'}`}>
                   {roundResults.slice(0, currentRound + (phase === 'result' ? 1 : 0)).filter((r) => r.winner === 'npc').length}
                 </div>
               </div>
@@ -289,7 +410,7 @@ export function BattleArena() {
 
         {/* Phase: Final */}
         {phase === 'final' && battleResult && (
-          <div className="bg-gray-900/95 border-2 border-red-500 rounded-xl p-8 shadow-2xl text-center">
+          <div className={`bg-gray-900/95 border-2 ${borderColor} rounded-xl p-8 shadow-2xl text-center`}>
             {/* Victory/Defeat banner */}
             <div className={`mb-6 ${battleResult.winner === 'player' ? 'animate-bounce' : ''}`}>
               <h1 className={`text-5xl font-bold ${
@@ -307,8 +428,8 @@ export function BattleArena() {
               </div>
               <div className="text-4xl text-gray-600">-</div>
               <div className="text-center">
-                <span className="text-gray-400">Enemy</span>
-                <div className="text-3xl font-bold text-red-400">{battleResult.npcWins}</div>
+                <span className="text-gray-400">{opponentName}</span>
+                <div className={`text-3xl font-bold ${isPvpBattle ? 'text-orange-400' : 'text-red-400'}`}>{battleResult.npcWins}</div>
               </div>
             </div>
 
@@ -333,19 +454,23 @@ export function BattleArena() {
 
             {battleResult.winner === 'npc' && (
               <div className="bg-gray-800/50 rounded-lg p-4 mb-6">
-                <p className="text-gray-400">Better luck next time! You lost your entry fee.</p>
+                <p className="text-gray-400">
+                  {isPvpBattle ? `Better luck next time! ${opponentName} won this battle.` : 'Better luck next time! You lost your entry fee.'}
+                </p>
               </div>
             )}
 
             {/* New balance */}
-            <p className="text-gray-400 mb-6">
-              Current Balance: <span className="text-yellow-400 font-bold">{battleResult.newBalance} PattyCoins</span>
-            </p>
+            {battleResult.winner === 'player' && (
+              <p className="text-gray-400 mb-6">
+                Current Balance: <span className="text-yellow-400 font-bold">{battleResult.newBalance} PattyCoins</span>
+              </p>
+            )}
 
             {/* Close button */}
             <button
               onClick={handleClose}
-              className="bg-red-600 hover:bg-red-500 text-white py-3 px-8 rounded-lg transition-colors font-bold text-lg"
+              className={`${isPvpBattle ? 'bg-cyan-600 hover:bg-cyan-500' : 'bg-red-600 hover:bg-red-500'} text-white py-3 px-8 rounded-lg transition-colors font-bold text-lg`}
             >
               Continue
             </button>

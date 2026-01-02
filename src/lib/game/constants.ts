@@ -72,6 +72,15 @@ export const BATTLE_NPC = {
   packChance: 0.15, // 15% chance to win a pack
 }
 
+// PvP Battle constants
+export const PVP_BATTLE = {
+  requestExpiryMs: 30000, // 30 seconds to accept
+  minCards: 3,
+  rewardMin: 30,
+  rewardMax: 50,
+  packChance: 0.15,
+}
+
 // Multiplayer constants
 export const MULTIPLAYER = {
   maxPlayers: 15,
