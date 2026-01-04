@@ -240,3 +240,28 @@ export const updateLastActive = mutation({
     }
   },
 });
+
+// Update total play time (called periodically from client)
+export const updatePlayTime = mutation({
+  args: { seconds: v.number() },
+  handler: async (ctx, { seconds }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return;
+    }
+
+    const clerkId = identity.subject;
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", clerkId))
+      .first();
+
+    if (user && user.username) {
+      const currentPlayTime = user.totalPlayTime ?? 0;
+      await ctx.db.patch(user._id, {
+        totalPlayTime: currentPlayTime + seconds,
+        lastActiveAt: Date.now(),
+      });
+    }
+  },
+});

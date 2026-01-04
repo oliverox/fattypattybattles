@@ -32,6 +32,7 @@ export default defineSchema({
     battleLosses: v.optional(v.number()),
     createdAt: v.optional(v.number()),
     lastActiveAt: v.optional(v.number()),
+    totalPlayTime: v.optional(v.number()), // Total seconds played
   })
     .index("by_clerkId", ["clerkId"])
     .index("by_username", ["username"]),

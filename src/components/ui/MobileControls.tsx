@@ -51,6 +51,7 @@ export function MobileControls() {
   const toggleTouchControls = useGameStore((state) => state.toggleTouchControls)
   const setInventoryOpen = useGameStore((state) => state.setInventoryOpen)
   const setChatOpen = useGameStore((state) => state.setChatOpen)
+  const setLeaderboardOpen = useGameStore((state) => state.setLeaderboardOpen)
 
   // Check if near an NPC
   const nearNPC = useGameStore((state) => state.nearNPC)
@@ -68,8 +69,9 @@ export function MobileControls() {
   const battleArenaOpen = useGameStore((state) => state.battleArenaOpen)
   const inventoryOpen = useGameStore((state) => state.inventoryOpen)
   const chatOpen = useGameStore((state) => state.chatOpen)
+  const leaderboardOpen = useGameStore((state) => state.leaderboardOpen)
 
-  const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen || battleDialogueOpen || battleCardSelectOpen || battleArenaOpen || chatOpen
+  const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen || battleDialogueOpen || battleCardSelectOpen || battleArenaOpen || chatOpen || leaderboardOpen
 
   return (
     <div className="fixed inset-0 pointer-events-none z-40">
@@ -127,6 +129,25 @@ export function MobileControls() {
             title="Chat"
           >
             💬
+          </button>
+        )}
+
+        {/* Leaderboard Button - Only show when touch controls visible and no UI open */}
+        {touchControlsVisible && !anyUIOpen && (
+          <button
+            onClick={() => setLeaderboardOpen(true)}
+            className="
+              w-12 h-12
+              bg-black/40 hover:bg-black/60
+              border-2 border-yellow-400/50
+              rounded-xl
+              flex items-center justify-center
+              text-white text-xl
+              transition-colors
+            "
+            title="Leaderboard"
+          >
+            🏆
           </button>
         )}
       </div>

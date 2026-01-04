@@ -20,6 +20,8 @@ import { PvpWaitingScreen } from '@/components/ui/PvpWaitingScreen'
 import { MobileControls } from '@/components/ui/MobileControls'
 import { EditAvatarModal } from '@/components/ui/EditAvatarModal'
 import { ChatUI } from '@/components/ui/ChatUI'
+import { Leaderboard } from '@/components/ui/Leaderboard'
+import { usePlaytimeTracker } from '@/hooks/usePlaytimeTracker'
 import { MULTIPLAYER } from '@/lib/game/constants'
 
 export const Route = createFileRoute('/game')({
@@ -33,6 +35,9 @@ function GamePage() {
   const seedCards = useMutation(api.inventory.seedCards)
   const initChecked = useRef(false)
   const [editAvatarOpen, setEditAvatarOpen] = useState(false)
+
+  // Track playtime for leaderboard
+  usePlaytimeTracker()
 
   // Seed cards and ensure existing users get their starter pack
   useEffect(() => {
@@ -120,6 +125,7 @@ function GamePage() {
       <PvpIncomingDialog />
       <PvpWaitingScreen />
       <ChatUI mapId={MULTIPLAYER.defaultMapId} />
+      <Leaderboard />
 
       {/* Mobile touch controls */}
       <MobileControls />

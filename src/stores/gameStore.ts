@@ -97,6 +97,8 @@ interface GameState {
   heldCardId: string | null
   // Chat
   chatOpen: boolean
+  // Leaderboard
+  leaderboardOpen: boolean
   // PvP Battle
   pvpTargetPlayer: PvpTargetPlayer | null
   pvpRequestDialogOpen: boolean
@@ -133,6 +135,7 @@ interface GameState {
   setInventoryOpen: (open: boolean) => void
   setHeldCardId: (cardId: string | null) => void
   setChatOpen: (open: boolean) => void
+  setLeaderboardOpen: (open: boolean) => void
   closeAllShopUI: () => void
   closeAllUI: () => void
   // PvP Battle
@@ -178,6 +181,8 @@ export const useGameStore = create<GameState>((set) => ({
   heldCardId: null,
   // Chat
   chatOpen: false,
+  // Leaderboard
+  leaderboardOpen: false,
   // PvP Battle
   pvpTargetPlayer: null,
   pvpRequestDialogOpen: false,
@@ -233,6 +238,7 @@ export const useGameStore = create<GameState>((set) => ({
   setInventoryOpen: (open) => set({ inventoryOpen: open }),
   setHeldCardId: (cardId) => set({ heldCardId: cardId }),
   setChatOpen: (open) => set({ chatOpen: open }),
+  setLeaderboardOpen: (open) => set({ leaderboardOpen: open }),
   closeAllShopUI: () => set({ dialogueOpen: false, shopOpen: false, activeShop: null }),
   // PvP Battle
   setPvpTargetPlayer: (player) => set({ pvpTargetPlayer: player }),
@@ -275,6 +281,7 @@ export const useGameStore = create<GameState>((set) => ({
     battleResult: null,
     inventoryOpen: false,
     chatOpen: false,
+    leaderboardOpen: false,
     // PvP
     pvpTargetPlayer: null,
     pvpRequestDialogOpen: false,
