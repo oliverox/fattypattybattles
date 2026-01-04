@@ -160,11 +160,13 @@ export function SellShop() {
                     <span>ATK: {item.attack}</span>
                     <span>DEF: {item.defense}</span>
                   </div>
-                  <div className="mt-2 pt-2 border-t border-gray-700">
-                    <p className="text-yellow-400 font-bold text-sm">
-                      {item.sellPrice} PC
-                    </p>
-                  </div>
+                  {isAppraise && (
+                    <div className="mt-2 pt-2 border-t border-gray-700">
+                      <p className="text-yellow-400 font-bold text-sm">
+                        {item.sellPrice} PC
+                      </p>
+                    </div>
+                  )}
                   {!isAppraise && (
                     <div className="mt-2">
                       <div className={`w-full h-6 rounded border-2 flex items-center justify-center text-xs font-bold ${
