@@ -50,7 +50,8 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
       sellDialogueOpen, sellShopOpen, inventoryOpen, setInventoryOpen,
       nearBattleNPC, setNearBattleNPC, setBattleDialogueOpen,
       battleDialogueOpen, battleCardSelectOpen, battleArenaOpen,
-      chatOpen, setChatOpen,
+      chatOpen, setChatOpen, leaderboardOpen,
+      pvpRequestDialogOpen, pvpIncomingDialogOpen, pvpWaitingForOpponent,
       touchInput
     } = state
 
@@ -98,7 +99,7 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
     syncPosition(playerPos, orbitAngle.current)
 
     // Check if any UI is open
-    const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen || battleDialogueOpen || battleCardSelectOpen || battleArenaOpen || chatOpen
+    const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen || battleDialogueOpen || battleCardSelectOpen || battleArenaOpen || chatOpen || leaderboardOpen || pvpRequestDialogOpen || pvpIncomingDialogOpen || pvpWaitingForOpponent
 
     // Handle inventory key (B) - toggle inventory
     if (inventory && !inventoryPressed.current && !anyUIOpen) {
