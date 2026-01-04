@@ -123,16 +123,13 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
     leaderboardPressed.current = leaderboard
 
     // Handle interact key (T) - only trigger on key down, not hold
-    if (interact && !interactPressed.current) {
-      console.log('T key pressed!', { anyUIOpen, isNearNPC, isNearSellNPC, isNearBattleNPC })
-      if (!anyUIOpen) {
-        if (isNearNPC) {
-          setDialogueOpen(true)
-        } else if (isNearSellNPC) {
-          setSellDialogueOpen(true)
-        } else if (isNearBattleNPC) {
-          setBattleDialogueOpen(true)
-        }
+    if (interact && !interactPressed.current && !anyUIOpen) {
+      if (isNearNPC) {
+        setDialogueOpen(true)
+      } else if (isNearSellNPC) {
+        setSellDialogueOpen(true)
+      } else if (isNearBattleNPC) {
+        setBattleDialogueOpen(true)
       }
     }
     interactPressed.current = interact

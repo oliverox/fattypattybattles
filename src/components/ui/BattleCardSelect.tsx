@@ -106,7 +106,7 @@ export function BattleCardSelect() {
     })
   }, [])
 
-  const handleStrongest = useCallback(() => {
+  const handleStrongest = () => {
     if (!playerCards) return
 
     // Sort by attack + defense and pick top 3
@@ -118,9 +118,9 @@ export function BattleCardSelect() {
       position: i + 1,
     }))
     setSelectedCards(top3)
-  }, [playerCards])
+  }
 
-  const handleRandom = useCallback(() => {
+  const handleRandom = () => {
     if (!playerCards || playerCards.length < 3) return
 
     // Shuffle and pick 3
@@ -130,7 +130,7 @@ export function BattleCardSelect() {
       position: i + 1,
     }))
     setSelectedCards(random3)
-  }, [playerCards])
+  }
 
   const handleStartBattle = useCallback(async () => {
     if (!user?.id || selectedCards.length !== 3) return
