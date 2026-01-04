@@ -15,8 +15,8 @@ const HAIR_COLORS = [
   '#FF69B4', '#4B0082', '#6A5ACD', '#00CED1', '#32CD32',
 ] as const;
 const EYE_COLORS = [
-  '#4A4A4A', '#634E34', '#2E536F', '#3D671D', '#497665',
-  '#1C7847', '#7F7F7F', '#00CED1', '#FF69B4', '#FFD700',
+  '#1A1A1A', '#3D2314', '#4A4A4A', '#634E34', '#2E536F', '#3D671D',
+  '#497665', '#1C7847', '#7F7F7F', '#00CED1', '#FF69B4', '#FFD700',
 ] as const;
 const MOUTH_STYLES = ['smile', 'grin', 'flat', 'open', 'surprised'] as const;
 
