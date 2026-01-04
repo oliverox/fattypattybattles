@@ -14,23 +14,24 @@ export const getLeaderboard = query({
     const identity = await ctx.auth.getUserIdentity();
     const currentUserId = identity?.subject;
 
-    // Get all users with usernames
+    // Get all users with usernames and clerkIds
     const users = await ctx.db.query("users").collect();
-    const usersWithProfiles = users.filter((u) => u.username);
+    const usersWithProfiles = users.filter((u) => u.username && u.clerkId);
 
     // Calculate stats for each user
     const userStats = await Promise.all(
       usersWithProfiles.map(async (user) => {
         // Get total cards from inventory
+        const clerkId = user.clerkId as string;
         const inventory = await ctx.db
           .query("inventory")
-          .withIndex("by_userId", (q) => q.eq("userId", user.clerkId!))
+          .withIndex("by_userId", (q) => q.eq("userId", clerkId))
           .collect();
         const totalCards = inventory.reduce((sum, item) => sum + item.quantity, 0);
 
         return {
-          clerkId: user.clerkId!,
-          username: user.username!,
+          clerkId: user.clerkId as string,
+          username: user.username as string,
           wins: user.battleWins ?? 0,
           coins: user.pattyCoins ?? 0,
           cards: totalCards,

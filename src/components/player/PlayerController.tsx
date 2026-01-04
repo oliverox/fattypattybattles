@@ -34,6 +34,8 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
   const inventoryPressed = useRef(false)
   // Track if chat key was pressed last frame
   const chatPressed = useRef(false)
+  // Track if leaderboard key was pressed last frame
+  const leaderboardPressed = useRef(false)
   // NPC positions for proximity check
   const npcPosition = useRef(new Vector3(...SHOP.npcPosition))
   const sellNpcPosition = useRef(new Vector3(...SELL_NPC.npcPosition))
@@ -50,7 +52,7 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
       sellDialogueOpen, sellShopOpen, inventoryOpen, setInventoryOpen,
       nearBattleNPC, setNearBattleNPC, setBattleDialogueOpen,
       battleDialogueOpen, battleCardSelectOpen, battleArenaOpen,
-      chatOpen, setChatOpen, leaderboardOpen,
+      chatOpen, setChatOpen, leaderboardOpen, setLeaderboardOpen,
       pvpRequestDialogOpen, pvpIncomingDialogOpen, pvpWaitingForOpponent,
       touchInput
     } = state
@@ -68,6 +70,7 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
     const interact = keys.interact || touchInput.interact
     const inventory = keys.inventory
     const chat = keys.chat || touchInput.chat
+    const leaderboard = keys.leaderboard
 
     // Check proximity to Shop NPC
     const position = rigidBodyRef.current.translation()
@@ -113,14 +116,23 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
     }
     chatPressed.current = chat
 
+    // Handle leaderboard key (L) - toggle leaderboard
+    if (leaderboard && !leaderboardPressed.current && !anyUIOpen) {
+      setLeaderboardOpen(true)
+    }
+    leaderboardPressed.current = leaderboard
+
     // Handle interact key (T) - only trigger on key down, not hold
-    if (interact && !interactPressed.current && !anyUIOpen) {
-      if (isNearNPC) {
-        setDialogueOpen(true)
-      } else if (isNearSellNPC) {
-        setSellDialogueOpen(true)
-      } else if (isNearBattleNPC) {
-        setBattleDialogueOpen(true)
+    if (interact && !interactPressed.current) {
+      console.log('T key pressed!', { anyUIOpen, isNearNPC, isNearSellNPC, isNearBattleNPC })
+      if (!anyUIOpen) {
+        if (isNearNPC) {
+          setDialogueOpen(true)
+        } else if (isNearSellNPC) {
+          setSellDialogueOpen(true)
+        } else if (isNearBattleNPC) {
+          setBattleDialogueOpen(true)
+        }
       }
     }
     interactPressed.current = interact

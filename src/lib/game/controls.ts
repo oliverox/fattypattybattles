@@ -13,6 +13,7 @@ export enum Controls {
   interact = 'interact',
   inventory = 'inventory',
   chat = 'chat',
+  leaderboard = 'leaderboard',
 }
 
 export const controlsMap: KeyboardControlsEntry<Controls>[] = [
@@ -28,4 +29,5 @@ export const controlsMap: KeyboardControlsEntry<Controls>[] = [
   { name: Controls.interact, keys: ['KeyT'] },
   { name: Controls.inventory, keys: ['KeyB'] },
   { name: Controls.chat, keys: ['KeyC'] },
+  { name: Controls.leaderboard, keys: ['KeyL'] },
 ]
