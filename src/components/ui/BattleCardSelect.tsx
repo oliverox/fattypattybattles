@@ -109,10 +109,19 @@ export function BattleCardSelect() {
   const handleStrongest = () => {
     if (!playerCards) return
 
-    // Sort by attack + defense and pick top 3
-    const sorted = [...playerCards].sort(
-      (a, b) => (b.attack + b.defense) - (a.attack + a.defense)
-    )
+    // Rarity order (higher index = better)
+    const rarityOrder = [
+      'common', 'uncommon', 'rare', 'legendary', 'mythical',
+      'divine', 'prismatic', 'transcendent', 'secret'
+    ]
+
+    // Sort by attack + defense, then by rarity as tiebreaker
+    const sorted = [...playerCards].sort((a, b) => {
+      const statDiff = (b.attack + b.defense) - (a.attack + a.defense)
+      if (statDiff !== 0) return statDiff
+      // If stats are equal, prefer higher rarity
+      return rarityOrder.indexOf(b.rarity) - rarityOrder.indexOf(a.rarity)
+    })
     const top3 = sorted.slice(0, 3).map((card, i) => ({
       cardId: card.cardId,
       position: i + 1,
