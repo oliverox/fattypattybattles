@@ -8,7 +8,7 @@ interface ChatUIProps {
   mapId: string
 }
 
-const EMOJIS = ['👋', '😊', '😂', '👍', '❤️', '🎮', '🔥', '✨']
+const EMOJIS = ['👋', '😊', '😂', '👍', '❤️', '🎮', '🔥', '✨', '💀', '😎', '😡', '😱', '🎉', '💥']
 
 export function ChatUI({ mapId }: ChatUIProps) {
   const chatOpen = useGameStore((state) => state.chatOpen)
