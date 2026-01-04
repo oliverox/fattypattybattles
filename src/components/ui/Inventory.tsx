@@ -200,9 +200,8 @@ export function Inventory() {
                     <span>ATK: {item.card?.attack}</span>
                     <span>DEF: {item.card?.defense}</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Qty: {item.quantity}</p>
                   <button
-                    onClick={() => handleHoldCard(item.cardId)}
+                    onClick={() => handleHoldCard(item.cardId as string)}
                     className={`w-full mt-2 py-1 rounded text-xs font-bold transition-colors ${
                       heldCardId === item.cardId
                         ? 'bg-pink-500 text-white'

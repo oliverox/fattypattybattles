@@ -216,26 +216,44 @@ export const getUserInventory = query({
       .withIndex("by_userId", (q) => q.eq("userId", clerkId))
       .collect();
 
-    const cardsWithDetails = await Promise.all(
-      inventoryItems.map(async (item) => {
-        const card = await ctx.db.get(item.cardId);
-        return {
-          inventoryId: item._id,
+    // Expand cards by quantity (one entry per card instance)
+    const cardsWithDetails: Array<{
+      inventoryId: string;
+      cardId: Id<"cards">;
+      acquiredAt: number;
+      card: {
+        name: string;
+        rarity: string;
+        attack: number;
+        defense: number;
+        cost: number;
+        description: string;
+        imageUrl?: string;
+      } | null;
+    }> = [];
+
+    for (const item of inventoryItems) {
+      const card = await ctx.db.get(item.cardId);
+      if (!card) continue;
+
+      // Expand each inventory item by its quantity
+      for (let i = 0; i < item.quantity; i++) {
+        cardsWithDetails.push({
+          inventoryId: `${item._id}:${i}`,
           cardId: item.cardId,
-          quantity: item.quantity,
           acquiredAt: item.acquiredAt,
-          card: card ? {
+          card: {
             name: card.name,
             rarity: card.rarity,
             attack: card.attack,
             defense: card.defense,
             cost: card.cost,
-            description: card.description,
+            description: card.description ?? "",
             imageUrl: card.imageUrl,
-          } : null,
-        };
-      })
-    );
+          },
+        });
+      }
+    }
 
     return cardsWithDetails.filter((item) => item.card !== null);
   },

@@ -20,6 +20,7 @@ const RARITY_COLORS: Record<string, string> = {
 }
 
 interface SelectedCard {
+  inventoryId: string
   cardId: string
   position: number
 }
@@ -85,14 +86,14 @@ export function BattleCardSelect() {
     }
   }, [isPvpBattle, pvpRequestStatus, waitingForOpponent, setBattleCardSelectOpen, setBattleArenaOpen])
 
-  const handleSelectCard = useCallback((cardId: string) => {
+  const handleSelectCard = useCallback((inventoryId: string, cardId: string) => {
     setSelectedCards((prev) => {
       // If card is already selected, remove it
-      const existing = prev.find((c) => c.cardId === cardId)
+      const existing = prev.find((c) => c.inventoryId === inventoryId)
       if (existing) {
         // Remove and reorder positions
         return prev
-          .filter((c) => c.cardId !== cardId)
+          .filter((c) => c.inventoryId !== inventoryId)
           .map((c, i) => ({ ...c, position: i + 1 }))
       }
 
@@ -102,7 +103,7 @@ export function BattleCardSelect() {
       }
 
       // Add with next position
-      return [...prev, { cardId, position: prev.length + 1 }]
+      return [...prev, { inventoryId, cardId, position: prev.length + 1 }]
     })
   }, [])
 
@@ -123,6 +124,7 @@ export function BattleCardSelect() {
       return rarityOrder.indexOf(b.rarity) - rarityOrder.indexOf(a.rarity)
     })
     const top3 = sorted.slice(0, 3).map((card, i) => ({
+      inventoryId: card.inventoryId,
       cardId: card.cardId,
       position: i + 1,
     }))
@@ -135,6 +137,7 @@ export function BattleCardSelect() {
     // Shuffle and pick 3
     const shuffled = [...playerCards].sort(() => Math.random() - 0.5)
     const random3 = shuffled.slice(0, 3).map((card, i) => ({
+      inventoryId: card.inventoryId,
       cardId: card.cardId,
       position: i + 1,
     }))
@@ -256,7 +259,7 @@ export function BattleCardSelect() {
           {[1, 2, 3].map((position) => {
             const selected = selectedCards.find((c) => c.position === position)
             const card = selected
-              ? playerCards?.find((c) => c.cardId === selected.cardId)
+              ? playerCards?.find((c) => c.inventoryId === selected.inventoryId)
               : null
 
             return (
@@ -277,7 +280,7 @@ export function BattleCardSelect() {
                       <span className="text-blue-400">DEF: {card.defense}</span>
                     </div>
                     <button
-                      onClick={() => handleSelectCard(card.cardId)}
+                      onClick={() => handleSelectCard(card.inventoryId, card.cardId)}
                       className="mt-2 text-xs text-gray-400 hover:text-red-400"
                     >
                       Remove
@@ -317,8 +320,8 @@ export function BattleCardSelect() {
           {playerCards && playerCards.length > 0 ? (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
               {playerCards.map((card) => {
-                const isSelected = selectedCards.some((c) => c.cardId === card.cardId)
-                const position = selectedCards.find((c) => c.cardId === card.cardId)?.position
+                const isSelected = selectedCards.some((c) => c.inventoryId === card.inventoryId)
+                const position = selectedCards.find((c) => c.inventoryId === card.inventoryId)?.position
 
                 const ringColor = isPvpBattle ? 'ring-cyan-400' : 'ring-red-400'
                 const badgeColor = isPvpBattle ? 'bg-cyan-500' : 'bg-red-500'
@@ -326,7 +329,7 @@ export function BattleCardSelect() {
                 return (
                   <button
                     key={card.inventoryId}
-                    onClick={() => handleSelectCard(card.cardId)}
+                    onClick={() => handleSelectCard(card.inventoryId, card.cardId)}
                     className={`relative border-2 rounded-lg p-2 transition-all hover:scale-105
                       ${RARITY_COLORS[card.rarity] || RARITY_COLORS.common}
                       ${isSelected ? `ring-2 ${ringColor} ring-offset-2 ring-offset-gray-900` : ''}
@@ -342,7 +345,6 @@ export function BattleCardSelect() {
                       <span className="text-red-400">{card.attack}</span>
                       <span className="text-blue-400">{card.defense}</span>
                     </div>
-                    <div className="text-gray-500 text-xs mt-1">x{card.quantity}</div>
                   </button>
                 )
               })}
