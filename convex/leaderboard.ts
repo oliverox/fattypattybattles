@@ -14,61 +14,72 @@ export const getLeaderboard = query({
     const identity = await ctx.auth.getUserIdentity();
     const currentUserId = identity?.subject;
 
-    // Get all users with usernames and clerkIds
+    // Get all users
     const users = await ctx.db.query("users").collect();
-    const usersWithProfiles = users.filter((u) => u.username && u.clerkId);
 
-    // Calculate stats for each user
-    const userStats = await Promise.all(
-      usersWithProfiles.map(async (user) => {
-        // Get total cards from inventory
-        const clerkId = user.clerkId as string;
+    // Build stats for each valid user
+    const entries: Array<{
+      rank: number;
+      username: string;
+      value: number;
+      isCurrentUser: boolean;
+    }> = [];
+
+    let currentUserRank: { rank: number; value: number } | null = null;
+
+    for (const user of users) {
+      // Skip users without username or clerkId
+      if (!user.username || !user.clerkId) continue;
+
+      let value: number;
+
+      if (category === "wins") {
+        value = user.battleWins ?? 0;
+      } else if (category === "coins") {
+        value = user.pattyCoins ?? 0;
+      } else if (category === "time") {
+        value = user.totalPlayTime ?? 0;
+      } else {
+        // cards - count from inventory
         const inventory = await ctx.db
           .query("inventory")
-          .withIndex("by_userId", (q) => q.eq("userId", clerkId))
+          .withIndex("by_userId", (q) => q.eq("userId", user.clerkId as string))
           .collect();
-        const totalCards = inventory.reduce((sum, item) => sum + item.quantity, 0);
+        value = inventory.reduce((sum, item) => sum + item.quantity, 0);
+      }
 
-        return {
-          clerkId: user.clerkId as string,
-          username: user.username as string,
-          wins: user.battleWins ?? 0,
-          coins: user.pattyCoins ?? 0,
-          cards: totalCards,
-          time: user.totalPlayTime ?? 0,
-        };
-      })
-    );
+      entries.push({
+        rank: 0, // Will set after sorting
+        username: user.username,
+        value,
+        isCurrentUser: user.clerkId === currentUserId,
+      });
+    }
 
-    // Sort by the requested category (descending)
-    userStats.sort((a, b) => b[category] - a[category]);
+    // Sort by value descending
+    entries.sort((a, b) => b.value - a.value);
 
-    // Get top 50
-    const top50 = userStats.slice(0, 50).map((user, index) => ({
+    // Assign ranks and limit to top 50
+    const top50 = entries.slice(0, 50).map((entry, index) => ({
+      ...entry,
       rank: index + 1,
-      username: user.username,
-      value: user[category],
-      isCurrentUser: user.clerkId === currentUserId,
     }));
 
-    // Find current user's rank if not in top 50
-    let userRank: { rank: number; value: number } | null = null;
+    // Find current user's rank if they're beyond top 50
     if (currentUserId) {
-      const userIndex = userStats.findIndex((u) => u.clerkId === currentUserId);
-      if (userIndex >= 0) {
-        const inTop50 = userIndex < 50;
-        if (!inTop50) {
-          userRank = {
-            rank: userIndex + 1,
-            value: userStats[userIndex]![category],
-          };
-        }
+      const allRanked = entries.map((entry, index) => ({ ...entry, rank: index + 1 }));
+      const currentUserEntry = allRanked.find((e) => e.isCurrentUser);
+      if (currentUserEntry && currentUserEntry.rank > 50) {
+        currentUserRank = {
+          rank: currentUserEntry.rank,
+          value: currentUserEntry.value,
+        };
       }
     }
 
     return {
       entries: top50,
-      userRank,
+      userRank: currentUserRank,
     };
   },
 });
