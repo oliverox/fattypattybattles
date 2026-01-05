@@ -23,7 +23,7 @@ const rarityColors: Record<string, string> = {
   divine: 'text-yellow-400 border-yellow-400',
   prismatic: 'text-cyan-400 border-cyan-400 animate-pulse',
   transcendent: 'text-red-400 border-red-400 animate-pulse',
-  secret: 'text-white border-white animate-pulse',
+  holographic: 'text-white border-white animate-pulse',
 }
 
 export function PacksShop() {

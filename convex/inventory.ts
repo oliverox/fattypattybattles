@@ -58,8 +58,8 @@ const SAMPLE_CARDS = [
   // Transcendent cards (1)
   { name: "armor patty", rarity: "transcendent", cost: 12, attack: 13, defense: 12, description: "i'm better than kung-fu patty" },
 
-  // Secret cards (1)
-  { name: "patty combinasion", rarity: "secret", cost: 15, attack: 15, defense: 15, description: "5 in 1!?" },
+  // Holographic cards (1)
+  { name: "patty combinasion", rarity: "holographic", cost: 15, attack: 15, defense: 15, description: "5 in 1!?" },
 ] as const;
 
 // Clear all cards from the database
@@ -70,6 +70,21 @@ export const clearCards = mutation({
       await ctx.db.delete(card._id);
     }
     return { cleared: true, count: allCards.length };
+  },
+});
+
+// Migration: Update secret rarity to holographic
+export const migrateSecretToHolographic = mutation({
+  handler: async (ctx) => {
+    const allCards = await ctx.db.query("cards").collect();
+    let updated = 0;
+    for (const card of allCards) {
+      if ((card.rarity as string) === "secret") {
+        await ctx.db.patch(card._id, { rarity: "holographic" });
+        updated++;
+      }
+    }
+    return { updated };
   },
 });
 
@@ -108,7 +123,7 @@ const SELL_PRICES: Record<string, { min: number; max: number }> = {
   divine: { min: 150, max: 180 },
   prismatic: { min: 180, max: 210 },
   transcendent: { min: 210, max: 240 },
-  secret: { min: 240, max: 270 },
+  holographic: { min: 240, max: 270 },
 };
 
 // Pack definitions (same as shop.ts)
@@ -124,7 +139,7 @@ const PACK_DEFINITIONS: Record<string, { cardCount: number; rarityWeights: Recor
       divine: 0,
       prismatic: 0,
       transcendent: 0,
-      secret: 0,
+      holographic: 0,
     },
   },
   normal: {
@@ -138,7 +153,7 @@ const PACK_DEFINITIONS: Record<string, { cardCount: number; rarityWeights: Recor
       divine: 0,
       prismatic: 0,
       transcendent: 0,
-      secret: 0,
+      holographic: 0,
     },
   },
   big: {
@@ -152,7 +167,7 @@ const PACK_DEFINITIONS: Record<string, { cardCount: number; rarityWeights: Recor
       divine: 0,
       prismatic: 0,
       transcendent: 0,
-      secret: 0,
+      holographic: 0,
     },
   },
   premium: {
@@ -166,13 +181,13 @@ const PACK_DEFINITIONS: Record<string, { cardCount: number; rarityWeights: Recor
       divine: 2,
       prismatic: 0,
       transcendent: 0,
-      secret: 0,
+      holographic: 0,
     },
   },
   deluxe: {
     cardCount: 15,
     rarityWeights: {
-      common: 25,
+      common: 24.5,
       uncommon: 25,
       rare: 20,
       legendary: 15,
@@ -180,7 +195,7 @@ const PACK_DEFINITIONS: Record<string, { cardCount: number; rarityWeights: Recor
       divine: 4,
       prismatic: 2,
       transcendent: 1,
-      secret: 0,
+      holographic: 0.5,
     },
   },
 };

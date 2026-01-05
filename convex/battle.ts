@@ -215,7 +215,7 @@ export const startBattle = mutation({
         divine: 3,
         prismatic: 2,
         transcendent: 1,
-        secret: 0.5,
+        holographic: 0.5,
       };
 
       const base = baseWeights[rarity] ?? 1;

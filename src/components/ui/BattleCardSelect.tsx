@@ -16,7 +16,7 @@ const RARITY_COLORS: Record<string, string> = {
   divine: 'border-yellow-400 bg-yellow-900/30',
   prismatic: 'border-cyan-400 bg-gradient-to-br from-cyan-900/30 to-purple-900/30',
   transcendent: 'border-orange-400 bg-gradient-to-br from-orange-900/30 to-red-900/30',
-  secret: 'border-red-400 bg-gradient-to-br from-red-900/30 to-black',
+  holographic: 'border-red-400 bg-gradient-to-br from-red-900/30 to-black',
 }
 
 interface SelectedCard {
@@ -113,7 +113,7 @@ export function BattleCardSelect() {
     // Rarity order (higher index = better)
     const rarityOrder = [
       'common', 'uncommon', 'rare', 'legendary', 'mythical',
-      'divine', 'prismatic', 'transcendent', 'secret'
+      'divine', 'prismatic', 'transcendent', 'holographic'
     ]
 
     // Sort by attack + defense, then by rarity as tiebreaker

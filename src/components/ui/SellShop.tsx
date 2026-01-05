@@ -13,7 +13,7 @@ const rarityColors: Record<string, string> = {
   divine: 'text-yellow-400 border-yellow-400',
   prismatic: 'text-cyan-400 border-cyan-400',
   transcendent: 'text-red-400 border-red-400',
-  secret: 'text-white border-white',
+  holographic: 'text-white border-white',
 }
 
 export function SellShop() {

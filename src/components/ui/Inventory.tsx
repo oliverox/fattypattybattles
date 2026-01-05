@@ -19,7 +19,7 @@ const rarityColors: Record<string, string> = {
   divine: 'text-yellow-400 border-yellow-400 bg-yellow-400/10',
   prismatic: 'text-cyan-400 border-cyan-400 bg-cyan-400/10 animate-pulse',
   transcendent: 'text-red-400 border-red-400 bg-red-400/10 animate-pulse',
-  secret: 'text-white border-white bg-white/10 animate-pulse',
+  holographic: 'text-white border-white bg-white/10 animate-pulse',
 }
 
 const packNames: Record<string, string> = {

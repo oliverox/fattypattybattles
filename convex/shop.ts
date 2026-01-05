@@ -18,7 +18,7 @@ const PACK_DEFINITIONS = {
       divine: 0,
       prismatic: 0,
       transcendent: 0,
-      secret: 0,
+      holographic: 0,
     },
   },
   normal: {
@@ -35,7 +35,7 @@ const PACK_DEFINITIONS = {
       divine: 0,
       prismatic: 0,
       transcendent: 0,
-      secret: 0,
+      holographic: 0,
     },
   },
   big: {
@@ -52,7 +52,7 @@ const PACK_DEFINITIONS = {
       divine: 0,
       prismatic: 0,
       transcendent: 0,
-      secret: 0,
+      holographic: 0,
     },
   },
   premium: {
@@ -69,7 +69,7 @@ const PACK_DEFINITIONS = {
       divine: 2,
       prismatic: 0,
       transcendent: 0,
-      secret: 0,
+      holographic: 0,
     },
   },
   deluxe: {
@@ -78,7 +78,7 @@ const PACK_DEFINITIONS = {
     cost: 150,
     cardCount: 15,
     rarityWeights: {
-      common: 25,
+      common: 24.5,
       uncommon: 25,
       rare: 20,
       legendary: 15,
@@ -86,7 +86,7 @@ const PACK_DEFINITIONS = {
       divine: 4,
       prismatic: 2,
       transcendent: 1,
-      secret: 0,
+      holographic: 0.5,
     },
   },
 } as const;
@@ -404,7 +404,7 @@ function rollRarity(
     "divine",
     "prismatic",
     "transcendent",
-    "secret",
+    "holographic",
   ];
 
   if (luckMultiplier > 1) {

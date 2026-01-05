@@ -156,7 +156,7 @@ export default defineSchema({
       v.literal("divine"),
       v.literal("prismatic"),
       v.literal("transcendent"),
-      v.literal("secret"),
+      v.literal("holographic"),
       v.literal("admin")
     ),
     cost: v.number(),
@@ -207,7 +207,7 @@ export default defineSchema({
       divine: v.number(),
       prismatic: v.number(),
       transcendent: v.number(),
-      secret: v.number(),
+      holographic: v.number(),
     }),
   }),
 

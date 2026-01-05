@@ -58,7 +58,7 @@ export const SELL_PRICES: Record<string, { min: number; max: number }> = {
   divine: { min: 150, max: 180 },
   prismatic: { min: 180, max: 210 },
   transcendent: { min: 210, max: 240 },
-  secret: { min: 240, max: 270 },
+  holographic: { min: 240, max: 270 },
 }
 
 // Battle NPC constants
