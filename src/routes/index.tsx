@@ -21,9 +21,11 @@ function AuthScreen() {
   return (
     <div className="w-full h-full bg-gradient-to-b from-blue-400 to-blue-600 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl text-center">
-        <h1 className="text-5xl font-bold text-white mb-8">
-          Fatty Patty Battles
-        </h1>
+        <img
+          src="/logo.png?v=2"
+          alt="Fatty Patty Battles"
+          className="w-64 h-64 mx-auto mb-6 object-contain"
+        />
         <p className="text-white/90 mb-8 text-lg">
           A multiplayer 3D card-battling game
         </p>
@@ -95,7 +97,12 @@ function GameScreen() {
         <UserButton />
       </div>
       <div className="text-center">
-        <h1 className="text-6xl font-bold text-white mb-4">
+        <img
+          src="/logo.png?v=2"
+          alt="Fatty Patty Battles"
+          className="w-48 h-48 mx-auto mb-4 object-contain"
+        />
+        <h1 className="text-4xl font-bold text-white mb-4">
           Welcome, {currentUser.username}!
         </h1>
         <p className="text-2xl text-white/90 mb-6">

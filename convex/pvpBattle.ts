@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 
 const PVP_CONFIG = {
@@ -560,6 +561,18 @@ export const resolvePvpBattle = mutation({
 
     // Store result so both players see the same battle
     await ctx.db.patch(requestId, { battleResult });
+
+    // Update daily quest progress for PvP battles (both players completed a PvP battle)
+    await ctx.scheduler.runAfter(0, internal.dailyRewards.updateQuestProgress, {
+      clerkId: request.challengerId,
+      questType: "pvp_battle",
+      amount: 1,
+    });
+    await ctx.scheduler.runAfter(0, internal.dailyRewards.updateQuestProgress, {
+      clerkId: request.targetId,
+      questType: "pvp_battle",
+      amount: 1,
+    });
 
     return battleResult;
   },

@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 
 // Sample cards for seeding the database
@@ -413,6 +414,13 @@ export const openPack = mutation({
       unopenedPacks: updatedPacks,
     });
 
+    // Update daily quest progress for pack opening
+    await ctx.scheduler.runAfter(0, internal.dailyRewards.updateQuestProgress, {
+      clerkId,
+      questType: "open_pack",
+      amount: 1,
+    });
+
     return {
       success: true,
       cards: generatedCards,
@@ -501,6 +509,13 @@ export const sellCards = mutation({
       amount: totalEarned,
       metadata: { salesCount: inventoryIds.length },
       timestamp: now,
+    });
+
+    // Update daily quest progress for selling cards
+    await ctx.scheduler.runAfter(0, internal.dailyRewards.updateQuestProgress, {
+      clerkId,
+      questType: "sell_cards",
+      amount: inventoryIds.length,
     });
 
     return {

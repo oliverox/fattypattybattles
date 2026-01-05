@@ -76,7 +76,7 @@ export function MobileControls() {
   return (
     <div className="fixed inset-0 pointer-events-none z-40">
       {/* Top Left Buttons */}
-      <div className="absolute top-20 left-4 flex flex-col gap-2 pointer-events-auto">
+      <div className="absolute top-36 left-4 flex flex-col gap-2 pointer-events-auto">
         {/* Toggle Button - Always visible */}
         <button
           onClick={toggleTouchControls}

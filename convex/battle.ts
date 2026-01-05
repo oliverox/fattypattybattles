@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 
 const BATTLE_CONFIG = {
@@ -520,6 +521,15 @@ export const resolveBattle = mutation({
       },
       timestamp: Date.now(),
     });
+
+    // Update daily quest progress for battle wins
+    if (winner === "player") {
+      await ctx.scheduler.runAfter(0, internal.dailyRewards.updateQuestProgress, {
+        clerkId,
+        questType: "win_battle",
+        amount: 1,
+      });
+    }
 
     return {
       winner,

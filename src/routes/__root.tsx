@@ -19,6 +19,10 @@ export const Route = createRootRoute({
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { title: 'Fatty Patty Battles' },
     ],
+    links: [
+      { rel: 'icon', type: 'image/png', href: '/logo.png?v=2' },
+      { rel: 'apple-touch-icon', href: '/logo.png?v=2' },
+    ],
   }),
   component: RootComponent,
   notFoundComponent: () => (

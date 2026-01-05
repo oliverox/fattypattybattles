@@ -33,6 +33,17 @@ export default defineSchema({
     createdAt: v.optional(v.number()),
     lastActiveAt: v.optional(v.number()),
     totalPlayTime: v.optional(v.number()), // Total seconds played
+    // Daily rewards
+    lastDailyClaimAt: v.optional(v.number()), // Timestamp of last daily login claim
+    dailyStreak: v.optional(v.number()), // Consecutive days claimed
+    // Daily quests
+    dailyQuests: v.optional(v.array(v.object({
+      questId: v.string(),
+      progress: v.number(),
+      completed: v.boolean(),
+      claimed: v.boolean(),
+    }))),
+    lastQuestResetAt: v.optional(v.number()), // When quests were last refreshed
   })
     .index("by_clerkId", ["clerkId"])
     .index("by_username", ["username"]),
@@ -172,7 +183,9 @@ export default defineSchema({
       v.literal("pack_purchase"),
       v.literal("card_sell"),
       v.literal("battle_reward"),
-      v.literal("admin_grant")
+      v.literal("admin_grant"),
+      v.literal("daily_reward"),
+      v.literal("quest_reward")
     ),
     amount: v.number(),
     metadata: v.optional(v.any()),
