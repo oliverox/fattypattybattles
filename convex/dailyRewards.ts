@@ -79,19 +79,30 @@ export const getDailyRewardStatus = query({
     // Check if already claimed today
     const claimedToday = lastClaim > 0 && isSameDay(lastClaim, now);
 
-    // Calculate what day of the 7-day cycle we're on
-    let streakDay = currentStreak % 7;
-    if (streakDay === 0 && currentStreak > 0) streakDay = 7;
-    if (currentStreak === 0) streakDay = 1;
-
-    // Get today's reward
-    const todayReward = DAILY_REWARDS[(streakDay - 1) % 7];
-
     // Check if streak will continue or reset
     let willResetStreak = false;
     if (lastClaim > 0 && !claimedToday && !isConsecutiveDay(lastClaim, now)) {
       willResetStreak = true;
     }
+
+    // Calculate what day of the 7-day cycle the user will claim (or has claimed today)
+    let streakDay: number;
+    if (claimedToday) {
+      // Already claimed - show the day they claimed
+      streakDay = currentStreak % 7;
+      if (streakDay === 0 && currentStreak > 0) streakDay = 7;
+    } else if (currentStreak === 0 || willResetStreak) {
+      // First time or streak reset - will claim day 1
+      streakDay = 1;
+    } else {
+      // Consecutive day - will claim next day
+      const nextStreak = currentStreak + 1;
+      streakDay = nextStreak % 7;
+      if (streakDay === 0) streakDay = 7;
+    }
+
+    // Get today's reward (the reward they will claim or have claimed)
+    const todayReward = DAILY_REWARDS[streakDay - 1];
 
     return {
       canClaim: !claimedToday,

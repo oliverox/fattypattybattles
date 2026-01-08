@@ -17,6 +17,11 @@ import { BattleArena } from '@/components/ui/BattleArena'
 import { PvpRequestDialog } from '@/components/ui/PvpRequestDialog'
 import { PvpIncomingDialog } from '@/components/ui/PvpIncomingDialog'
 import { PvpWaitingScreen } from '@/components/ui/PvpWaitingScreen'
+import { TradeInitiateDialog } from '@/components/ui/TradeInitiateDialog'
+import { TradeIncomingDialog } from '@/components/ui/TradeIncomingDialog'
+import { TradeWaitingScreen } from '@/components/ui/TradeWaitingScreen'
+import { TradeNegotiationScreen } from '@/components/ui/TradeNegotiationScreen'
+import { TradeCompletedDialog } from '@/components/ui/TradeCompletedDialog'
 import { MobileControls } from '@/components/ui/MobileControls'
 import { EditAvatarModal } from '@/components/ui/EditAvatarModal'
 import { ChatUI } from '@/components/ui/ChatUI'
@@ -42,6 +47,12 @@ function GamePage() {
   const [editAvatarOpen, setEditAvatarOpen] = useState(false)
 
   const setDailyRewardPopupOpen = useGameStore((state) => state.setDailyRewardPopupOpen)
+
+  // Trade state
+  const tradeInitiateDialogOpen = useGameStore((state) => state.tradeInitiateDialogOpen)
+  const tradeNegotiationOpen = useGameStore((state) => state.tradeNegotiationOpen)
+  const tradeCompletedOpen = useGameStore((state) => state.tradeCompletedOpen)
+  const tradeRequestId = useGameStore((state) => state.tradeRequestId)
 
   // Check if daily rewards are claimable
   const claimableRewards = useQuery(
@@ -171,6 +182,14 @@ function GamePage() {
       <PvpRequestDialog />
       <PvpIncomingDialog />
       <PvpWaitingScreen />
+
+      {/* Trade UI */}
+      {tradeInitiateDialogOpen && <TradeInitiateDialog />}
+      <TradeIncomingDialog />
+      {tradeRequestId && !tradeNegotiationOpen && <TradeWaitingScreen />}
+      {tradeNegotiationOpen && <TradeNegotiationScreen />}
+      {tradeCompletedOpen && <TradeCompletedDialog />}
+
       <ChatUI mapId={MULTIPLAYER.defaultMapId} />
       <Leaderboard />
       <DailyRewardPopup />

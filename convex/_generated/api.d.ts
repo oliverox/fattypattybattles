@@ -15,6 +15,7 @@ import type * as leaderboard from "../leaderboard.js";
 import type * as multiplayer from "../multiplayer.js";
 import type * as pvpBattle from "../pvpBattle.js";
 import type * as shop from "../shop.js";
+import type * as trading from "../trading.js";
 import type * as users from "../users.js";
 
 import type {
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   multiplayer: typeof multiplayer;
   pvpBattle: typeof pvpBattle;
   shop: typeof shop;
+  trading: typeof trading;
   users: typeof users;
 }>;
 

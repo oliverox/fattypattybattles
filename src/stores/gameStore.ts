@@ -71,6 +71,26 @@ interface PvpTargetPlayer {
   username: string
 }
 
+interface TradePartner {
+  clerkId: string
+  username: string
+}
+
+interface TradeCardOffer {
+  inventoryId: string
+  cardId: string
+  cardName: string
+  rarity: string
+}
+
+interface TradeResult {
+  partnerUsername: string
+  cardsGiven: TradeCardOffer[]
+  cardsReceived: TradeCardOffer[]
+  coinsGiven: number
+  coinsReceived: number
+}
+
 interface GameState {
   playerPosition: Vector3
   isMoving: boolean
@@ -111,6 +131,14 @@ interface GameState {
   isPvpBattle: boolean
   pvpOpponentUsername: string | null
   pvpBattleResult: PvpBattleResult | null
+  // Trading
+  tradeInitiateDialogOpen: boolean
+  tradeIncomingDialogOpen: boolean
+  tradeNegotiationOpen: boolean
+  tradeCompletedOpen: boolean
+  tradeRequestId: string | null
+  tradePartner: TradePartner | null
+  tradeResult: TradeResult | null
   // Mobile Touch Controls
   touchControlsVisible: boolean
   touchInput: TouchInput
@@ -152,6 +180,15 @@ interface GameState {
   setPvpOpponentUsername: (username: string | null) => void
   setPvpBattleResult: (result: PvpBattleResult | null) => void
   closePvpUI: () => void
+  // Trading
+  setTradeInitiateDialogOpen: (open: boolean) => void
+  setTradeIncomingDialogOpen: (open: boolean) => void
+  setTradeNegotiationOpen: (open: boolean) => void
+  setTradeCompletedOpen: (open: boolean) => void
+  setTradeRequestId: (id: string | null) => void
+  setTradePartner: (partner: TradePartner | null) => void
+  setTradeResult: (result: TradeResult | null) => void
+  closeTradeUI: () => void
   // Touch Controls
   setTouchControlsVisible: (visible: boolean) => void
   toggleTouchControls: () => void
@@ -198,6 +235,14 @@ export const useGameStore = create<GameState>((set) => ({
   isPvpBattle: false,
   pvpOpponentUsername: null,
   pvpBattleResult: null,
+  // Trading
+  tradeInitiateDialogOpen: false,
+  tradeIncomingDialogOpen: false,
+  tradeNegotiationOpen: false,
+  tradeCompletedOpen: false,
+  tradeRequestId: null,
+  tradePartner: null,
+  tradeResult: null,
   // Mobile Touch Controls
   touchControlsVisible: true,
   touchInput: {
@@ -272,6 +317,23 @@ export const useGameStore = create<GameState>((set) => ({
     battleData: null,
     battleResult: null,
   }),
+  // Trading
+  setTradeInitiateDialogOpen: (open) => set({ tradeInitiateDialogOpen: open }),
+  setTradeIncomingDialogOpen: (open) => set({ tradeIncomingDialogOpen: open }),
+  setTradeNegotiationOpen: (open) => set({ tradeNegotiationOpen: open }),
+  setTradeCompletedOpen: (open) => set({ tradeCompletedOpen: open }),
+  setTradeRequestId: (id) => set({ tradeRequestId: id }),
+  setTradePartner: (partner) => set({ tradePartner: partner }),
+  setTradeResult: (result) => set({ tradeResult: result }),
+  closeTradeUI: () => set({
+    tradeInitiateDialogOpen: false,
+    tradeIncomingDialogOpen: false,
+    tradeNegotiationOpen: false,
+    tradeCompletedOpen: false,
+    tradeRequestId: null,
+    tradePartner: null,
+    tradeResult: null,
+  }),
   closeAllUI: () => set({
     dialogueOpen: false,
     shopOpen: false,
@@ -299,6 +361,14 @@ export const useGameStore = create<GameState>((set) => ({
     isPvpBattle: false,
     pvpOpponentUsername: null,
     pvpBattleResult: null,
+    // Trading
+    tradeInitiateDialogOpen: false,
+    tradeIncomingDialogOpen: false,
+    tradeNegotiationOpen: false,
+    tradeCompletedOpen: false,
+    tradeRequestId: null,
+    tradePartner: null,
+    tradeResult: null,
   }),
   // Touch Controls
   setTouchControlsVisible: (visible) => set({ touchControlsVisible: visible }),

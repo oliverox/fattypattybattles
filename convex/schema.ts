@@ -144,6 +144,56 @@ export default defineSchema({
     .index("by_challengerId", ["challengerId", "status"])
     .index("by_targetId", ["targetId", "status"]),
 
+  // Trade Requests - player-to-player trading
+  tradeRequests: defineTable({
+    // Participants
+    senderId: v.string(),
+    senderUsername: v.string(),
+    receiverId: v.string(),
+    receiverUsername: v.string(),
+
+    // Trade offers (what each side is offering)
+    senderOffer: v.object({
+      cards: v.array(v.object({
+        inventoryId: v.string(),    // "inventoryId:instanceIndex" format
+        cardId: v.id("cards"),
+        cardName: v.string(),
+        rarity: v.string(),
+      })),
+      coins: v.number(),
+    }),
+    receiverOffer: v.object({
+      cards: v.array(v.object({
+        inventoryId: v.string(),
+        cardId: v.id("cards"),
+        cardName: v.string(),
+        rarity: v.string(),
+      })),
+      coins: v.number(),
+    }),
+
+    // State tracking
+    status: v.union(
+      v.literal("pending"),         // Waiting for receiver to respond
+      v.literal("negotiating"),     // Both setting their offers
+      v.literal("completed"),       // Trade executed successfully
+      v.literal("declined"),        // Either party declined
+      v.literal("cancelled"),       // Sender cancelled
+      v.literal("expired")          // Timed out
+    ),
+
+    // Confirmation tracking (both must be true to complete trade)
+    senderConfirmed: v.boolean(),
+    receiverConfirmed: v.boolean(),
+
+    // Timestamps
+    createdAt: v.number(),
+    expiresAt: v.number(),          // 5 minute timeout
+    completedAt: v.optional(v.number()),
+  })
+    .index("by_senderId", ["senderId", "status"])
+    .index("by_receiverId", ["receiverId", "status"]),
+
   // Cards - master card definitions
   cards: defineTable({
     name: v.string(),
@@ -185,7 +235,8 @@ export default defineSchema({
       v.literal("battle_reward"),
       v.literal("admin_grant"),
       v.literal("daily_reward"),
-      v.literal("quest_reward")
+      v.literal("quest_reward"),
+      v.literal("trade")
     ),
     amount: v.number(),
     metadata: v.optional(v.any()),

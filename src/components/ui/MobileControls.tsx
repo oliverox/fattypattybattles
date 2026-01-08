@@ -52,6 +52,7 @@ export function MobileControls() {
   const setInventoryOpen = useGameStore((state) => state.setInventoryOpen)
   const setChatOpen = useGameStore((state) => state.setChatOpen)
   const setLeaderboardOpen = useGameStore((state) => state.setLeaderboardOpen)
+  const setTradeInitiateDialogOpen = useGameStore((state) => state.setTradeInitiateDialogOpen)
 
   // Check if near an NPC
   const nearNPC = useGameStore((state) => state.nearNPC)
@@ -70,8 +71,11 @@ export function MobileControls() {
   const inventoryOpen = useGameStore((state) => state.inventoryOpen)
   const chatOpen = useGameStore((state) => state.chatOpen)
   const leaderboardOpen = useGameStore((state) => state.leaderboardOpen)
+  const tradeInitiateDialogOpen = useGameStore((state) => state.tradeInitiateDialogOpen)
+  const tradeNegotiationOpen = useGameStore((state) => state.tradeNegotiationOpen)
+  const tradeCompletedOpen = useGameStore((state) => state.tradeCompletedOpen)
 
-  const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen || battleDialogueOpen || battleCardSelectOpen || battleArenaOpen || chatOpen || leaderboardOpen
+  const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen || battleDialogueOpen || battleCardSelectOpen || battleArenaOpen || chatOpen || leaderboardOpen || tradeInitiateDialogOpen || tradeNegotiationOpen || tradeCompletedOpen
 
   return (
     <div className="fixed inset-0 pointer-events-none z-40">
@@ -191,6 +195,23 @@ export function MobileControls() {
 
           {/* Right Side - Jump & Zoom Controls */}
           <div className="absolute bottom-8 right-4 pointer-events-auto flex flex-col items-center gap-2">
+            {/* Trade Button */}
+            <button
+              onClick={() => setTradeInitiateDialogOpen(true)}
+              className="
+                w-14 h-12
+                bg-emerald-900/60 hover:bg-emerald-800/60
+                border-2 border-emerald-500/50
+                rounded-xl
+                flex items-center justify-center
+                text-white text-lg
+                transition-colors
+              "
+              title="Trade"
+            >
+              🤝
+            </button>
+
             {/* Zoom In */}
             <ControlButton inputKey="zoomIn" className="w-14 h-12">
               🔍+
