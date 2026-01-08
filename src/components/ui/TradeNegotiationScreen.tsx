@@ -126,6 +126,14 @@ export function TradeNegotiationScreen() {
     }
   }
 
+  // Check for changes in local vs server offer
+  const hasUnsavedChanges = useCallback(() => {
+    if (!myOffer) return false
+    if (coinAmount !== myOffer.coins) return true
+    if (selectedCards.length !== myOffer.cards.length) return true
+    return selectedCards.some((c) => !myOffer.cards.find((mc) => mc.inventoryId === c.inventoryId))
+  }, [coinAmount, selectedCards, myOffer])
+
   const handleUpdateOffer = async () => {
     if (!user?.id || !tradeRequestId) return
 
@@ -165,20 +173,23 @@ export function TradeNegotiationScreen() {
     setError(null)
 
     try {
-      // First update offer to ensure it's synced
-      await updateOffer({
-        clerkId: user.id,
-        requestId: tradeRequestId as Id<"tradeRequests">,
-        offer: {
-          cards: selectedCards.map((c) => ({
-            inventoryId: c.inventoryId,
-            cardId: c.cardId as Id<"cards">,
-            cardName: c.cardName,
-            rarity: c.rarity,
-          })),
-          coins: coinAmount,
-        },
-      })
+      // Only update offer if there are unsaved changes
+      // (updateOffer resets both confirmations, so we avoid calling it unnecessarily)
+      if (hasUnsavedChanges()) {
+        await updateOffer({
+          clerkId: user.id,
+          requestId: tradeRequestId as Id<"tradeRequests">,
+          offer: {
+            cards: selectedCards.map((c) => ({
+              inventoryId: c.inventoryId,
+              cardId: c.cardId as Id<"cards">,
+              cardName: c.cardName,
+              rarity: c.rarity,
+            })),
+            coins: coinAmount,
+          },
+        })
+      }
 
       // Then confirm
       await confirmTrade({
@@ -224,14 +235,6 @@ export function TradeNegotiationScreen() {
       setLoading(false)
     }
   }
-
-  // Check for changes in local vs server offer
-  const hasUnsavedChanges = useCallback(() => {
-    if (!myOffer) return false
-    if (coinAmount !== myOffer.coins) return true
-    if (selectedCards.length !== myOffer.cards.length) return true
-    return selectedCards.some((c) => !myOffer.cards.find((mc) => mc.inventoryId === c.inventoryId))
-  }, [coinAmount, selectedCards, myOffer])
 
   // Time remaining
   const timeLeft = tradeRequest ? Math.max(0, Math.ceil((tradeRequest.expiresAt - Date.now()) / 1000)) : 0
