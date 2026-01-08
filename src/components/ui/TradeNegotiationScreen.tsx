@@ -236,8 +236,28 @@ export function TradeNegotiationScreen() {
     }
   }
 
-  // Time remaining
-  const timeLeft = tradeRequest ? Math.max(0, Math.ceil((tradeRequest.expiresAt - Date.now()) / 1000)) : 0
+  // Time remaining - recalculate every second
+  const [timeLeft, setTimeLeft] = useState(0)
+
+  useEffect(() => {
+    if (!tradeRequest) return
+
+    const updateTimer = () => {
+      const remaining = Math.max(0, Math.ceil((tradeRequest.expiresAt - Date.now()) / 1000))
+      setTimeLeft(remaining)
+
+      // Auto-close when expired
+      if (remaining === 0) {
+        closeTradeUI()
+      }
+    }
+
+    updateTimer()
+    const interval = setInterval(updateTimer, 1000)
+
+    return () => clearInterval(interval)
+  }, [tradeRequest?.expiresAt, closeTradeUI])
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
