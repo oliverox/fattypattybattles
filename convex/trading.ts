@@ -416,7 +416,7 @@ export const updateOffer = mutation({
       }
     }
 
-    // Update offer and reset both confirmations (offer changed)
+    // Update offer and reset both confirmations (offer changed, both must re-confirm)
     const updateData: Record<string, unknown> = {
       senderConfirmed: false,
       receiverConfirmed: false,

@@ -173,25 +173,8 @@ export function TradeNegotiationScreen() {
     setError(null)
 
     try {
-      // Only update offer if there are unsaved changes
-      // (updateOffer resets both confirmations, so we avoid calling it unnecessarily)
-      if (hasUnsavedChanges()) {
-        await updateOffer({
-          clerkId: user.id,
-          requestId: tradeRequestId as Id<"tradeRequests">,
-          offer: {
-            cards: selectedCards.map((c) => ({
-              inventoryId: c.inventoryId,
-              cardId: c.cardId as Id<"cards">,
-              cardName: c.cardName,
-              rarity: c.rarity,
-            })),
-            coins: coinAmount,
-          },
-        })
-      }
-
-      // Then confirm
+      // Just confirm - the button is disabled if there are unsaved changes
+      // so we should never need to sync here
       await confirmTrade({
         clerkId: user.id,
         requestId: tradeRequestId as Id<"tradeRequests">,
