@@ -352,8 +352,8 @@ export const resolvePvpBattle = mutation({
     // Run battle logic (same as NPC battle)
     const rounds: Array<{
       round: number;
-      challengerCard: (typeof challengerCards)[0] & { currentDefense: number };
-      targetCard: (typeof targetCards)[0] & { currentDefense: number };
+      challengerCard: (typeof challengerCards)[0] & { currentDefense: number; startingDefense: number };
+      targetCard: (typeof targetCards)[0] & { currentDefense: number; startingDefense: number };
       winner: "challenger" | "target" | "draw";
       damage: number;
     }> = [];
@@ -364,12 +364,14 @@ export const resolvePvpBattle = mutation({
     // Track surviving cards
     let challengerSurvivor: ((typeof challengerCards)[0] & {
       currentDefense: number;
+      startingDefense: number;
     }) | null = null;
     let targetSurvivor: ((typeof targetCards)[0] & {
       currentDefense: number;
+      startingDefense: number;
     }) | null = null;
 
-    type CardWithDefense = (typeof challengerCards)[0] & { currentDefense: number };
+    type CardWithDefense = (typeof challengerCards)[0] & { currentDefense: number; startingDefense: number };
 
     for (let i = 0; i < 3; i++) {
       const currentChallengerCard = challengerCards[i]!;
@@ -378,11 +380,17 @@ export const resolvePvpBattle = mutation({
       const cCard: CardWithDefense = challengerSurvivor ?? {
         ...currentChallengerCard,
         currentDefense: currentChallengerCard.defense,
+        startingDefense: currentChallengerCard.defense,
       };
       const tCard: CardWithDefense = targetSurvivor ?? {
         ...currentTargetCard,
         currentDefense: currentTargetCard.defense,
+        startingDefense: currentTargetCard.defense,
       };
+
+      // Record starting defense for this round (especially important for survivors)
+      const challengerStartingDefense = cCard.currentDefense;
+      const targetStartingDefense = tCard.currentDefense;
 
       let roundWinner: "challenger" | "target" | "draw";
       let damage = 0;
@@ -437,8 +445,8 @@ export const resolvePvpBattle = mutation({
 
       rounds.push({
         round: i + 1,
-        challengerCard: { ...cCard },
-        targetCard: { ...tCard },
+        challengerCard: { ...cCard, startingDefense: challengerStartingDefense },
+        targetCard: { ...tCard, startingDefense: targetStartingDefense },
         winner: roundWinner,
         damage,
       });

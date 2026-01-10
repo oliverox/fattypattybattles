@@ -347,8 +347,8 @@ export const resolveBattle = mutation({
     // Battle simulation
     const rounds: Array<{
       round: number;
-      playerCard: typeof playerCards[0] & { currentDefense: number };
-      npcCard: typeof npcCards[0] & { currentDefense: number };
+      playerCard: typeof playerCards[0] & { currentDefense: number; startingDefense: number };
+      npcCard: typeof npcCards[0] & { currentDefense: number; startingDefense: number };
       winner: "player" | "npc" | "draw";
       damage: number;
     }> = [];
@@ -357,22 +357,28 @@ export const resolveBattle = mutation({
     let npcWins = 0;
 
     // Track surviving cards with current defense
-    let playerSurvivor: (typeof playerCards[0] & { currentDefense: number }) | null = null;
-    let npcSurvivor: (typeof npcCards[0] & { currentDefense: number }) | null = null;
+    let playerSurvivor: (typeof playerCards[0] & { currentDefense: number; startingDefense: number }) | null = null;
+    let npcSurvivor: (typeof npcCards[0] & { currentDefense: number; startingDefense: number }) | null = null;
 
     for (let i = 0; i < 3; i++) {
       // Get the card for this round (survivor or next in line)
       const currentPlayerCard = sortedPlayerCards[i]!;
       const currentNpcCard = sortedNpcCards[i]!;
 
-      const playerCard: typeof playerCards[0] & { currentDefense: number } = playerSurvivor ?? {
+      const playerCard: typeof playerCards[0] & { currentDefense: number; startingDefense: number } = playerSurvivor ?? {
         ...currentPlayerCard,
-        currentDefense: currentPlayerCard.defense
+        currentDefense: currentPlayerCard.defense,
+        startingDefense: currentPlayerCard.defense,
       };
-      const npcCard: typeof npcCards[0] & { currentDefense: number } = npcSurvivor ?? {
+      const npcCard: typeof npcCards[0] & { currentDefense: number; startingDefense: number } = npcSurvivor ?? {
         ...currentNpcCard,
-        currentDefense: currentNpcCard.defense
+        currentDefense: currentNpcCard.defense,
+        startingDefense: currentNpcCard.defense,
       };
+
+      // Record starting defense for this round (especially important for survivors)
+      const playerStartingDefense = playerCard.currentDefense;
+      const npcStartingDefense = npcCard.currentDefense;
 
       // Battle logic: Attack vs Defense
       const playerAttack = playerCard.attack;
@@ -439,8 +445,8 @@ export const resolveBattle = mutation({
 
       rounds.push({
         round: i + 1,
-        playerCard: { ...playerCard },
-        npcCard: { ...npcCard },
+        playerCard: { ...playerCard, startingDefense: playerStartingDefense },
+        npcCard: { ...npcCard, startingDefense: npcStartingDefense },
         winner: roundWinner,
         damage,
       });

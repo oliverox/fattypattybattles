@@ -23,8 +23,8 @@ type BattlePhase = 'intro' | 'round' | 'result' | 'final'
 
 interface RoundResult {
   round: number
-  playerCard: { cardId: string; name: string; attack: number; defense: number; rarity: string; position: number; currentDefense: number }
-  npcCard: { cardId: string; name: string; attack: number; defense: number; rarity: string; position: number; currentDefense: number }
+  playerCard: { cardId: string; name: string; attack: number; defense: number; rarity: string; position: number; currentDefense: number; startingDefense: number }
+  npcCard: { cardId: string; name: string; attack: number; defense: number; rarity: string; position: number; currentDefense: number; startingDefense: number }
   winner: 'player' | 'npc' | 'draw'
   damage: number
 }
@@ -93,10 +93,13 @@ export function BattleArena() {
         const convertedRounds: RoundResult[] = result.rounds.map((r) => {
           const pCard = isChallenger ? r.challengerCard : r.targetCard
           const oCard = isChallenger ? r.targetCard : r.challengerCard
+          // Type assertion for startingDefense which is added by the updated backend
+          const pStartingDef = (pCard as { startingDefense?: number }).startingDefense ?? pCard.defense
+          const oStartingDef = (oCard as { startingDefense?: number }).startingDefense ?? oCard.defense
           return {
             round: r.round,
-            playerCard: { ...pCard, cardId: pCard.cardId as string },
-            npcCard: { ...oCard, cardId: oCard.cardId as string },
+            playerCard: { ...pCard, cardId: pCard.cardId as string, startingDefense: pStartingDef },
+            npcCard: { ...oCard, cardId: oCard.cardId as string, startingDefense: oStartingDef },
             winner: r.winner === 'draw'
               ? 'draw'
               : (isChallenger
@@ -334,7 +337,7 @@ export function BattleArena() {
                     </div>
                     <div className="text-center">
                       <span className="text-blue-400 text-2xl font-bold">
-                        {phase === 'result' ? currentRoundData.playerCard.currentDefense : currentRoundData.playerCard.defense}
+                        {phase === 'result' ? currentRoundData.playerCard.currentDefense : currentRoundData.playerCard.startingDefense}
                       </span>
                       <p className="text-xs text-gray-400">DEF</p>
                     </div>
@@ -359,7 +362,7 @@ export function BattleArena() {
                     </div>
                     <div className="text-center">
                       <span className="text-blue-400 text-2xl font-bold">
-                        {phase === 'result' ? currentRoundData.npcCard.currentDefense : currentRoundData.npcCard.defense}
+                        {phase === 'result' ? currentRoundData.npcCard.currentDefense : currentRoundData.npcCard.startingDefense}
                       </span>
                       <p className="text-xs text-gray-400">DEF</p>
                     </div>
