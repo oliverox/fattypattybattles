@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 
 // Pack definitions with rarity weights
@@ -313,6 +314,13 @@ export const purchasePack = mutation({
       amount: -pack.cost,
       metadata: { packType, cardsReceived: generatedCards.length },
       timestamp: now,
+    });
+
+    // Update daily quest progress for pack opening
+    await ctx.scheduler.runAfter(0, internal.dailyRewards.updateQuestProgress, {
+      clerkId,
+      questType: "open_pack",
+      amount: 1,
     });
 
     return {
