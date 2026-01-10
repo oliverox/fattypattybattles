@@ -14,7 +14,7 @@ const RARITY_COLORS: Record<string, string> = {
   divine: 'border-yellow-400 text-yellow-300',
   prismatic: 'border-cyan-400 text-cyan-300',
   transcendent: 'border-orange-400 text-orange-300',
-  holographic: 'border-red-400 text-red-300 animate-pulse',
+  holographic: 'border-white text-white bg-white/10 animate-pulse',
 }
 
 interface SelectedCard {
