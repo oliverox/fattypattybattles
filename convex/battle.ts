@@ -356,46 +356,67 @@ export const resolveBattle = mutation({
     let playerWins = 0;
     let npcWins = 0;
 
+    // Track card indices separately - survivors don't consume the next card slot
+    let playerCardIndex = 0;
+    let npcCardIndex = 0;
+
     // Track surviving cards with current defense
     let playerSurvivor: (typeof playerCards[0] & { currentDefense: number; startingDefense: number }) | null = null;
     let npcSurvivor: (typeof npcCards[0] & { currentDefense: number; startingDefense: number }) | null = null;
 
-    for (let i = 0; i < 3; i++) {
-      // Get the card for this round (survivor or next in line)
-      const currentPlayerCard = sortedPlayerCards[i]!;
-      const currentNpcCard = sortedNpcCards[i]!;
-
-      // Safety check: clear survivors with 0 or less defense
+    for (let round = 0; round < 3; round++) {
+      // Clear survivors with 0 or less defense
       if (playerSurvivor && playerSurvivor.currentDefense <= 0) {
-        console.log(`[BATTLE DEBUG] Clearing invalid playerSurvivor with defense ${playerSurvivor.currentDefense}`);
+        console.log(`[BATTLE DEBUG] Round ${round + 1}: Clearing playerSurvivor with 0 defense`);
         playerSurvivor = null;
       }
       if (npcSurvivor && npcSurvivor.currentDefense <= 0) {
-        console.log(`[BATTLE DEBUG] Clearing invalid npcSurvivor with defense ${npcSurvivor.currentDefense}`);
+        console.log(`[BATTLE DEBUG] Round ${round + 1}: Clearing npcSurvivor with 0 defense`);
         npcSurvivor = null;
       }
 
-      // Track if we're using a survivor
+      // Determine which card to use
       const playerIsSurvivor = playerSurvivor !== null;
       const npcIsSurvivor = npcSurvivor !== null;
 
-      const playerCard: typeof playerCards[0] & { currentDefense: number; startingDefense: number } = playerSurvivor ?? {
-        ...currentPlayerCard,
-        currentDefense: currentPlayerCard.defense,
-        startingDefense: currentPlayerCard.defense,
-      };
-      const npcCard: typeof npcCards[0] & { currentDefense: number; startingDefense: number } = npcSurvivor ?? {
-        ...currentNpcCard,
-        currentDefense: currentNpcCard.defense,
-        startingDefense: currentNpcCard.defense,
-      };
+      // Get the next fresh card if no survivor
+      const currentPlayerCard = sortedPlayerCards[playerCardIndex]!;
+      const currentNpcCard = sortedNpcCards[npcCardIndex]!;
+
+      // Create the card for this round
+      let playerCard: typeof playerCards[0] & { currentDefense: number; startingDefense: number };
+      let npcCard: typeof npcCards[0] & { currentDefense: number; startingDefense: number };
+
+      if (playerSurvivor) {
+        playerCard = playerSurvivor;
+      } else {
+        playerCard = {
+          ...currentPlayerCard,
+          currentDefense: currentPlayerCard.defense,
+          startingDefense: currentPlayerCard.defense,
+        };
+        playerCardIndex++; // Only increment when using a fresh card
+      }
+
+      if (npcSurvivor) {
+        npcCard = npcSurvivor;
+      } else {
+        npcCard = {
+          ...currentNpcCard,
+          currentDefense: currentNpcCard.defense,
+          startingDefense: currentNpcCard.defense,
+        };
+        npcCardIndex++; // Only increment when using a fresh card
+      }
+
+      console.log(`[BATTLE DEBUG] Round ${round + 1}: Player(${playerIsSurvivor ? 'SURVIVOR' : 'FRESH'} atk=${playerCard.attack} def=${playerCard.currentDefense}), NPC(${npcIsSurvivor ? 'SURVIVOR' : 'FRESH'} atk=${npcCard.attack} def=${npcCard.currentDefense})`);
 
       // Record starting defense for this round (especially important for survivors)
       const playerStartingDefense = playerCard.currentDefense;
       const npcStartingDefense = npcCard.currentDefense;
 
       // Debug: log survivor info
-      console.log(`[BATTLE DEBUG] Round ${i + 1}: PlayerSurvivor=${playerIsSurvivor} (def=${playerStartingDefense}), NpcSurvivor=${npcIsSurvivor} (def=${npcStartingDefense}), PlayerAtk=${playerCard.attack}, NpcAtk=${npcCard.attack}`);
+      console.log(`[BATTLE DEBUG] Round ${round + 1}: PlayerSurvivor=${playerIsSurvivor} (def=${playerStartingDefense}), NpcSurvivor=${npcIsSurvivor} (def=${npcStartingDefense}), PlayerAtk=${playerCard.attack}, NpcAtk=${npcCard.attack}`);
 
       // Battle logic: Attack vs Defense
       const playerAttack = playerCard.attack;
@@ -417,7 +438,7 @@ export const resolveBattle = mutation({
         npcCard.currentDefense = 0;
         playerSurvivor = null;
         npcSurvivor = null;
-        console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: Both 0 def, ${roundWinner} wins 50/50, no survivor`);
+        console.log(`[BATTLE DEBUG] Round ${round + 1} RESULT: Both 0 def, ${roundWinner} wins 50/50, no survivor`);
       } else if (playerDef <= 0) {
         // Player has 0 defense - instant knockout
         roundWinner = "npc";
@@ -427,7 +448,7 @@ export const resolveBattle = mutation({
         // NPC doesn't take damage, survives if defense > 0
         npcSurvivor = npcCard.currentDefense > 0 ? npcCard : null;
         playerSurvivor = null;
-        console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: Player 0 def knockout, NPC wins, survives=${npcSurvivor !== null}`);
+        console.log(`[BATTLE DEBUG] Round ${round + 1} RESULT: Player 0 def knockout, NPC wins, survives=${npcSurvivor !== null}`);
       } else if (npcDef <= 0) {
         // NPC has 0 defense - instant knockout
         roundWinner = "player";
@@ -437,7 +458,7 @@ export const resolveBattle = mutation({
         // Player doesn't take damage, survives if defense > 0
         playerSurvivor = playerCard.currentDefense > 0 ? playerCard : null;
         npcSurvivor = null;
-        console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: NPC 0 def knockout, Player wins, survives=${playerSurvivor !== null}`);
+        console.log(`[BATTLE DEBUG] Round ${round + 1} RESULT: NPC 0 def knockout, Player wins, survives=${playerSurvivor !== null}`);
       } else if (playerAttack > npcDef && npcAttack <= playerDef) {
         // Player wins clearly - their attack beats NPC defense, NPC attack doesn't beat player defense
         roundWinner = "player";
@@ -448,7 +469,7 @@ export const resolveBattle = mutation({
         npcSurvivor = null;
         npcCard.currentDefense = 0;
         playerWins++;
-        console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: Player wins clearly, def=${playerCard.currentDefense}, survives=${playerSurvivor !== null}`);
+        console.log(`[BATTLE DEBUG] Round ${round + 1} RESULT: Player wins clearly, def=${playerCard.currentDefense}, survives=${playerSurvivor !== null}`);
       } else if (npcAttack > playerDef && playerAttack <= npcDef) {
         // NPC wins clearly
         roundWinner = "npc";
@@ -459,7 +480,7 @@ export const resolveBattle = mutation({
         playerSurvivor = null;
         playerCard.currentDefense = 0;
         npcWins++;
-        console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: NPC wins clearly, def=${npcCard.currentDefense}, survives=${npcSurvivor !== null}`);
+        console.log(`[BATTLE DEBUG] Round ${round + 1} RESULT: NPC wins clearly, def=${npcCard.currentDefense}, survives=${npcSurvivor !== null}`);
       } else if (playerAttack > npcDef && npcAttack > playerDef) {
         // Both deal lethal damage - higher attack wins, but no survivor (both took lethal)
         if (playerAttack > npcAttack) {
@@ -470,7 +491,7 @@ export const resolveBattle = mutation({
           // No survivor - both dealt lethal damage
           playerSurvivor = null;
           npcSurvivor = null;
-          console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: Both lethal, Player wins (higher atk), no survivor`);
+          console.log(`[BATTLE DEBUG] Round ${round + 1} RESULT: Both lethal, Player wins (higher atk), no survivor`);
         } else if (npcAttack > playerAttack) {
           roundWinner = "npc";
           npcWins++;
@@ -479,7 +500,7 @@ export const resolveBattle = mutation({
           // No survivor - both dealt lethal damage
           npcSurvivor = null;
           playerSurvivor = null;
-          console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: Both lethal, NPC wins (higher atk), no survivor`);
+          console.log(`[BATTLE DEBUG] Round ${round + 1} RESULT: Both lethal, NPC wins (higher atk), no survivor`);
         } else {
           // Equal attacks, 50/50 - no survivor either way
           roundWinner = Math.random() < 0.5 ? "player" : "npc";
@@ -492,7 +513,7 @@ export const resolveBattle = mutation({
           npcCard.currentDefense = 0;
           playerSurvivor = null;
           npcSurvivor = null;
-          console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: Both lethal equal atk, ${roundWinner} wins 50/50, no survivor`);
+          console.log(`[BATTLE DEBUG] Round ${round + 1} RESULT: Both lethal equal atk, ${roundWinner} wins 50/50, no survivor`);
         }
         damage = Math.max(playerAttack, npcAttack);
       } else {
@@ -506,7 +527,7 @@ export const resolveBattle = mutation({
           playerSurvivor = playerCard.currentDefense > 0 ? playerCard : null;
           npcCard.currentDefense = 0;
           npcSurvivor = null;
-          console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: Stalemate, Player wins 50/50, def=${playerCard.currentDefense}, survives=${playerSurvivor !== null}`);
+          console.log(`[BATTLE DEBUG] Round ${round + 1} RESULT: Stalemate, Player wins 50/50, def=${playerCard.currentDefense}, survives=${playerSurvivor !== null}`);
         } else {
           npcWins++;
           npcCard.currentDefense = Math.max(0, npcCard.currentDefense - playerAttack);
@@ -514,14 +535,14 @@ export const resolveBattle = mutation({
           npcSurvivor = npcCard.currentDefense > 0 ? npcCard : null;
           playerCard.currentDefense = 0;
           playerSurvivor = null;
-          console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: Stalemate, NPC wins 50/50, def=${npcCard.currentDefense}, survives=${npcSurvivor !== null}`);
+          console.log(`[BATTLE DEBUG] Round ${round + 1} RESULT: Stalemate, NPC wins 50/50, def=${npcCard.currentDefense}, survives=${npcSurvivor !== null}`);
         }
       }
 
-      console.log(`[BATTLE DEBUG] After Round ${i + 1}: playerSurvivor=${playerSurvivor !== null}, npcSurvivor=${npcSurvivor !== null}`);
+      console.log(`[BATTLE DEBUG] After Round ${round + 1}: playerSurvivor=${playerSurvivor !== null}, npcSurvivor=${npcSurvivor !== null}`);
 
       rounds.push({
-        round: i + 1,
+        round: round + 1,
         playerCard: { ...playerCard, startingDefense: playerStartingDefense, isSurvivor: playerIsSurvivor },
         npcCard: { ...npcCard, startingDefense: npcStartingDefense, isSurvivor: npcIsSurvivor },
         winner: roundWinner,

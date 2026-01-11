@@ -373,34 +373,56 @@ export const resolvePvpBattle = mutation({
 
     type CardWithDefense = (typeof challengerCards)[0] & { currentDefense: number; startingDefense: number };
 
-    for (let i = 0; i < 3; i++) {
-      const currentChallengerCard = challengerCards[i]!;
-      const currentTargetCard = targetCards[i]!;
+    // Track card indices separately - survivors don't consume the next card slot
+    let challengerCardIndex = 0;
+    let targetCardIndex = 0;
 
-      // Safety check: clear survivors with 0 or less defense
+    for (let round = 0; round < 3; round++) {
+      // Clear survivors with 0 or less defense
       if (challengerSurvivor && challengerSurvivor.currentDefense <= 0) {
-        console.log(`[PVP DEBUG] Clearing invalid challengerSurvivor with defense ${challengerSurvivor.currentDefense}`);
+        console.log(`[PVP DEBUG] Round ${round + 1}: Clearing challengerSurvivor with 0 defense`);
         challengerSurvivor = null;
       }
       if (targetSurvivor && targetSurvivor.currentDefense <= 0) {
-        console.log(`[PVP DEBUG] Clearing invalid targetSurvivor with defense ${targetSurvivor.currentDefense}`);
+        console.log(`[PVP DEBUG] Round ${round + 1}: Clearing targetSurvivor with 0 defense`);
         targetSurvivor = null;
       }
 
-      // Track if we're using a survivor
+      // Determine which card to use
       const challengerIsSurvivor = challengerSurvivor !== null;
       const targetIsSurvivor = targetSurvivor !== null;
 
-      const cCard: CardWithDefense = challengerSurvivor ?? {
-        ...currentChallengerCard,
-        currentDefense: currentChallengerCard.defense,
-        startingDefense: currentChallengerCard.defense,
-      };
-      const tCard: CardWithDefense = targetSurvivor ?? {
-        ...currentTargetCard,
-        currentDefense: currentTargetCard.defense,
-        startingDefense: currentTargetCard.defense,
-      };
+      // Get the next fresh card if no survivor
+      const currentChallengerCard = challengerCards[challengerCardIndex]!;
+      const currentTargetCard = targetCards[targetCardIndex]!;
+
+      // Create the card for this round
+      let cCard: CardWithDefense;
+      let tCard: CardWithDefense;
+
+      if (challengerSurvivor) {
+        cCard = challengerSurvivor;
+      } else {
+        cCard = {
+          ...currentChallengerCard,
+          currentDefense: currentChallengerCard.defense,
+          startingDefense: currentChallengerCard.defense,
+        };
+        challengerCardIndex++;
+      }
+
+      if (targetSurvivor) {
+        tCard = targetSurvivor;
+      } else {
+        tCard = {
+          ...currentTargetCard,
+          currentDefense: currentTargetCard.defense,
+          startingDefense: currentTargetCard.defense,
+        };
+        targetCardIndex++;
+      }
+
+      console.log(`[PVP DEBUG] Round ${round + 1}: Challenger(${challengerIsSurvivor ? 'SURVIVOR' : 'FRESH'} atk=${cCard.attack} def=${cCard.currentDefense}), Target(${targetIsSurvivor ? 'SURVIVOR' : 'FRESH'} atk=${tCard.attack} def=${tCard.currentDefense})`);
 
       // Record starting defense for this round (especially important for survivors)
       const challengerStartingDefense = cCard.currentDefense;
@@ -410,7 +432,7 @@ export const resolvePvpBattle = mutation({
       let damage = 0;
 
       // Debug log
-      console.log(`[PVP DEBUG] Round ${i + 1}: ChallengerSurvivor=${challengerIsSurvivor} (def=${challengerStartingDefense}), TargetSurvivor=${targetIsSurvivor} (def=${targetStartingDefense})`);
+      console.log(`[PVP DEBUG] Round ${round + 1}: ChallengerSurvivor=${challengerIsSurvivor} (def=${challengerStartingDefense}), TargetSurvivor=${targetIsSurvivor} (def=${targetStartingDefense})`);
 
       const cDef = cCard.currentDefense;
       const tDef = tCard.currentDefense;
@@ -426,7 +448,7 @@ export const resolvePvpBattle = mutation({
         tCard.currentDefense = 0;
         challengerSurvivor = null;
         targetSurvivor = null;
-        console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Both 0 def, ${roundWinner} wins 50/50, no survivor`);
+        console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Both 0 def, ${roundWinner} wins 50/50, no survivor`);
       } else if (cDef <= 0) {
         // Challenger has 0 defense - instant knockout
         roundWinner = "target";
@@ -436,7 +458,7 @@ export const resolvePvpBattle = mutation({
         // Target doesn't take damage, survives if defense > 0
         targetSurvivor = tCard.currentDefense > 0 ? tCard : null;
         challengerSurvivor = null;
-        console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Challenger 0 def knockout, Target wins, survives=${targetSurvivor !== null}`);
+        console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Challenger 0 def knockout, Target wins, survives=${targetSurvivor !== null}`);
       } else if (tDef <= 0) {
         // Target has 0 defense - instant knockout
         roundWinner = "challenger";
@@ -446,7 +468,7 @@ export const resolvePvpBattle = mutation({
         // Challenger doesn't take damage, survives if defense > 0
         challengerSurvivor = cCard.currentDefense > 0 ? cCard : null;
         targetSurvivor = null;
-        console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Target 0 def knockout, Challenger wins, survives=${challengerSurvivor !== null}`);
+        console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Target 0 def knockout, Challenger wins, survives=${challengerSurvivor !== null}`);
       } else if (cCard.attack > tCard.currentDefense && tCard.attack <= cCard.currentDefense) {
         // Challenger wins clearly
         roundWinner = "challenger";
@@ -457,7 +479,7 @@ export const resolvePvpBattle = mutation({
         targetSurvivor = null;
         tCard.currentDefense = 0;
         challengerWins++;
-        console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Challenger wins clearly, def=${cCard.currentDefense}, survives=${challengerSurvivor !== null}`);
+        console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Challenger wins clearly, def=${cCard.currentDefense}, survives=${challengerSurvivor !== null}`);
       } else if (tCard.attack > cCard.currentDefense && cCard.attack <= tCard.currentDefense) {
         // Target wins clearly
         roundWinner = "target";
@@ -468,7 +490,7 @@ export const resolvePvpBattle = mutation({
         challengerSurvivor = null;
         cCard.currentDefense = 0;
         targetWins++;
-        console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Target wins clearly, def=${tCard.currentDefense}, survives=${targetSurvivor !== null}`);
+        console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Target wins clearly, def=${tCard.currentDefense}, survives=${targetSurvivor !== null}`);
       } else if (cCard.attack > tCard.currentDefense && tCard.attack > cCard.currentDefense) {
         // Both deal lethal damage - higher attack wins, but no survivor (both took lethal)
         if (cCard.attack > tCard.attack) {
@@ -479,7 +501,7 @@ export const resolvePvpBattle = mutation({
           // No survivor - both dealt lethal damage
           challengerSurvivor = null;
           targetSurvivor = null;
-          console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Both lethal, Challenger wins (higher atk), no survivor`);
+          console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Both lethal, Challenger wins (higher atk), no survivor`);
         } else if (tCard.attack > cCard.attack) {
           roundWinner = "target";
           targetWins++;
@@ -488,7 +510,7 @@ export const resolvePvpBattle = mutation({
           // No survivor - both dealt lethal damage
           targetSurvivor = null;
           challengerSurvivor = null;
-          console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Both lethal, Target wins (higher atk), no survivor`);
+          console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Both lethal, Target wins (higher atk), no survivor`);
         } else {
           // Equal attacks, 50/50 - no survivor either way
           roundWinner = Math.random() < 0.5 ? "challenger" : "target";
@@ -501,7 +523,7 @@ export const resolvePvpBattle = mutation({
           tCard.currentDefense = 0;
           challengerSurvivor = null;
           targetSurvivor = null;
-          console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Both lethal equal, ${roundWinner} wins 50/50, no survivor`);
+          console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Both lethal equal, ${roundWinner} wins 50/50, no survivor`);
         }
         damage = Math.max(cCard.attack, tCard.attack);
       } else {
@@ -515,7 +537,7 @@ export const resolvePvpBattle = mutation({
           challengerSurvivor = cCard.currentDefense > 0 ? cCard : null;
           tCard.currentDefense = 0;
           targetSurvivor = null;
-          console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Stalemate, Challenger wins 50/50, def=${cCard.currentDefense}, survives=${challengerSurvivor !== null}`);
+          console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Stalemate, Challenger wins 50/50, def=${cCard.currentDefense}, survives=${challengerSurvivor !== null}`);
         } else {
           targetWins++;
           tCard.currentDefense = Math.max(0, tCard.currentDefense - cCard.attack);
@@ -523,14 +545,14 @@ export const resolvePvpBattle = mutation({
           targetSurvivor = tCard.currentDefense > 0 ? tCard : null;
           cCard.currentDefense = 0;
           challengerSurvivor = null;
-          console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Stalemate, Target wins 50/50, def=${tCard.currentDefense}, survives=${targetSurvivor !== null}`);
+          console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Stalemate, Target wins 50/50, def=${tCard.currentDefense}, survives=${targetSurvivor !== null}`);
         }
       }
 
-      console.log(`[PVP DEBUG] After Round ${i + 1}: challengerSurvivor=${challengerSurvivor !== null}, targetSurvivor=${targetSurvivor !== null}`);
+      console.log(`[PVP DEBUG] After Round ${round + 1}: challengerSurvivor=${challengerSurvivor !== null}, targetSurvivor=${targetSurvivor !== null}`);
 
       rounds.push({
-        round: i + 1,
+        round: round + 1,
         challengerCard: { ...cCard, startingDefense: challengerStartingDefense, isSurvivor: challengerIsSurvivor },
         targetCard: { ...tCard, startingDefense: targetStartingDefense, isSurvivor: targetIsSurvivor },
         winner: roundWinner,
