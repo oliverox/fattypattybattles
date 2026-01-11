@@ -337,7 +337,7 @@ export function BattleArena() {
                     </div>
                     <div className="text-center">
                       <span className="text-blue-400 text-2xl font-bold">
-                        {phase === 'result' ? currentRoundData.playerCard.currentDefense : currentRoundData.playerCard.startingDefense}
+                        {phase === 'result' ? currentRoundData.playerCard.currentDefense : (currentRoundData.playerCard.startingDefense ?? currentRoundData.playerCard.defense)}
                       </span>
                       <p className="text-xs text-gray-400">DEF</p>
                     </div>
@@ -362,7 +362,7 @@ export function BattleArena() {
                     </div>
                     <div className="text-center">
                       <span className="text-blue-400 text-2xl font-bold">
-                        {phase === 'result' ? currentRoundData.npcCard.currentDefense : currentRoundData.npcCard.startingDefense}
+                        {phase === 'result' ? currentRoundData.npcCard.currentDefense : (currentRoundData.npcCard.startingDefense ?? currentRoundData.npcCard.defense)}
                       </span>
                       <p className="text-xs text-gray-400">DEF</p>
                     </div>

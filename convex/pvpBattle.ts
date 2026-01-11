@@ -397,16 +397,20 @@ export const resolvePvpBattle = mutation({
 
       // Same battle logic as NPC
       if (cCard.attack > tCard.currentDefense && tCard.attack <= cCard.currentDefense) {
+        // Challenger wins clearly - target can't break through defense
         roundWinner = "challenger";
-        cCard.currentDefense -= tCard.attack;
-        challengerSurvivor = cCard.currentDefense > 0 ? cCard : null;
+        const damageTaken = Math.max(0, tCard.attack - cCard.currentDefense);
+        cCard.currentDefense -= damageTaken;
+        challengerSurvivor = cCard; // Clear winner always survives
         targetSurvivor = null;
         challengerWins++;
         damage = cCard.attack;
       } else if (tCard.attack > cCard.currentDefense && cCard.attack <= tCard.currentDefense) {
+        // Target wins clearly - challenger can't break through defense
         roundWinner = "target";
-        tCard.currentDefense -= cCard.attack;
-        targetSurvivor = tCard.currentDefense > 0 ? tCard : null;
+        const damageTaken = Math.max(0, cCard.attack - tCard.currentDefense);
+        tCard.currentDefense -= damageTaken;
+        targetSurvivor = tCard; // Clear winner always survives
         challengerSurvivor = null;
         targetWins++;
         damage = tCard.attack;

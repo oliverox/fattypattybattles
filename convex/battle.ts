@@ -394,19 +394,23 @@ export const resolveBattle = mutation({
       const npcDamageToPlayer = Math.max(0, npcAttack - playerDef);
 
       if (playerAttack > npcDef && npcAttack <= playerDef) {
-        // Player wins clearly
+        // Player wins clearly - opponent can't break through defense
         roundWinner = "player";
         damage = playerAttack;
-        playerCard.currentDefense -= npcAttack; // Take some damage
-        playerSurvivor = playerCard.currentDefense > 0 ? playerCard : null;
+        // Only take damage if opponent's attack exceeds defense
+        const damageTaken = Math.max(0, npcAttack - playerDef);
+        playerCard.currentDefense -= damageTaken;
+        playerSurvivor = playerCard; // Clear winner always survives
         npcSurvivor = null;
         playerWins++;
       } else if (npcAttack > playerDef && playerAttack <= npcDef) {
-        // NPC wins clearly
+        // NPC wins clearly - player can't break through defense
         roundWinner = "npc";
         damage = npcAttack;
-        npcCard.currentDefense -= playerAttack; // Take some damage
-        npcSurvivor = npcCard.currentDefense > 0 ? npcCard : null;
+        // Only take damage if opponent's attack exceeds defense
+        const damageTaken = Math.max(0, playerAttack - npcDef);
+        npcCard.currentDefense -= damageTaken;
+        npcSurvivor = npcCard; // Clear winner always survives
         playerSurvivor = null;
         npcWins++;
       } else if (playerAttack > npcDef && npcAttack > playerDef) {
