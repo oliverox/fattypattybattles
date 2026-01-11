@@ -402,8 +402,42 @@ export const resolvePvpBattle = mutation({
       // Debug log
       console.log(`[PVP DEBUG] Round ${i + 1}: ChallengerSurvivor=${challengerIsSurvivor} (def=${challengerStartingDefense}), TargetSurvivor=${targetIsSurvivor} (def=${targetStartingDefense})`);
 
-      // Same battle logic as NPC
-      if (cCard.attack > tCard.currentDefense && tCard.attack <= cCard.currentDefense) {
+      const cDef = cCard.currentDefense;
+      const tDef = tCard.currentDefense;
+
+      // Check for instant knockout - cards with 0 defense can't fight
+      if (cDef <= 0 && tDef <= 0) {
+        // Both have 0 defense - 50/50
+        roundWinner = Math.random() < 0.5 ? "challenger" : "target";
+        if (roundWinner === "challenger") challengerWins++;
+        else targetWins++;
+        damage = 0;
+        cCard.currentDefense = 0;
+        tCard.currentDefense = 0;
+        challengerSurvivor = null;
+        targetSurvivor = null;
+        console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Both 0 def, ${roundWinner} wins 50/50, no survivor`);
+      } else if (cDef <= 0) {
+        // Challenger has 0 defense - instant knockout
+        roundWinner = "target";
+        targetWins++;
+        damage = tCard.attack;
+        cCard.currentDefense = 0;
+        // Target doesn't take damage, survives if defense > 0
+        targetSurvivor = tCard.currentDefense > 0 ? tCard : null;
+        challengerSurvivor = null;
+        console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Challenger 0 def knockout, Target wins, survives=${targetSurvivor !== null}`);
+      } else if (tDef <= 0) {
+        // Target has 0 defense - instant knockout
+        roundWinner = "challenger";
+        challengerWins++;
+        damage = cCard.attack;
+        tCard.currentDefense = 0;
+        // Challenger doesn't take damage, survives if defense > 0
+        challengerSurvivor = cCard.currentDefense > 0 ? cCard : null;
+        targetSurvivor = null;
+        console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Target 0 def knockout, Challenger wins, survives=${challengerSurvivor !== null}`);
+      } else if (cCard.attack > tCard.currentDefense && tCard.attack <= cCard.currentDefense) {
         // Challenger wins clearly
         roundWinner = "challenger";
         damage = cCard.attack;

@@ -396,11 +396,39 @@ export const resolveBattle = mutation({
       let roundWinner: "player" | "npc" | "draw";
       let damage = 0;
 
-      // Player attacks NPC's defense, NPC attacks player's defense
-      const playerDamageToNpc = Math.max(0, playerAttack - npcDef);
-      const npcDamageToPlayer = Math.max(0, npcAttack - playerDef);
-
-      if (playerAttack > npcDef && npcAttack <= playerDef) {
+      // Check for instant knockout - cards with 0 defense can't fight
+      if (playerDef <= 0 && npcDef <= 0) {
+        // Both have 0 defense - 50/50
+        roundWinner = Math.random() < 0.5 ? "player" : "npc";
+        if (roundWinner === "player") playerWins++;
+        else npcWins++;
+        damage = 0;
+        playerCard.currentDefense = 0;
+        npcCard.currentDefense = 0;
+        playerSurvivor = null;
+        npcSurvivor = null;
+        console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: Both 0 def, ${roundWinner} wins 50/50, no survivor`);
+      } else if (playerDef <= 0) {
+        // Player has 0 defense - instant knockout
+        roundWinner = "npc";
+        npcWins++;
+        damage = npcAttack;
+        playerCard.currentDefense = 0;
+        // NPC doesn't take damage, survives if defense > 0
+        npcSurvivor = npcCard.currentDefense > 0 ? npcCard : null;
+        playerSurvivor = null;
+        console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: Player 0 def knockout, NPC wins, survives=${npcSurvivor !== null}`);
+      } else if (npcDef <= 0) {
+        // NPC has 0 defense - instant knockout
+        roundWinner = "player";
+        playerWins++;
+        damage = playerAttack;
+        npcCard.currentDefense = 0;
+        // Player doesn't take damage, survives if defense > 0
+        playerSurvivor = playerCard.currentDefense > 0 ? playerCard : null;
+        npcSurvivor = null;
+        console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: NPC 0 def knockout, Player wins, survives=${playerSurvivor !== null}`);
+      } else if (playerAttack > npcDef && npcAttack <= playerDef) {
         // Player wins clearly - their attack beats NPC defense, NPC attack doesn't beat player defense
         roundWinner = "player";
         damage = playerAttack;
