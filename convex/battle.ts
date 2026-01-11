@@ -394,24 +394,26 @@ export const resolveBattle = mutation({
       const npcDamageToPlayer = Math.max(0, npcAttack - playerDef);
 
       if (playerAttack > npcDef && npcAttack <= playerDef) {
-        // Player wins clearly - opponent can't break through defense
+        // Player wins clearly
         roundWinner = "player";
         damage = playerAttack;
-        // Only take damage if opponent's attack exceeds defense
-        const damageTaken = Math.max(0, npcAttack - playerDef);
-        playerCard.currentDefense -= damageTaken;
-        playerSurvivor = playerCard; // Clear winner always survives
+        // Take damage from opponent's attack
+        playerCard.currentDefense -= npcAttack;
+        // Winner survives (defense can be 0 or negative but they still won)
+        playerSurvivor = playerCard;
         npcSurvivor = null;
+        npcCard.currentDefense = 0; // Loser has 0 defense
         playerWins++;
       } else if (npcAttack > playerDef && playerAttack <= npcDef) {
-        // NPC wins clearly - player can't break through defense
+        // NPC wins clearly
         roundWinner = "npc";
         damage = npcAttack;
-        // Only take damage if opponent's attack exceeds defense
-        const damageTaken = Math.max(0, playerAttack - npcDef);
-        npcCard.currentDefense -= damageTaken;
-        npcSurvivor = npcCard; // Clear winner always survives
+        // Take damage from opponent's attack
+        npcCard.currentDefense -= playerAttack;
+        // Winner survives
+        npcSurvivor = npcCard;
         playerSurvivor = null;
+        playerCard.currentDefense = 0; // Loser has 0 defense
         npcWins++;
       } else if (playerAttack > npcDef && npcAttack > playerDef) {
         // Both deal lethal damage - compare attack values
@@ -428,6 +430,9 @@ export const resolveBattle = mutation({
           else npcWins++;
         }
         damage = Math.max(playerAttack, npcAttack);
+        // Both cards are knocked out
+        playerCard.currentDefense = 0;
+        npcCard.currentDefense = 0;
         playerSurvivor = null;
         npcSurvivor = null;
       } else {
@@ -436,14 +441,16 @@ export const resolveBattle = mutation({
         damage = 0;
         if (roundWinner === "player") {
           playerWins++;
-          npcSurvivor = null;
           playerCard.currentDefense -= npcAttack;
-          playerSurvivor = playerCard.currentDefense > 0 ? playerCard : null;
+          playerSurvivor = playerCard; // Winner survives
+          npcCard.currentDefense = 0;
+          npcSurvivor = null;
         } else {
           npcWins++;
-          playerSurvivor = null;
           npcCard.currentDefense -= playerAttack;
-          npcSurvivor = npcCard.currentDefense > 0 ? npcCard : null;
+          npcSurvivor = npcCard; // Winner survives
+          playerCard.currentDefense = 0;
+          playerSurvivor = null;
         }
       }
 
