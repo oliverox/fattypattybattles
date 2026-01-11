@@ -377,6 +377,16 @@ export const resolvePvpBattle = mutation({
       const currentChallengerCard = challengerCards[i]!;
       const currentTargetCard = targetCards[i]!;
 
+      // Safety check: clear survivors with 0 or less defense
+      if (challengerSurvivor && challengerSurvivor.currentDefense <= 0) {
+        console.log(`[PVP DEBUG] Clearing invalid challengerSurvivor with defense ${challengerSurvivor.currentDefense}`);
+        challengerSurvivor = null;
+      }
+      if (targetSurvivor && targetSurvivor.currentDefense <= 0) {
+        console.log(`[PVP DEBUG] Clearing invalid targetSurvivor with defense ${targetSurvivor.currentDefense}`);
+        targetSurvivor = null;
+      }
+
       // Track if we're using a survivor
       const challengerIsSurvivor = challengerSurvivor !== null;
       const targetIsSurvivor = targetSurvivor !== null;

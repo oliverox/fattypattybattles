@@ -365,6 +365,16 @@ export const resolveBattle = mutation({
       const currentPlayerCard = sortedPlayerCards[i]!;
       const currentNpcCard = sortedNpcCards[i]!;
 
+      // Safety check: clear survivors with 0 or less defense
+      if (playerSurvivor && playerSurvivor.currentDefense <= 0) {
+        console.log(`[BATTLE DEBUG] Clearing invalid playerSurvivor with defense ${playerSurvivor.currentDefense}`);
+        playerSurvivor = null;
+      }
+      if (npcSurvivor && npcSurvivor.currentDefense <= 0) {
+        console.log(`[BATTLE DEBUG] Clearing invalid npcSurvivor with defense ${npcSurvivor.currentDefense}`);
+        npcSurvivor = null;
+      }
+
       // Track if we're using a survivor
       const playerIsSurvivor = playerSurvivor !== null;
       const npcIsSurvivor = npcSurvivor !== null;
