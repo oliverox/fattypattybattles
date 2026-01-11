@@ -385,7 +385,7 @@ export const resolveBattle = mutation({
       const npcStartingDefense = npcCard.currentDefense;
 
       // Debug: log survivor info
-      console.log(`Round ${i + 1}: Player survivor=${playerIsSurvivor}, startingDef=${playerStartingDefense}, NPC survivor=${npcIsSurvivor}, startingDef=${npcStartingDefense}`);
+      console.log(`[BATTLE DEBUG] Round ${i + 1}: PlayerSurvivor=${playerIsSurvivor} (def=${playerStartingDefense}), NpcSurvivor=${npcIsSurvivor} (def=${npcStartingDefense}), PlayerAtk=${playerCard.attack}, NpcAtk=${npcCard.attack}`);
 
       // Battle logic: Attack vs Defense
       const playerAttack = playerCard.attack;
@@ -401,79 +401,85 @@ export const resolveBattle = mutation({
       const npcDamageToPlayer = Math.max(0, npcAttack - playerDef);
 
       if (playerAttack > npcDef && npcAttack <= playerDef) {
-        // Player wins clearly
+        // Player wins clearly - their attack beats NPC defense, NPC attack doesn't beat player defense
         roundWinner = "player";
         damage = playerAttack;
-        // Take damage from opponent's attack
-        playerCard.currentDefense -= npcAttack;
-        // Winner survives (defense can be 0 or negative but they still won)
+        playerCard.currentDefense = Math.max(0, playerCard.currentDefense - npcAttack);
         playerSurvivor = playerCard;
         npcSurvivor = null;
-        npcCard.currentDefense = 0; // Loser has 0 defense
+        npcCard.currentDefense = 0;
         playerWins++;
+        console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: Player wins clearly, survivor def=${playerCard.currentDefense}`);
       } else if (npcAttack > playerDef && playerAttack <= npcDef) {
         // NPC wins clearly
         roundWinner = "npc";
         damage = npcAttack;
-        // Take damage from opponent's attack
-        npcCard.currentDefense -= playerAttack;
-        // Winner survives
+        npcCard.currentDefense = Math.max(0, npcCard.currentDefense - playerAttack);
         npcSurvivor = npcCard;
         playerSurvivor = null;
-        playerCard.currentDefense = 0; // Loser has 0 defense
+        playerCard.currentDefense = 0;
         npcWins++;
+        console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: NPC wins clearly, survivor def=${npcCard.currentDefense}`);
       } else if (playerAttack > npcDef && npcAttack > playerDef) {
-        // Both deal lethal damage - compare attack values, winner survives
+        // Both deal lethal damage - higher attack wins and survives
         if (playerAttack > npcAttack) {
           roundWinner = "player";
           playerWins++;
-          playerCard.currentDefense -= npcAttack;
-          playerSurvivor = playerCard; // Winner survives with reduced defense
+          playerCard.currentDefense = Math.max(0, playerCard.currentDefense - npcAttack);
+          playerSurvivor = playerCard;
           npcCard.currentDefense = 0;
           npcSurvivor = null;
+          console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: Both lethal, Player wins (higher atk), survivor def=${playerCard.currentDefense}`);
         } else if (npcAttack > playerAttack) {
           roundWinner = "npc";
           npcWins++;
-          npcCard.currentDefense -= playerAttack;
-          npcSurvivor = npcCard; // Winner survives with reduced defense
+          npcCard.currentDefense = Math.max(0, npcCard.currentDefense - playerAttack);
+          npcSurvivor = npcCard;
           playerCard.currentDefense = 0;
           playerSurvivor = null;
+          console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: Both lethal, NPC wins (higher atk), survivor def=${npcCard.currentDefense}`);
         } else {
           // Equal attacks, 50/50 - winner survives
           roundWinner = Math.random() < 0.5 ? "player" : "npc";
           if (roundWinner === "player") {
             playerWins++;
-            playerCard.currentDefense -= npcAttack;
+            playerCard.currentDefense = Math.max(0, playerCard.currentDefense - npcAttack);
             playerSurvivor = playerCard;
             npcCard.currentDefense = 0;
             npcSurvivor = null;
+            console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: Both lethal equal atk, Player wins 50/50, survivor def=${playerCard.currentDefense}`);
           } else {
             npcWins++;
-            npcCard.currentDefense -= playerAttack;
+            npcCard.currentDefense = Math.max(0, npcCard.currentDefense - playerAttack);
             npcSurvivor = npcCard;
             playerCard.currentDefense = 0;
             playerSurvivor = null;
+            console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: Both lethal equal atk, NPC wins 50/50, survivor def=${npcCard.currentDefense}`);
           }
         }
         damage = Math.max(playerAttack, npcAttack);
       } else {
-        // Neither can defeat the other, 50/50
+        // Neither can defeat the other (both attacks <= both defenses), 50/50
         roundWinner = Math.random() < 0.5 ? "player" : "npc";
         damage = 0;
         if (roundWinner === "player") {
           playerWins++;
-          playerCard.currentDefense -= npcAttack;
-          playerSurvivor = playerCard; // Winner survives
+          playerCard.currentDefense = Math.max(0, playerCard.currentDefense - npcAttack);
+          playerSurvivor = playerCard;
           npcCard.currentDefense = 0;
           npcSurvivor = null;
+          console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: Stalemate, Player wins 50/50, survivor def=${playerCard.currentDefense}`);
         } else {
           npcWins++;
-          npcCard.currentDefense -= playerAttack;
-          npcSurvivor = npcCard; // Winner survives
+          npcCard.currentDefense = Math.max(0, npcCard.currentDefense - playerAttack);
+          npcSurvivor = npcCard;
           playerCard.currentDefense = 0;
           playerSurvivor = null;
+          console.log(`[BATTLE DEBUG] Round ${i + 1} RESULT: Stalemate, NPC wins 50/50, survivor def=${npcCard.currentDefense}`);
         }
       }
+
+      console.log(`[BATTLE DEBUG] After Round ${i + 1}: playerSurvivor=${playerSurvivor !== null}, npcSurvivor=${npcSurvivor !== null}`);
 
       rounds.push({
         round: i + 1,
