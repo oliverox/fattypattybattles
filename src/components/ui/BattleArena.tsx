@@ -23,8 +23,8 @@ type BattlePhase = 'intro' | 'round' | 'result' | 'final'
 
 interface RoundResult {
   round: number
-  playerCard: { cardId: string; name: string; attack: number; defense: number; rarity: string; position: number; currentDefense: number; startingDefense: number }
-  npcCard: { cardId: string; name: string; attack: number; defense: number; rarity: string; position: number; currentDefense: number; startingDefense: number }
+  playerCard: { cardId: string; name: string; attack: number; defense: number; rarity: string; position: number; currentDefense: number; startingDefense: number; isSurvivor?: boolean }
+  npcCard: { cardId: string; name: string; attack: number; defense: number; rarity: string; position: number; currentDefense: number; startingDefense: number; isSurvivor?: boolean }
   winner: 'player' | 'npc' | 'draw'
   damage: number
 }
@@ -93,13 +93,15 @@ export function BattleArena() {
         const convertedRounds: RoundResult[] = result.rounds.map((r) => {
           const pCard = isChallenger ? r.challengerCard : r.targetCard
           const oCard = isChallenger ? r.targetCard : r.challengerCard
-          // Type assertion for startingDefense which is added by the updated backend
+          // Type assertion for startingDefense and isSurvivor which are added by the updated backend
           const pStartingDef = (pCard as { startingDefense?: number }).startingDefense ?? pCard.defense
           const oStartingDef = (oCard as { startingDefense?: number }).startingDefense ?? oCard.defense
+          const pIsSurvivor = (pCard as { isSurvivor?: boolean }).isSurvivor ?? false
+          const oIsSurvivor = (oCard as { isSurvivor?: boolean }).isSurvivor ?? false
           return {
             round: r.round,
-            playerCard: { ...pCard, cardId: pCard.cardId as string, startingDefense: pStartingDef },
-            npcCard: { ...oCard, cardId: oCard.cardId as string, startingDefense: oStartingDef },
+            playerCard: { ...pCard, cardId: pCard.cardId as string, startingDefense: pStartingDef, isSurvivor: pIsSurvivor },
+            npcCard: { ...oCard, cardId: oCard.cardId as string, startingDefense: oStartingDef, isSurvivor: oIsSurvivor },
             winner: r.winner === 'draw'
               ? 'draw'
               : (isChallenger
@@ -328,7 +330,9 @@ export function BattleArena() {
                 RARITY_COLORS[playerCard.rarity] || RARITY_COLORS.common
               } ${phase === 'result' && currentRoundData.winner === 'player' ? 'ring-4 ring-green-400' : ''}`}>
                 <div className="text-center">
-                  <span className="text-xs text-cyan-400 uppercase">Your Card</span>
+                  <span className="text-xs text-cyan-400 uppercase">
+                    Your Card {currentRoundData.playerCard.isSurvivor && '(Survivor)'}
+                  </span>
                   <h3 className="text-white font-bold text-lg mt-1">{currentRoundData.playerCard.name}</h3>
                   <div className="flex justify-center gap-4 mt-3">
                     <div className="text-center">
@@ -353,7 +357,9 @@ export function BattleArena() {
                 RARITY_COLORS[npcCard.rarity] || RARITY_COLORS.common
               } ${phase === 'result' && currentRoundData.winner === 'npc' ? 'ring-4 ring-red-500' : ''}`}>
                 <div className="text-center">
-                  <span className={`text-xs uppercase ${isPvpBattle ? 'text-orange-400' : 'text-red-400'}`}>{opponentName}'s Card</span>
+                  <span className={`text-xs uppercase ${isPvpBattle ? 'text-orange-400' : 'text-red-400'}`}>
+                    {opponentName}'s Card {currentRoundData.npcCard.isSurvivor && '(Survivor)'}
+                  </span>
                   <h3 className="text-white font-bold text-lg mt-1">{currentRoundData.npcCard.name}</h3>
                   <div className="flex justify-center gap-4 mt-3">
                     <div className="text-center">

@@ -352,8 +352,8 @@ export const resolvePvpBattle = mutation({
     // Run battle logic (same as NPC battle)
     const rounds: Array<{
       round: number;
-      challengerCard: (typeof challengerCards)[0] & { currentDefense: number; startingDefense: number };
-      targetCard: (typeof targetCards)[0] & { currentDefense: number; startingDefense: number };
+      challengerCard: (typeof challengerCards)[0] & { currentDefense: number; startingDefense: number; isSurvivor: boolean };
+      targetCard: (typeof targetCards)[0] & { currentDefense: number; startingDefense: number; isSurvivor: boolean };
       winner: "challenger" | "target" | "draw";
       damage: number;
     }> = [];
@@ -376,6 +376,10 @@ export const resolvePvpBattle = mutation({
     for (let i = 0; i < 3; i++) {
       const currentChallengerCard = challengerCards[i]!;
       const currentTargetCard = targetCards[i]!;
+
+      // Track if we're using a survivor
+      const challengerIsSurvivor = challengerSurvivor !== null;
+      const targetIsSurvivor = targetSurvivor !== null;
 
       const cCard: CardWithDefense = challengerSurvivor ?? {
         ...currentChallengerCard,
@@ -419,24 +423,39 @@ export const resolvePvpBattle = mutation({
         cCard.currentDefense = 0; // Loser has 0 defense
         targetWins++;
       } else if (cCard.attack > tCard.currentDefense && tCard.attack > cCard.currentDefense) {
-        // Both deal lethal damage - compare attack values
+        // Both deal lethal damage - compare attack values, winner survives
         if (cCard.attack > tCard.attack) {
           roundWinner = "challenger";
           challengerWins++;
+          cCard.currentDefense -= tCard.attack;
+          challengerSurvivor = cCard; // Winner survives with reduced defense
+          tCard.currentDefense = 0;
+          targetSurvivor = null;
         } else if (tCard.attack > cCard.attack) {
           roundWinner = "target";
           targetWins++;
+          tCard.currentDefense -= cCard.attack;
+          targetSurvivor = tCard; // Winner survives with reduced defense
+          cCard.currentDefense = 0;
+          challengerSurvivor = null;
         } else {
+          // Equal attacks, 50/50 - winner survives
           roundWinner = Math.random() < 0.5 ? "challenger" : "target";
-          if (roundWinner === "challenger") challengerWins++;
-          else targetWins++;
+          if (roundWinner === "challenger") {
+            challengerWins++;
+            cCard.currentDefense -= tCard.attack;
+            challengerSurvivor = cCard;
+            tCard.currentDefense = 0;
+            targetSurvivor = null;
+          } else {
+            targetWins++;
+            tCard.currentDefense -= cCard.attack;
+            targetSurvivor = tCard;
+            cCard.currentDefense = 0;
+            challengerSurvivor = null;
+          }
         }
         damage = Math.max(cCard.attack, tCard.attack);
-        // Both cards are knocked out
-        cCard.currentDefense = 0;
-        tCard.currentDefense = 0;
-        challengerSurvivor = null;
-        targetSurvivor = null;
       } else {
         // Neither can defeat the other, 50/50
         roundWinner = Math.random() < 0.5 ? "challenger" : "target";
@@ -458,8 +477,8 @@ export const resolvePvpBattle = mutation({
 
       rounds.push({
         round: i + 1,
-        challengerCard: { ...cCard, startingDefense: challengerStartingDefense },
-        targetCard: { ...tCard, startingDefense: targetStartingDefense },
+        challengerCard: { ...cCard, startingDefense: challengerStartingDefense, isSurvivor: challengerIsSurvivor },
+        targetCard: { ...tCard, startingDefense: targetStartingDefense, isSurvivor: targetIsSurvivor },
         winner: roundWinner,
         damage,
       });

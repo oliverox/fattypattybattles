@@ -347,8 +347,8 @@ export const resolveBattle = mutation({
     // Battle simulation
     const rounds: Array<{
       round: number;
-      playerCard: typeof playerCards[0] & { currentDefense: number; startingDefense: number };
-      npcCard: typeof npcCards[0] & { currentDefense: number; startingDefense: number };
+      playerCard: typeof playerCards[0] & { currentDefense: number; startingDefense: number; isSurvivor: boolean };
+      npcCard: typeof npcCards[0] & { currentDefense: number; startingDefense: number; isSurvivor: boolean };
       winner: "player" | "npc" | "draw";
       damage: number;
     }> = [];
@@ -365,6 +365,10 @@ export const resolveBattle = mutation({
       const currentPlayerCard = sortedPlayerCards[i]!;
       const currentNpcCard = sortedNpcCards[i]!;
 
+      // Track if we're using a survivor
+      const playerIsSurvivor = playerSurvivor !== null;
+      const npcIsSurvivor = npcSurvivor !== null;
+
       const playerCard: typeof playerCards[0] & { currentDefense: number; startingDefense: number } = playerSurvivor ?? {
         ...currentPlayerCard,
         currentDefense: currentPlayerCard.defense,
@@ -379,6 +383,9 @@ export const resolveBattle = mutation({
       // Record starting defense for this round (especially important for survivors)
       const playerStartingDefense = playerCard.currentDefense;
       const npcStartingDefense = npcCard.currentDefense;
+
+      // Debug: log survivor info
+      console.log(`Round ${i + 1}: Player survivor=${playerIsSurvivor}, startingDef=${playerStartingDefense}, NPC survivor=${npcIsSurvivor}, startingDef=${npcStartingDefense}`);
 
       // Battle logic: Attack vs Defense
       const playerAttack = playerCard.attack;
@@ -416,25 +423,39 @@ export const resolveBattle = mutation({
         playerCard.currentDefense = 0; // Loser has 0 defense
         npcWins++;
       } else if (playerAttack > npcDef && npcAttack > playerDef) {
-        // Both deal lethal damage - compare attack values
+        // Both deal lethal damage - compare attack values, winner survives
         if (playerAttack > npcAttack) {
           roundWinner = "player";
           playerWins++;
+          playerCard.currentDefense -= npcAttack;
+          playerSurvivor = playerCard; // Winner survives with reduced defense
+          npcCard.currentDefense = 0;
+          npcSurvivor = null;
         } else if (npcAttack > playerAttack) {
           roundWinner = "npc";
           npcWins++;
+          npcCard.currentDefense -= playerAttack;
+          npcSurvivor = npcCard; // Winner survives with reduced defense
+          playerCard.currentDefense = 0;
+          playerSurvivor = null;
         } else {
-          // Equal attacks, 50/50
+          // Equal attacks, 50/50 - winner survives
           roundWinner = Math.random() < 0.5 ? "player" : "npc";
-          if (roundWinner === "player") playerWins++;
-          else npcWins++;
+          if (roundWinner === "player") {
+            playerWins++;
+            playerCard.currentDefense -= npcAttack;
+            playerSurvivor = playerCard;
+            npcCard.currentDefense = 0;
+            npcSurvivor = null;
+          } else {
+            npcWins++;
+            npcCard.currentDefense -= playerAttack;
+            npcSurvivor = npcCard;
+            playerCard.currentDefense = 0;
+            playerSurvivor = null;
+          }
         }
         damage = Math.max(playerAttack, npcAttack);
-        // Both cards are knocked out
-        playerCard.currentDefense = 0;
-        npcCard.currentDefense = 0;
-        playerSurvivor = null;
-        npcSurvivor = null;
       } else {
         // Neither can defeat the other, 50/50
         roundWinner = Math.random() < 0.5 ? "player" : "npc";
@@ -456,8 +477,8 @@ export const resolveBattle = mutation({
 
       rounds.push({
         round: i + 1,
-        playerCard: { ...playerCard, startingDefense: playerStartingDefense },
-        npcCard: { ...npcCard, startingDefense: npcStartingDefense },
+        playerCard: { ...playerCard, startingDefense: playerStartingDefense, isSurvivor: playerIsSurvivor },
+        npcCard: { ...npcCard, startingDefense: npcStartingDefense, isSurvivor: npcIsSurvivor },
         winner: roundWinner,
         damage,
       });
