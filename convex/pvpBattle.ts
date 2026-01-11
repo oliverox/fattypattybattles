@@ -408,57 +408,56 @@ export const resolvePvpBattle = mutation({
         roundWinner = "challenger";
         damage = cCard.attack;
         cCard.currentDefense = Math.max(0, cCard.currentDefense - tCard.attack);
-        challengerSurvivor = cCard;
+        // Only survive if defense > 0
+        challengerSurvivor = cCard.currentDefense > 0 ? cCard : null;
         targetSurvivor = null;
         tCard.currentDefense = 0;
         challengerWins++;
-        console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Challenger wins clearly, survivor def=${cCard.currentDefense}`);
+        console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Challenger wins clearly, def=${cCard.currentDefense}, survives=${challengerSurvivor !== null}`);
       } else if (tCard.attack > cCard.currentDefense && cCard.attack <= tCard.currentDefense) {
         // Target wins clearly
         roundWinner = "target";
         damage = tCard.attack;
         tCard.currentDefense = Math.max(0, tCard.currentDefense - cCard.attack);
-        targetSurvivor = tCard;
+        // Only survive if defense > 0
+        targetSurvivor = tCard.currentDefense > 0 ? tCard : null;
         challengerSurvivor = null;
         cCard.currentDefense = 0;
         targetWins++;
-        console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Target wins clearly, survivor def=${tCard.currentDefense}`);
+        console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Target wins clearly, def=${tCard.currentDefense}, survives=${targetSurvivor !== null}`);
       } else if (cCard.attack > tCard.currentDefense && tCard.attack > cCard.currentDefense) {
-        // Both deal lethal damage - higher attack wins and survives
+        // Both deal lethal damage - higher attack wins, but no survivor (both took lethal)
         if (cCard.attack > tCard.attack) {
           roundWinner = "challenger";
           challengerWins++;
-          cCard.currentDefense = Math.max(0, cCard.currentDefense - tCard.attack);
-          challengerSurvivor = cCard;
+          cCard.currentDefense = 0;
           tCard.currentDefense = 0;
+          // No survivor - both dealt lethal damage
+          challengerSurvivor = null;
           targetSurvivor = null;
-          console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Both lethal, Challenger wins (higher atk), survivor def=${cCard.currentDefense}`);
+          console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Both lethal, Challenger wins (higher atk), no survivor`);
         } else if (tCard.attack > cCard.attack) {
           roundWinner = "target";
           targetWins++;
-          tCard.currentDefense = Math.max(0, tCard.currentDefense - cCard.attack);
-          targetSurvivor = tCard;
+          tCard.currentDefense = 0;
           cCard.currentDefense = 0;
+          // No survivor - both dealt lethal damage
+          targetSurvivor = null;
           challengerSurvivor = null;
-          console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Both lethal, Target wins (higher atk), survivor def=${tCard.currentDefense}`);
+          console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Both lethal, Target wins (higher atk), no survivor`);
         } else {
-          // Equal attacks, 50/50 - winner survives
+          // Equal attacks, 50/50 - no survivor either way
           roundWinner = Math.random() < 0.5 ? "challenger" : "target";
           if (roundWinner === "challenger") {
             challengerWins++;
-            cCard.currentDefense = Math.max(0, cCard.currentDefense - tCard.attack);
-            challengerSurvivor = cCard;
-            tCard.currentDefense = 0;
-            targetSurvivor = null;
-            console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Both lethal equal, Challenger wins 50/50, survivor def=${cCard.currentDefense}`);
           } else {
             targetWins++;
-            tCard.currentDefense = Math.max(0, tCard.currentDefense - cCard.attack);
-            targetSurvivor = tCard;
-            cCard.currentDefense = 0;
-            challengerSurvivor = null;
-            console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Both lethal equal, Target wins 50/50, survivor def=${tCard.currentDefense}`);
           }
+          cCard.currentDefense = 0;
+          tCard.currentDefense = 0;
+          challengerSurvivor = null;
+          targetSurvivor = null;
+          console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Both lethal equal, ${roundWinner} wins 50/50, no survivor`);
         }
         damage = Math.max(cCard.attack, tCard.attack);
       } else {
@@ -468,17 +467,19 @@ export const resolvePvpBattle = mutation({
         if (roundWinner === "challenger") {
           challengerWins++;
           cCard.currentDefense = Math.max(0, cCard.currentDefense - tCard.attack);
-          challengerSurvivor = cCard;
+          // Only survive if defense > 0
+          challengerSurvivor = cCard.currentDefense > 0 ? cCard : null;
           tCard.currentDefense = 0;
           targetSurvivor = null;
-          console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Stalemate, Challenger wins 50/50, survivor def=${cCard.currentDefense}`);
+          console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Stalemate, Challenger wins 50/50, def=${cCard.currentDefense}, survives=${challengerSurvivor !== null}`);
         } else {
           targetWins++;
           tCard.currentDefense = Math.max(0, tCard.currentDefense - cCard.attack);
-          targetSurvivor = tCard;
+          // Only survive if defense > 0
+          targetSurvivor = tCard.currentDefense > 0 ? tCard : null;
           cCard.currentDefense = 0;
           challengerSurvivor = null;
-          console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Stalemate, Target wins 50/50, survivor def=${tCard.currentDefense}`);
+          console.log(`[PVP DEBUG] Round ${i + 1} RESULT: Stalemate, Target wins 50/50, def=${tCard.currentDefense}, survives=${targetSurvivor !== null}`);
         }
       }
 
