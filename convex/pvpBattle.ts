@@ -500,39 +500,39 @@ export const resolvePvpBattle = mutation({
         targetWins++;
         console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Target wins clearly, def=${tCard.currentDefense}, survives=${targetSurvivor !== null}`);
       } else if (cCard.attack > tCard.currentDefense && tCard.attack > cCard.currentDefense) {
-        // Both deal lethal damage - higher attack wins, but no survivor (both took lethal)
-        if (cCard.attack > tCard.attack) {
+        // Both deal lethal damage - higher defense wins, then higher attack, then 50/50
+        if (cDef > tDef) {
           roundWinner = "challenger";
           challengerWins++;
-          cCard.currentDefense = 0;
-          tCard.currentDefense = 0;
-          // No survivor - both dealt lethal damage
-          challengerSurvivor = null;
-          targetSurvivor = null;
-          console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Both lethal, Challenger wins (higher atk), no survivor`);
+          console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Both lethal, Challenger wins (higher def ${cDef} > ${tDef}), no survivor`);
+        } else if (tDef > cDef) {
+          roundWinner = "target";
+          targetWins++;
+          console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Both lethal, Target wins (higher def ${tDef} > ${cDef}), no survivor`);
+        } else if (cCard.attack > tCard.attack) {
+          // Equal defense, compare attack
+          roundWinner = "challenger";
+          challengerWins++;
+          console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Both lethal equal def, Challenger wins (higher atk ${cCard.attack} > ${tCard.attack}), no survivor`);
         } else if (tCard.attack > cCard.attack) {
           roundWinner = "target";
           targetWins++;
-          tCard.currentDefense = 0;
-          cCard.currentDefense = 0;
-          // No survivor - both dealt lethal damage
-          targetSurvivor = null;
-          challengerSurvivor = null;
-          console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Both lethal, Target wins (higher atk), no survivor`);
+          console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Both lethal equal def, Target wins (higher atk ${tCard.attack} > ${cCard.attack}), no survivor`);
         } else {
-          // Equal attacks, 50/50 - no survivor either way
+          // Equal defense AND equal attack, 50/50
           roundWinner = Math.random() < 0.5 ? "challenger" : "target";
           if (roundWinner === "challenger") {
             challengerWins++;
           } else {
             targetWins++;
           }
-          cCard.currentDefense = 0;
-          tCard.currentDefense = 0;
-          challengerSurvivor = null;
-          targetSurvivor = null;
-          console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Both lethal equal, ${roundWinner} wins 50/50, no survivor`);
+          console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Both lethal equal def & atk, ${roundWinner} wins 50/50, no survivor`);
         }
+        // No survivor for either - both dealt lethal damage
+        cCard.currentDefense = 0;
+        tCard.currentDefense = 0;
+        challengerSurvivor = null;
+        targetSurvivor = null;
         damage = Math.max(cCard.attack, tCard.attack);
       } else {
         // Neither can defeat the other, 50/50
