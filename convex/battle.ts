@@ -379,17 +379,19 @@ export const resolveBattle = mutation({
       const playerIsSurvivor = playerSurvivor !== null;
       const npcIsSurvivor = npcSurvivor !== null;
 
-      // Get the next fresh card if no survivor
-      const currentPlayerCard = sortedPlayerCards[playerCardIndex]!;
-      const currentNpcCard = sortedNpcCards[npcCardIndex]!;
-
       // Create the card for this round
       let playerCard: typeof playerCards[0] & { currentDefense: number; startingDefense: number };
       let npcCard: typeof npcCards[0] & { currentDefense: number; startingDefense: number };
 
       if (playerSurvivor) {
-        playerCard = playerSurvivor;
+        playerCard = { ...playerSurvivor }; // Clone to avoid mutating the survivor reference
       } else {
+        // Only access array when we need a fresh card
+        if (playerCardIndex >= sortedPlayerCards.length) {
+          console.error(`[BATTLE ERROR] Player card index ${playerCardIndex} out of bounds (max ${sortedPlayerCards.length - 1})`);
+          throw new Error("Battle error: ran out of player cards");
+        }
+        const currentPlayerCard = sortedPlayerCards[playerCardIndex]!;
         playerCard = {
           ...currentPlayerCard,
           currentDefense: currentPlayerCard.defense,
@@ -399,8 +401,14 @@ export const resolveBattle = mutation({
       }
 
       if (npcSurvivor) {
-        npcCard = npcSurvivor;
+        npcCard = { ...npcSurvivor }; // Clone to avoid mutating the survivor reference
       } else {
+        // Only access array when we need a fresh card
+        if (npcCardIndex >= sortedNpcCards.length) {
+          console.error(`[BATTLE ERROR] NPC card index ${npcCardIndex} out of bounds (max ${sortedNpcCards.length - 1})`);
+          throw new Error("Battle error: ran out of NPC cards");
+        }
+        const currentNpcCard = sortedNpcCards[npcCardIndex]!;
         npcCard = {
           ...currentNpcCard,
           currentDefense: currentNpcCard.defense,

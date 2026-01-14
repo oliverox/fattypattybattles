@@ -392,17 +392,19 @@ export const resolvePvpBattle = mutation({
       const challengerIsSurvivor = challengerSurvivor !== null;
       const targetIsSurvivor = targetSurvivor !== null;
 
-      // Get the next fresh card if no survivor
-      const currentChallengerCard = challengerCards[challengerCardIndex]!;
-      const currentTargetCard = targetCards[targetCardIndex]!;
-
       // Create the card for this round
       let cCard: CardWithDefense;
       let tCard: CardWithDefense;
 
       if (challengerSurvivor) {
-        cCard = challengerSurvivor;
+        cCard = { ...challengerSurvivor }; // Clone to avoid mutating the survivor reference
       } else {
+        // Only access array when we need a fresh card
+        if (challengerCardIndex >= challengerCards.length) {
+          console.error(`[PVP ERROR] Challenger card index ${challengerCardIndex} out of bounds (max ${challengerCards.length - 1})`);
+          throw new Error("PvP battle error: ran out of challenger cards");
+        }
+        const currentChallengerCard = challengerCards[challengerCardIndex]!;
         cCard = {
           ...currentChallengerCard,
           currentDefense: currentChallengerCard.defense,
@@ -412,8 +414,14 @@ export const resolvePvpBattle = mutation({
       }
 
       if (targetSurvivor) {
-        tCard = targetSurvivor;
+        tCard = { ...targetSurvivor }; // Clone to avoid mutating the survivor reference
       } else {
+        // Only access array when we need a fresh card
+        if (targetCardIndex >= targetCards.length) {
+          console.error(`[PVP ERROR] Target card index ${targetCardIndex} out of bounds (max ${targetCards.length - 1})`);
+          throw new Error("PvP battle error: ran out of target cards");
+        }
+        const currentTargetCard = targetCards[targetCardIndex]!;
         tCard = {
           ...currentTargetCard,
           currentDefense: currentTargetCard.defense,
