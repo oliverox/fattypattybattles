@@ -346,15 +346,19 @@ export function BattleArena() {
               <p className="text-yellow-400 text-lg font-bold mb-6">50/50 Coin Flip!</p>
 
               {/* Coin */}
-              <div className="relative w-24 h-24 perspective-1000">
+              <div className="relative w-28 h-28 perspective-1000">
                 <div className={`w-full h-full ${currentRoundData.winner === 'player' ? 'animate-coin-flip-heads' : 'animate-coin-flip-tails'}`}>
                   {/* Coin front (heads - player) */}
-                  <div className="absolute inset-0 w-full h-full rounded-full bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-600 border-4 border-yellow-500 shadow-lg backface-hidden flex items-center justify-center">
-                    <span className="text-yellow-900 font-bold text-2xl">YOU</span>
+                  <div className="absolute inset-0 w-full h-full rounded-full bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-600 border-4 border-yellow-500 shadow-lg backface-hidden flex items-center justify-center p-2">
+                    <span className="text-yellow-900 font-bold text-sm text-center truncate max-w-full">
+                      {isPvpBattle ? (user?.username || user?.firstName || 'YOU') : 'YOU'}
+                    </span>
                   </div>
                   {/* Coin back (tails - opponent) */}
-                  <div className="absolute inset-0 w-full h-full rounded-full bg-gradient-to-br from-gray-300 via-gray-400 to-gray-600 border-4 border-gray-500 shadow-lg backface-hidden rotate-y-180 flex items-center justify-center">
-                    <span className="text-gray-900 font-bold text-lg">{isPvpBattle ? 'OPP' : 'NPC'}</span>
+                  <div className="absolute inset-0 w-full h-full rounded-full bg-gradient-to-br from-gray-300 via-gray-400 to-gray-600 border-4 border-gray-500 shadow-lg backface-hidden rotate-y-180 flex items-center justify-center p-2">
+                    <span className="text-gray-900 font-bold text-sm text-center truncate max-w-full">
+                      {isPvpBattle ? (pvpOpponentUsername || 'OPP') : 'NPC'}
+                    </span>
                   </div>
                 </div>
               </div>
