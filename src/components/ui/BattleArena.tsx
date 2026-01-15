@@ -19,7 +19,7 @@ const RARITY_COLORS: Record<string, string> = {
   holographic: 'border-white bg-gradient-to-br from-white/20 to-black animate-pulse',
 }
 
-type BattlePhase = 'intro' | 'round' | 'result' | 'final'
+type BattlePhase = 'intro' | 'round' | 'coinflip' | 'result' | 'final'
 
 interface RoundResult {
   round: number
@@ -27,6 +27,7 @@ interface RoundResult {
   npcCard: { cardId: string; name: string; attack: number; defense: number; rarity: string; position: number; currentDefense: number; startingDefense: number; isSurvivor?: boolean }
   winner: 'player' | 'npc' | 'draw'
   damage: number
+  coinFlip?: boolean
 }
 
 export function BattleArena() {
@@ -98,6 +99,7 @@ export function BattleArena() {
           const oStartingDef = (oCard as { startingDefense?: number }).startingDefense ?? oCard.defense
           const pIsSurvivor = (pCard as { isSurvivor?: boolean }).isSurvivor ?? false
           const oIsSurvivor = (oCard as { isSurvivor?: boolean }).isSurvivor ?? false
+          const coinFlip = (r as { coinFlip?: boolean }).coinFlip ?? false
           return {
             round: r.round,
             playerCard: { ...pCard, cardId: pCard.cardId as string, startingDefense: pStartingDef, isSurvivor: pIsSurvivor },
@@ -108,6 +110,7 @@ export function BattleArena() {
                   ? (r.winner === 'challenger' ? 'player' : 'npc')
                   : (r.winner === 'target' ? 'player' : 'npc')),
             damage: r.damage,
+            coinFlip,
           }
         })
 
@@ -208,14 +211,30 @@ export function BattleArena() {
   useEffect(() => {
     if (phase === 'round' && roundResults.length > 0) {
       if (currentRound < roundResults.length) {
-        // Show round result for 2 seconds, then advance
+        const currentResult = roundResults[currentRound]
+        // Show round for 1.5 seconds, then show coinflip if needed or result
         const timer = setTimeout(() => {
-          setPhase('result')
+          if (currentResult?.coinFlip) {
+            setPhase('coinflip')
+          } else {
+            setPhase('result')
+          }
         }, 1500)
         return () => clearTimeout(timer)
       }
     }
   }, [phase, currentRound, roundResults])
+
+  // Coinflip animation phase
+  useEffect(() => {
+    if (phase === 'coinflip') {
+      // Show coinflip animation for 2 seconds, then show result
+      const timer = setTimeout(() => {
+        setPhase('result')
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [phase])
 
   useEffect(() => {
     if (phase === 'result') {
@@ -315,6 +334,52 @@ export function BattleArena() {
           </div>
         )}
 
+        {/* Phase: Coinflip */}
+        {phase === 'coinflip' && currentRoundData && (
+          <div className={`bg-gray-900/95 border-2 ${borderColor} rounded-xl p-8 shadow-2xl`}>
+            <div className="text-center mb-6">
+              <span className={`text-xl font-bold ${isPvpBattle ? 'text-cyan-400' : 'text-red-400'}`}>Round {currentRound + 1}</span>
+            </div>
+
+            {/* Coinflip Animation */}
+            <div className="flex flex-col items-center justify-center py-8">
+              <p className="text-yellow-400 text-lg font-bold mb-6">50/50 Coin Flip!</p>
+
+              {/* Coin */}
+              <div className="relative w-24 h-24 perspective-1000">
+                <div className={`w-full h-full ${currentRoundData.winner === 'player' ? 'animate-coin-flip-heads' : 'animate-coin-flip-tails'}`}>
+                  {/* Coin front (heads - player) */}
+                  <div className="absolute inset-0 w-full h-full rounded-full bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-600 border-4 border-yellow-500 shadow-lg backface-hidden flex items-center justify-center">
+                    <span className="text-yellow-900 font-bold text-2xl">YOU</span>
+                  </div>
+                  {/* Coin back (tails - opponent) */}
+                  <div className="absolute inset-0 w-full h-full rounded-full bg-gradient-to-br from-gray-300 via-gray-400 to-gray-600 border-4 border-gray-500 shadow-lg backface-hidden rotate-y-180 flex items-center justify-center">
+                    <span className="text-gray-900 font-bold text-lg">{isPvpBattle ? 'OPP' : 'NPC'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-gray-400 mt-6 animate-pulse">Flipping...</p>
+            </div>
+
+            {/* Score tracker */}
+            <div className="mt-4 flex justify-center gap-8">
+              <div className="text-center">
+                <span className="text-gray-400 text-xs">You</span>
+                <div className="text-2xl font-bold text-cyan-400">
+                  {roundResults.slice(0, currentRound).filter((r) => r.winner === 'player').length}
+                </div>
+              </div>
+              <div className="text-center">
+                <span className="text-gray-400 text-xs">{opponentName}</span>
+                <div className={`text-2xl font-bold ${isPvpBattle ? 'text-orange-400' : 'text-red-400'}`}>
+                  {roundResults.slice(0, currentRound).filter((r) => r.winner === 'npc').length}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Phase: Round or Result */}
         {(phase === 'round' || phase === 'result') && currentRoundData && (
           <div className={`bg-gray-900/95 border-2 ${borderColor} rounded-xl p-6 shadow-2xl`}>
@@ -396,6 +461,9 @@ export function BattleArena() {
                   {currentRoundData.winner === 'player' ? 'You Win This Round!' :
                    currentRoundData.winner === 'npc' ? `${opponentName} Wins This Round!` : 'Draw!'}
                 </span>
+                {currentRoundData.coinFlip && (
+                  <p className="text-yellow-300 text-sm mt-1 animate-pulse">(50/50 Coin Flip)</p>
+                )}
               </div>
             )}
 

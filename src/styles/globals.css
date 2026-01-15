@@ -33,3 +33,44 @@ body {
   --foreground: #f5f5f5;
   --border: #374151;
 }
+
+/* Coinflip Animation */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+@keyframes coin-flip-heads {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(1800deg);
+  }
+}
+
+@keyframes coin-flip-tails {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(1980deg);
+  }
+}
+
+.animate-coin-flip-heads {
+  animation: coin-flip-heads 2s ease-out forwards;
+  transform-style: preserve-3d;
+}
+
+.animate-coin-flip-tails {
+  animation: coin-flip-tails 2s ease-out forwards;
+  transform-style: preserve-3d;
+}

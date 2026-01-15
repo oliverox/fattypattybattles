@@ -351,6 +351,7 @@ export const resolveBattle = mutation({
       npcCard: typeof npcCards[0] & { currentDefense: number; startingDefense: number; isSurvivor: boolean };
       winner: "player" | "npc" | "draw";
       damage: number;
+      coinFlip: boolean;
     }> = [];
 
     let playerWins = 0;
@@ -434,10 +435,12 @@ export const resolveBattle = mutation({
 
       let roundWinner: "player" | "npc" | "draw";
       let damage = 0;
+      let coinFlip = false;
 
       // Check for instant knockout - cards with 0 defense can't fight
       if (playerDef <= 0 && npcDef <= 0) {
         // Both have 0 defense - 50/50
+        coinFlip = true;
         roundWinner = Math.random() < 0.5 ? "player" : "npc";
         if (roundWinner === "player") playerWins++;
         else npcWins++;
@@ -510,6 +513,7 @@ export const resolveBattle = mutation({
           console.log(`[BATTLE DEBUG] Round ${round + 1} RESULT: Both lethal equal def, NPC wins (higher atk ${npcAttack} > ${playerAttack}), no survivor`);
         } else {
           // Equal defense AND equal attack, 50/50
+          coinFlip = true;
           roundWinner = Math.random() < 0.5 ? "player" : "npc";
           if (roundWinner === "player") {
             playerWins++;
@@ -526,6 +530,7 @@ export const resolveBattle = mutation({
         damage = Math.max(playerAttack, npcAttack);
       } else {
         // Neither can defeat the other (both attacks <= both defenses), 50/50
+        coinFlip = true;
         roundWinner = Math.random() < 0.5 ? "player" : "npc";
         damage = 0;
         if (roundWinner === "player") {
@@ -555,6 +560,7 @@ export const resolveBattle = mutation({
         npcCard: { ...npcCard, startingDefense: npcStartingDefense, isSurvivor: npcIsSurvivor },
         winner: roundWinner,
         damage,
+        coinFlip,
       });
     }
 

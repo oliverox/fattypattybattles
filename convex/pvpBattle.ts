@@ -356,6 +356,7 @@ export const resolvePvpBattle = mutation({
       targetCard: (typeof targetCards)[0] & { currentDefense: number; startingDefense: number; isSurvivor: boolean };
       winner: "challenger" | "target" | "draw";
       damage: number;
+      coinFlip: boolean;
     }> = [];
 
     let challengerWins = 0;
@@ -438,6 +439,7 @@ export const resolvePvpBattle = mutation({
 
       let roundWinner: "challenger" | "target" | "draw";
       let damage = 0;
+      let coinFlip = false;
 
       // Debug log
       console.log(`[PVP DEBUG] Round ${round + 1}: ChallengerSurvivor=${challengerIsSurvivor} (def=${challengerStartingDefense}), TargetSurvivor=${targetIsSurvivor} (def=${targetStartingDefense})`);
@@ -448,6 +450,7 @@ export const resolvePvpBattle = mutation({
       // Check for instant knockout - cards with 0 defense can't fight
       if (cDef <= 0 && tDef <= 0) {
         // Both have 0 defense - 50/50
+        coinFlip = true;
         roundWinner = Math.random() < 0.5 ? "challenger" : "target";
         if (roundWinner === "challenger") challengerWins++;
         else targetWins++;
@@ -520,6 +523,7 @@ export const resolvePvpBattle = mutation({
           console.log(`[PVP DEBUG] Round ${round + 1} RESULT: Both lethal equal def, Target wins (higher atk ${tCard.attack} > ${cCard.attack}), no survivor`);
         } else {
           // Equal defense AND equal attack, 50/50
+          coinFlip = true;
           roundWinner = Math.random() < 0.5 ? "challenger" : "target";
           if (roundWinner === "challenger") {
             challengerWins++;
@@ -536,6 +540,7 @@ export const resolvePvpBattle = mutation({
         damage = Math.max(cCard.attack, tCard.attack);
       } else {
         // Neither can defeat the other, 50/50
+        coinFlip = true;
         roundWinner = Math.random() < 0.5 ? "challenger" : "target";
         damage = 0;
         if (roundWinner === "challenger") {
@@ -565,6 +570,7 @@ export const resolvePvpBattle = mutation({
         targetCard: { ...tCard, startingDefense: targetStartingDefense, isSurvivor: targetIsSurvivor },
         winner: roundWinner,
         damage,
+        coinFlip,
       });
     }
 
