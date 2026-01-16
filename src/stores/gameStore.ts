@@ -91,6 +91,11 @@ interface TradeResult {
   coinsReceived: number
 }
 
+interface QuestCompletionNotification {
+  questName: string
+  reward: number
+}
+
 interface GameState {
   playerPosition: Vector3
   isMoving: boolean
@@ -142,6 +147,10 @@ interface GameState {
   // Mobile Touch Controls
   touchControlsVisible: boolean
   touchInput: TouchInput
+  // Quest Completion Notifications
+  pendingQuestCompletions: QuestCompletionNotification[]
+  questCompletionPopupOpen: boolean
+  currentQuestCompletion: QuestCompletionNotification | null
   // Setters
   setPlayerPosition: (position: Vector3) => void
   setIsMoving: (moving: boolean) => void
@@ -193,6 +202,11 @@ interface GameState {
   setTouchControlsVisible: (visible: boolean) => void
   toggleTouchControls: () => void
   setTouchInput: (key: keyof TouchInput, pressed: boolean) => void
+  // Quest Completion
+  addQuestCompletion: (notification: QuestCompletionNotification) => void
+  showNextQuestCompletion: () => void
+  dismissQuestCompletion: () => void
+  isAnyUIOpen: () => boolean
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -245,6 +259,10 @@ export const useGameStore = create<GameState>((set) => ({
   tradeResult: null,
   // Mobile Touch Controls
   touchControlsVisible: true,
+  // Quest Completion Notifications
+  pendingQuestCompletions: [],
+  questCompletionPopupOpen: false,
+  currentQuestCompletion: null,
   touchInput: {
     forward: false,
     backward: false,
@@ -376,4 +394,56 @@ export const useGameStore = create<GameState>((set) => ({
   setTouchInput: (key, pressed) => set((state) => ({
     touchInput: { ...state.touchInput, [key]: pressed }
   })),
+  // Quest Completion
+  addQuestCompletion: (notification) => set((state) => ({
+    pendingQuestCompletions: [...state.pendingQuestCompletions, notification]
+  })),
+  showNextQuestCompletion: () => set((state) => {
+    if (state.pendingQuestCompletions.length === 0) {
+      return { questCompletionPopupOpen: false, currentQuestCompletion: null }
+    }
+    const [next, ...rest] = state.pendingQuestCompletions
+    return {
+      pendingQuestCompletions: rest,
+      questCompletionPopupOpen: true,
+      currentQuestCompletion: next ?? null
+    }
+  }),
+  dismissQuestCompletion: () => set((state) => {
+    // After dismissing, check if there are more
+    if (state.pendingQuestCompletions.length > 0) {
+      const [next, ...rest] = state.pendingQuestCompletions
+      return {
+        pendingQuestCompletions: rest,
+        currentQuestCompletion: next ?? null
+      }
+    }
+    return {
+      questCompletionPopupOpen: false,
+      currentQuestCompletion: null
+    }
+  }),
+  isAnyUIOpen: () => {
+    const state = useGameStore.getState()
+    return (
+      state.dialogueOpen ||
+      state.shopOpen ||
+      state.sellDialogueOpen ||
+      state.sellShopOpen ||
+      state.battleDialogueOpen ||
+      state.battleCardSelectOpen ||
+      state.battleArenaOpen ||
+      state.inventoryOpen ||
+      state.chatOpen ||
+      state.leaderboardOpen ||
+      state.dailyRewardPopupOpen ||
+      state.pvpRequestDialogOpen ||
+      state.pvpIncomingDialogOpen ||
+      state.pvpWaitingForOpponent ||
+      state.tradeInitiateDialogOpen ||
+      state.tradeIncomingDialogOpen ||
+      state.tradeNegotiationOpen ||
+      state.tradeCompletedOpen
+    )
+  },
 }))

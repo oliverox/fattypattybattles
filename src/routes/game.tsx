@@ -27,6 +27,7 @@ import { EditAvatarModal } from '@/components/ui/EditAvatarModal'
 import { ChatUI } from '@/components/ui/ChatUI'
 import { Leaderboard } from '@/components/ui/Leaderboard'
 import { DailyRewardPopup } from '@/components/ui/DailyRewardPopup'
+import { QuestCompletePopup } from '@/components/ui/QuestCompletePopup'
 import { usePlaytimeTracker } from '@/hooks/usePlaytimeTracker'
 import { useGameStore } from '@/stores/gameStore'
 import { MULTIPLAYER } from '@/lib/game/constants'
@@ -43,10 +44,13 @@ function GamePage() {
   const refreshDailyQuests = useMutation(api.dailyRewards.refreshDailyQuests)
   const initChecked = useRef(false)
   const dailyRewardChecked = useRef(false)
-  const prevClaimableQuest = useRef(false)
   const [editAvatarOpen, setEditAvatarOpen] = useState(false)
 
   const setDailyRewardPopupOpen = useGameStore((state) => state.setDailyRewardPopupOpen)
+  const addQuestCompletion = useGameStore((state) => state.addQuestCompletion)
+
+  // Track previous quest completion states
+  const prevQuestStates = useRef<Record<string, boolean>>({})
 
   // Trade state
   const tradeInitiateDialogOpen = useGameStore((state) => state.tradeInitiateDialogOpen)
@@ -57,6 +61,12 @@ function GamePage() {
   // Check if daily rewards are claimable
   const claimableRewards = useQuery(
     api.dailyRewards.hasClaimableRewards,
+    currentUser?.clerkId ? { clerkId: currentUser.clerkId } : 'skip'
+  )
+
+  // Get daily quests to track completion
+  const dailyQuests = useQuery(
+    api.dailyRewards.getDailyQuests,
     currentUser?.clerkId ? { clerkId: currentUser.clerkId } : 'skip'
   )
 
@@ -98,17 +108,26 @@ function GamePage() {
     }
   }, [claimableRewards, setDailyRewardPopupOpen])
 
-  // Auto-show popup when a quest becomes claimable (during gameplay)
+  // Track quest completions and queue notifications
   useEffect(() => {
-    const hasClaimableQuest = claimableRewards?.hasClaimableQuest ?? false
+    if (!dailyQuests?.quests || !dailyRewardChecked.current) return
 
-    // If a quest just became claimable (wasn't before, now is)
-    if (hasClaimableQuest && !prevClaimableQuest.current && dailyRewardChecked.current) {
-      setDailyRewardPopupOpen(true)
+    for (const quest of dailyQuests.quests) {
+      const wasCompleted = prevQuestStates.current[quest.id] ?? false
+      const isNowCompleted = quest.completed && !quest.claimed
+
+      // If quest just became completed (wasn't before, now is)
+      if (isNowCompleted && !wasCompleted) {
+        addQuestCompletion({
+          questName: quest.name,
+          reward: quest.reward,
+        })
+      }
+
+      // Update tracking
+      prevQuestStates.current[quest.id] = quest.completed && !quest.claimed
     }
-
-    prevClaimableQuest.current = hasClaimableQuest
-  }, [claimableRewards?.hasClaimableQuest, setDailyRewardPopupOpen])
+  }, [dailyQuests?.quests, addQuestCompletion])
 
   // Wait for auth to load
   if (!isLoaded) {
@@ -193,6 +212,7 @@ function GamePage() {
       <ChatUI mapId={MULTIPLAYER.defaultMapId} />
       <Leaderboard />
       <DailyRewardPopup />
+      <QuestCompletePopup />
 
       {/* Mobile touch controls */}
       <MobileControls />
