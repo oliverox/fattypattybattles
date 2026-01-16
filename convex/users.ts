@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 
 // Create or update user profile
 export const createUserProfile = mutation({
@@ -262,6 +263,16 @@ export const updatePlayTime = mutation({
         totalPlayTime: currentPlayTime + seconds,
         lastActiveAt: Date.now(),
       });
+
+      // Update playtime quest progress (convert seconds to minutes)
+      const minutes = Math.floor(seconds / 60);
+      if (minutes > 0) {
+        await ctx.scheduler.runAfter(0, internal.dailyRewards.updateQuestProgress, {
+          clerkId,
+          questType: "playtime",
+          amount: minutes,
+        });
+      }
     }
   },
 });

@@ -436,6 +436,34 @@ export const openPack = mutation({
       amount: 1,
     });
 
+    // Update daily quest progress for card rarities obtained
+    const rarityCounts: Record<string, number> = {};
+    for (const card of generatedCards) {
+      rarityCounts[card.rarity] = (rarityCounts[card.rarity] ?? 0) + 1;
+    }
+
+    if (rarityCounts["common"]) {
+      await ctx.scheduler.runAfter(0, internal.dailyRewards.updateQuestProgress, {
+        clerkId,
+        questType: "get_common",
+        amount: rarityCounts["common"],
+      });
+    }
+    if (rarityCounts["uncommon"]) {
+      await ctx.scheduler.runAfter(0, internal.dailyRewards.updateQuestProgress, {
+        clerkId,
+        questType: "get_uncommon",
+        amount: rarityCounts["uncommon"],
+      });
+    }
+    if (rarityCounts["rare"]) {
+      await ctx.scheduler.runAfter(0, internal.dailyRewards.updateQuestProgress, {
+        clerkId,
+        questType: "get_rare",
+        amount: rarityCounts["rare"],
+      });
+    }
+
     return {
       success: true,
       cards: generatedCards,

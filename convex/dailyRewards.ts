@@ -20,6 +20,12 @@ const QUEST_POOL = [
   { id: "open_packs_3", name: "Open 3 Packs", target: 3, reward: 25 },
   { id: "sell_cards_5", name: "Sell 5 Cards", target: 5, reward: 20 },
   { id: "pvp_battle", name: "Complete a PvP Battle", target: 1, reward: 25 },
+  { id: "get_commons_3", name: "Get 3 Commons from Packs", target: 3, reward: 10 },
+  { id: "get_uncommons_3", name: "Get 3 Uncommons from Packs", target: 3, reward: 20 },
+  { id: "get_rares_3", name: "Get 3 Rares from Packs", target: 3, reward: 35 },
+  { id: "playtime_10", name: "Play for 10 Minutes", target: 10, reward: 15 },
+  { id: "playtime_20", name: "Play for 20 Minutes", target: 20, reward: 25 },
+  { id: "playtime_30", name: "Play for 30 Minutes", target: 30, reward: 40 },
 ];
 
 // Helper: Get start of day in UTC
@@ -344,6 +350,10 @@ export const updateQuestProgress = internalMutation({
       "open_pack": ["open_pack", "open_packs_3"],
       "sell_cards": ["sell_cards_5"],
       "pvp_battle": ["pvp_battle"],
+      "get_common": ["get_commons_3"],
+      "get_uncommon": ["get_uncommons_3"],
+      "get_rare": ["get_rares_3"],
+      "playtime": ["playtime_10", "playtime_20", "playtime_30"],
     };
 
     const relevantQuestIds = questTypeToIds[args.questType] ?? [];
