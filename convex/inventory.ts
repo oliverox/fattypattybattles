@@ -200,12 +200,32 @@ const PACK_DEFINITIONS: Record<string, { cardCount: number; rarityWeights: Recor
   },
 };
 
-// Helper: Roll rarity based on weights
-function rollRarity(weights: Record<string, number>): string {
-  const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
+/// Helper: Roll rarity based on weights with luck multiplier
+function rollRarity(weights: Record<string, number>, luckMultiplier: number = 1): string {
+  // Apply luck multiplier to rare+ cards
+  const adjustedWeights = { ...weights };
+  const rareRarities = [
+    "rare",
+    "legendary",
+    "mythical",
+    "divine",
+    "prismatic",
+    "transcendent",
+    "holographic",
+  ];
+
+  if (luckMultiplier > 1) {
+    for (const rarity of rareRarities) {
+      if (adjustedWeights[rarity]) {
+        adjustedWeights[rarity] = Math.floor(adjustedWeights[rarity] * luckMultiplier);
+      }
+    }
+  }
+
+  const totalWeight = Object.values(adjustedWeights).reduce((a, b) => a + b, 0);
   let roll = Math.random() * totalWeight;
 
-  for (const [rarity, weight] of Object.entries(weights)) {
+  for (const [rarity, weight] of Object.entries(adjustedWeights)) {
     roll -= weight;
     if (roll <= 0) {
       return rarity;
@@ -364,6 +384,16 @@ export const openPack = mutation({
       throw new Error("Invalid pack type");
     }
 
+    // Get active luck boosts
+    const now = Date.now();
+    const activeBoosts = (user.luckBoosts ?? []).filter(
+      (boost: { expiresAt: number; multiplier: number }) => boost.expiresAt > now
+    );
+    const luckMultiplier = activeBoosts.reduce(
+      (max: number, boost: { multiplier: number }) => Math.max(max, boost.multiplier),
+      1
+    );
+
     // Get all cards grouped by rarity
     const allCards = await ctx.db.query("cards").collect();
     const cardsByRarity: Record<string, typeof allCards> = {};
@@ -375,7 +405,6 @@ export const openPack = mutation({
     }
 
     // Generate cards
-    const now = Date.now();
     const generatedCards: Array<{
       cardId: Id<"cards">;
       name: string;
@@ -383,7 +412,7 @@ export const openPack = mutation({
     }> = [];
 
     for (let i = 0; i < packDef.cardCount; i++) {
-      const rarity = rollRarity(packDef.rarityWeights);
+      const rarity = rollRarity(packDef.rarityWeights, luckMultiplier);
       const cardsOfRarity = cardsByRarity[rarity];
 
       if (cardsOfRarity && cardsOfRarity.length > 0) {
