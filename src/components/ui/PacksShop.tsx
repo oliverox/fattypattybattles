@@ -32,6 +32,7 @@ export function PacksShop() {
   const shopOpen = useGameStore((state) => state.shopOpen)
   const activeShop = useGameStore((state) => state.activeShop)
   const closeAllShopUI = useGameStore((state) => state.closeAllShopUI)
+  const setPackResultsOpen = useGameStore((state) => state.setPackResultsOpen)
 
   const [purchaseResult, setPurchaseResult] = useState<PackResult[] | null>(null)
   const [isPurchasing, setIsPurchasing] = useState(false)
@@ -45,6 +46,11 @@ export function PacksShop() {
     user?.id ? { clerkId: user.id } : 'skip'
   )
   const purchasePack = useMutation(api.shop.purchasePack)
+
+  // Sync local purchaseResult state with global packResultsOpen state
+  useEffect(() => {
+    setPackResultsOpen(purchaseResult !== null)
+  }, [purchaseResult, setPackResultsOpen])
 
   const handlePurchase = useCallback(async (packType: string) => {
     if (!user?.id || isPurchasing) return

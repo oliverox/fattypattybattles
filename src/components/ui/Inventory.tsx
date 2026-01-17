@@ -40,6 +40,7 @@ export function Inventory() {
   const setInventoryOpen = useGameStore((state) => state.setInventoryOpen)
   const heldCardId = useGameStore((state) => state.heldCardId)
   const setHeldCardId = useGameStore((state) => state.setHeldCardId)
+  const setPackResultsOpen = useGameStore((state) => state.setPackResultsOpen)
 
   const [packOpenResult, setPackOpenResult] = useState<PackOpenResult[] | null>(null)
   const [openingPackType, setOpeningPackType] = useState<string | null>(null)
@@ -55,6 +56,11 @@ export function Inventory() {
   )
   const openPack = useMutation(api.inventory.openPack)
   const setHeldCardMutation = useMutation(api.inventory.setHeldCard)
+
+  // Sync local packOpenResult state with global packResultsOpen state
+  useEffect(() => {
+    setPackResultsOpen(packOpenResult !== null)
+  }, [packOpenResult, setPackResultsOpen])
 
   const handleOpenPack = useCallback(async (packType: string) => {
     if (!user?.id || openingPackType) return

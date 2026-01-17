@@ -120,6 +120,8 @@ interface GameState {
   // Inventory
   inventoryOpen: boolean
   heldCardId: string | null
+  // Pack Results (when pack is opened and showing cards)
+  packResultsOpen: boolean
   // Chat
   chatOpen: boolean
   // Leaderboard
@@ -173,6 +175,7 @@ interface GameState {
   closeBattleUI: () => void
   setInventoryOpen: (open: boolean) => void
   setHeldCardId: (cardId: string | null) => void
+  setPackResultsOpen: (open: boolean) => void
   setChatOpen: (open: boolean) => void
   setLeaderboardOpen: (open: boolean) => void
   setDailyRewardPopupOpen: (open: boolean) => void
@@ -233,6 +236,8 @@ export const useGameStore = create<GameState>((set) => ({
   // Inventory
   inventoryOpen: false,
   heldCardId: null,
+  // Pack Results
+  packResultsOpen: false,
   // Chat
   chatOpen: false,
   // Leaderboard
@@ -305,10 +310,11 @@ export const useGameStore = create<GameState>((set) => ({
   }),
   setInventoryOpen: (open) => set({ inventoryOpen: open }),
   setHeldCardId: (cardId) => set({ heldCardId: cardId }),
+  setPackResultsOpen: (open) => set({ packResultsOpen: open }),
   setChatOpen: (open) => set({ chatOpen: open }),
   setLeaderboardOpen: (open) => set({ leaderboardOpen: open }),
   setDailyRewardPopupOpen: (open) => set({ dailyRewardPopupOpen: open }),
-  closeAllShopUI: () => set({ dialogueOpen: false, shopOpen: false, activeShop: null }),
+  closeAllShopUI: () => set({ dialogueOpen: false, shopOpen: false, activeShop: null, packResultsOpen: false }),
   // PvP Battle
   setPvpTargetPlayer: (player) => set({ pvpTargetPlayer: player }),
   setPvpRequestDialogOpen: (open) => set({ pvpRequestDialogOpen: open }),
@@ -366,6 +372,7 @@ export const useGameStore = create<GameState>((set) => ({
     battleData: null,
     battleResult: null,
     inventoryOpen: false,
+    packResultsOpen: false,
     chatOpen: false,
     leaderboardOpen: false,
     dailyRewardPopupOpen: false,
@@ -434,6 +441,7 @@ export const useGameStore = create<GameState>((set) => ({
       state.battleCardSelectOpen ||
       state.battleArenaOpen ||
       state.inventoryOpen ||
+      state.packResultsOpen ||
       state.chatOpen ||
       state.leaderboardOpen ||
       state.dailyRewardPopupOpen ||

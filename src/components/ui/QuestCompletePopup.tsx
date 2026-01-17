@@ -28,6 +28,7 @@ export function QuestCompletePopup() {
   const tradeIncomingDialogOpen = useGameStore((state) => state.tradeIncomingDialogOpen)
   const tradeNegotiationOpen = useGameStore((state) => state.tradeNegotiationOpen)
   const tradeCompletedOpen = useGameStore((state) => state.tradeCompletedOpen)
+  const packResultsOpen = useGameStore((state) => state.packResultsOpen)
 
   const anyUIOpen = dialogueOpen ||
     shopOpen ||
@@ -37,6 +38,7 @@ export function QuestCompletePopup() {
     battleCardSelectOpen ||
     battleArenaOpen ||
     inventoryOpen ||
+    packResultsOpen ||
     chatOpen ||
     leaderboardOpen ||
     dailyRewardPopupOpen ||
