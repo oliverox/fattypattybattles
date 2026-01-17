@@ -11,6 +11,7 @@ const RARITY_COLORS: Record<string, string> = {
   prismatic: 'text-cyan-300 border-cyan-400',
   transcendent: 'text-orange-300 border-orange-400',
   holographic: 'text-white border-white bg-white/10 animate-pulse',
+  exclusive: 'text-pink-300 border-pink-300 bg-pink-300/10 animate-pulse',
 }
 
 export function TradeCompletedDialog() {

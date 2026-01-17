@@ -20,6 +20,7 @@ const rarityColors: Record<string, string> = {
   prismatic: 'text-cyan-400 border-cyan-400 bg-cyan-400/10 animate-pulse',
   transcendent: 'text-red-400 border-red-400 bg-red-400/10 animate-pulse',
   holographic: 'text-white border-white bg-white/10 animate-pulse',
+  exclusive: 'text-pink-300 border-pink-300 bg-pink-300/10 animate-pulse',
 }
 
 const packNames: Record<string, string> = {
@@ -28,6 +29,9 @@ const packNames: Record<string, string> = {
   big: 'Big Pack',
   premium: 'Premium Pack',
   deluxe: 'Deluxe Pack',
+  cosmic: 'Cosmic Pack',
+  metrolic: 'Metrolic Pack',
+  exclusive: 'Exclusive Pack',
 }
 
 export function Inventory() {

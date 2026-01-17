@@ -195,6 +195,21 @@ export const startBattle = mutation({
     // Get all cards for NPC selection
     const allCards = await ctx.db.query("cards").collect();
 
+    // Check if player owns any exclusive cards (NPC can only use exclusive if player has one)
+    const playerInventory = await ctx.db
+      .query("inventory")
+      .withIndex("by_userId", (q) => q.eq("userId", clerkId))
+      .collect();
+
+    const playerCardIds = playerInventory.map(inv => inv.cardId);
+    const playerOwnedCards = allCards.filter(card => playerCardIds.includes(card._id));
+    const playerHasExclusive = playerOwnedCards.some(card => card.rarity === "exclusive");
+
+    // Filter cards for NPC pool (exclude exclusive unless player has one)
+    const npcCardPool = playerHasExclusive
+      ? allCards
+      : allCards.filter(card => card.rarity !== "exclusive");
+
     // Calculate rarity weights based on player's battle wins
     const battleWins = user.battleWins ?? 0;
 
@@ -216,6 +231,7 @@ export const startBattle = mutation({
         prismatic: 2,
         transcendent: 1,
         holographic: 0.5,
+        exclusive: 0.3,
       };
 
       const base = baseWeights[rarity] ?? 1;
@@ -245,8 +261,8 @@ export const startBattle = mutation({
     }> = [];
     const usedNames = new Set<string>();
 
-    // Create weighted pool
-    const weightedCards = allCards.map(card => ({
+    // Create weighted pool (using npcCardPool which excludes exclusive if player doesn't have one)
+    const weightedCards = npcCardPool.map(card => ({
       card,
       weight: getRarityWeight(card.rarity),
     }));

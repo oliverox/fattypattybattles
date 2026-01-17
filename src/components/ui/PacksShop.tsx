@@ -11,8 +11,8 @@ interface PackResult {
   rarity: string
 }
 
-const packKeys = ['1', '2', '3', '4', '5'] as const
-const packTypes = ['small', 'normal', 'big', 'premium', 'deluxe'] as const
+const packKeys = ['1', '2', '3', '4', '5', '6', '7', '8'] as const
+const packTypes = ['small', 'normal', 'big', 'premium', 'deluxe', 'cosmic', 'metrolic', 'exclusive'] as const
 
 const rarityColors: Record<string, string> = {
   common: 'text-gray-400 border-gray-400',
@@ -24,6 +24,7 @@ const rarityColors: Record<string, string> = {
   prismatic: 'text-cyan-400 border-cyan-400 animate-pulse',
   transcendent: 'text-red-400 border-red-400 animate-pulse',
   holographic: 'text-white border-white animate-pulse',
+  exclusive: 'text-pink-300 border-pink-300 animate-pulse',
 }
 
 export function PacksShop() {
@@ -208,7 +209,7 @@ export function PacksShop() {
         )}
 
         {/* Packs grid */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {packTypes.map((type, index) => {
             const pack = packs?.find((p) => p.type === type)
             const price = PACK_PRICES[type]
@@ -258,7 +259,7 @@ export function PacksShop() {
         </div>
 
         <p className="text-gray-500 text-sm mt-4 text-center">
-          Press <span className="text-gray-400">1-5</span> to buy or{' '}
+          Press <span className="text-gray-400">1-8</span> to buy or{' '}
           <span className="text-gray-400">ESC</span> to close
         </p>
       </div>

@@ -60,6 +60,9 @@ const SAMPLE_CARDS = [
 
   // Holographic cards (1)
   { name: "patty combinasion", rarity: "holographic", cost: 15, attack: 15, defense: 15, description: "5 in 1!?" },
+
+  // Exclusive cards (1)
+  { name: "slimy patty", rarity: "exclusive", cost: 20, attack: 16, defense: 13, description: "slippery and rare..." },
 ] as const;
 
 // Clear all cards from the database
@@ -124,6 +127,7 @@ const SELL_PRICES: Record<string, { min: number; max: number }> = {
   prismatic: { min: 180, max: 210 },
   transcendent: { min: 210, max: 240 },
   holographic: { min: 240, max: 270 },
+  exclusive: { min: 1000, max: 1150 },
 };
 
 // Pack definitions (same as shop.ts)
@@ -140,6 +144,7 @@ const PACK_DEFINITIONS: Record<string, { cardCount: number; rarityWeights: Recor
       prismatic: 0,
       transcendent: 0,
       holographic: 0,
+      exclusive: 0,
     },
   },
   normal: {
@@ -154,6 +159,7 @@ const PACK_DEFINITIONS: Record<string, { cardCount: number; rarityWeights: Recor
       prismatic: 0,
       transcendent: 0,
       holographic: 0,
+      exclusive: 0,
     },
   },
   big: {
@@ -168,6 +174,7 @@ const PACK_DEFINITIONS: Record<string, { cardCount: number; rarityWeights: Recor
       prismatic: 0,
       transcendent: 0,
       holographic: 0,
+      exclusive: 0,
     },
   },
   premium: {
@@ -182,6 +189,7 @@ const PACK_DEFINITIONS: Record<string, { cardCount: number; rarityWeights: Recor
       prismatic: 0,
       transcendent: 0,
       holographic: 0,
+      exclusive: 0,
     },
   },
   deluxe: {
@@ -196,6 +204,52 @@ const PACK_DEFINITIONS: Record<string, { cardCount: number; rarityWeights: Recor
       prismatic: 2,
       transcendent: 1,
       holographic: 0.5,
+      exclusive: 0,
+    },
+  },
+  cosmic: {
+    cardCount: 20,
+    rarityWeights: {
+      common: 20,
+      uncommon: 22,
+      rare: 22,
+      legendary: 16,
+      mythical: 10,
+      divine: 5,
+      prismatic: 3,
+      transcendent: 1.5,
+      holographic: 0.5,
+      exclusive: 0,
+    },
+  },
+  metrolic: {
+    cardCount: 25,
+    rarityWeights: {
+      common: 15,
+      uncommon: 18,
+      rare: 24,
+      legendary: 18,
+      mythical: 12,
+      divine: 6,
+      prismatic: 4,
+      transcendent: 2,
+      holographic: 1,
+      exclusive: 0,
+    },
+  },
+  exclusive: {
+    cardCount: 30,
+    rarityWeights: {
+      common: 10,
+      uncommon: 14,
+      rare: 24,
+      legendary: 20,
+      mythical: 14,
+      divine: 8,
+      prismatic: 5,
+      transcendent: 3,
+      holographic: 1.5,
+      exclusive: 0.5,
     },
   },
 };
@@ -212,6 +266,7 @@ function rollRarity(weights: Record<string, number>, luckMultiplier: number = 1)
     "prismatic",
     "transcendent",
     "holographic",
+    "exclusive",
   ];
 
   if (luckMultiplier > 1) {

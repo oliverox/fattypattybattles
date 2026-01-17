@@ -40,6 +40,9 @@ export const PACK_PRICES = {
   big: 90,
   premium: 120,
   deluxe: 150,
+  cosmic: 500,
+  metrolic: 5000,
+  exclusive: 10000,
 } as const
 
 // Sell NPC constants
@@ -59,6 +62,7 @@ export const SELL_PRICES: Record<string, { min: number; max: number }> = {
   prismatic: { min: 180, max: 210 },
   transcendent: { min: 210, max: 240 },
   holographic: { min: 240, max: 270 },
+  exclusive: { min: 1000, max: 1150 },
 }
 
 // Battle NPC constants

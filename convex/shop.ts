@@ -20,6 +20,7 @@ const PACK_DEFINITIONS = {
       prismatic: 0,
       transcendent: 0,
       holographic: 0,
+      exclusive: 0,
     },
   },
   normal: {
@@ -37,6 +38,7 @@ const PACK_DEFINITIONS = {
       prismatic: 0,
       transcendent: 0,
       holographic: 0,
+      exclusive: 0,
     },
   },
   big: {
@@ -54,6 +56,7 @@ const PACK_DEFINITIONS = {
       prismatic: 0,
       transcendent: 0,
       holographic: 0,
+      exclusive: 0,
     },
   },
   premium: {
@@ -71,6 +74,7 @@ const PACK_DEFINITIONS = {
       prismatic: 0,
       transcendent: 0,
       holographic: 0,
+      exclusive: 0,
     },
   },
   deluxe: {
@@ -88,6 +92,61 @@ const PACK_DEFINITIONS = {
       prismatic: 2,
       transcendent: 1,
       holographic: 0.5,
+      exclusive: 0,
+    },
+  },
+  cosmic: {
+    name: "Cosmic Pack",
+    description: "Contains 20 cards with cosmic luck!",
+    cost: 500,
+    cardCount: 20,
+    rarityWeights: {
+      common: 20,
+      uncommon: 22,
+      rare: 22,
+      legendary: 16,
+      mythical: 10,
+      divine: 5,
+      prismatic: 3,
+      transcendent: 1.5,
+      holographic: 0.5,
+      exclusive: 0,
+    },
+  },
+  metrolic: {
+    name: "Metrolic Pack",
+    description: "Contains 25 cards with enhanced cosmic luck!",
+    cost: 5000,
+    cardCount: 25,
+    rarityWeights: {
+      common: 15,
+      uncommon: 18,
+      rare: 24,
+      legendary: 18,
+      mythical: 12,
+      divine: 6,
+      prismatic: 4,
+      transcendent: 2,
+      holographic: 1,
+      exclusive: 0,
+    },
+  },
+  exclusive: {
+    name: "Exclusive Pack",
+    description: "Contains 30 cards with the best odds + exclusive cards!",
+    cost: 10000,
+    cardCount: 30,
+    rarityWeights: {
+      common: 10,
+      uncommon: 14,
+      rare: 24,
+      legendary: 20,
+      mythical: 14,
+      divine: 8,
+      prismatic: 5,
+      transcendent: 3,
+      holographic: 1.5,
+      exclusive: 0.5,
     },
   },
 } as const;
@@ -413,6 +472,7 @@ function rollRarity(
     "prismatic",
     "transcendent",
     "holographic",
+    "exclusive",
   ];
 
   if (luckMultiplier > 1) {

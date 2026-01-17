@@ -17,6 +17,7 @@ const RARITY_COLORS: Record<string, string> = {
   prismatic: 'border-cyan-400 bg-gradient-to-br from-cyan-900/30 to-purple-900/30',
   transcendent: 'border-orange-400 bg-gradient-to-br from-orange-900/30 to-red-900/30',
   holographic: 'border-white bg-gradient-to-br from-white/20 to-black animate-pulse',
+  exclusive: 'border-pink-300 bg-gradient-to-br from-pink-900/30 to-fuchsia-900/30 animate-pulse',
 }
 
 type BattlePhase = 'intro' | 'round' | 'coinflip' | 'result' | 'final'
