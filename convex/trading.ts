@@ -8,6 +8,8 @@ const TRADE_TIMEOUT_MS = 5 * 60 * 1000;
 // ============== QUERIES ==============
 
 // Search for users by username (autocomplete)
+// NOTE: Convex doesn't support partial text search with indexes.
+// For large user bases, consider using a dedicated search service.
 export const searchUsersByUsername = query({
   args: {
     clerkId: v.string(),
@@ -18,23 +20,25 @@ export const searchUsersByUsername = query({
       return [];
     }
 
-    // Get all users with usernames
+    // Get all users - cannot use index for partial matching
+    // Only fetch fields needed for search
     const allUsers = await ctx.db.query("users").collect();
 
     // Filter by search query (case-insensitive partial match)
     const lowerQuery = searchQuery.toLowerCase();
-    const matches = allUsers
-      .filter((user) => {
-        if (!user.username || !user.clerkId) return false;
-        // Don't include self
-        if (user.clerkId === clerkId) return false;
-        return user.username.toLowerCase().includes(lowerQuery);
-      })
-      .slice(0, 10) // Limit to 10 results
-      .map((user) => ({
-        clerkId: user.clerkId!,
-        username: user.username!,
-      }));
+    const matches: Array<{ clerkId: string; username: string }> = [];
+
+    for (const user of allUsers) {
+      if (matches.length >= 10) break; // Early exit once we have 10 matches
+      if (!user.username || !user.clerkId) continue;
+      if (user.clerkId === clerkId) continue; // Don't include self
+      if (user.username.toLowerCase().includes(lowerQuery)) {
+        matches.push({
+          clerkId: user.clerkId,
+          username: user.username,
+        });
+      }
+    }
 
     return matches;
   },

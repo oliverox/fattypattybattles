@@ -308,7 +308,7 @@ export const purchasePack = mutation({
       1
     );
 
-    // Get all cards grouped by rarity
+    // Get all cards grouped by rarity (cards table is small, single fetch is efficient)
     const allCards = await ctx.db.query("cards").collect();
     const cardsByRarity: Record<string, typeof allCards> = {};
     for (const card of allCards) {
@@ -318,12 +318,25 @@ export const purchasePack = mutation({
       cardsByRarity[card.rarity]!.push(card);
     }
 
+    // Pre-fetch user's existing inventory to batch lookups
+    const existingInventory = await ctx.db
+      .query("inventory")
+      .withIndex("by_userId", (q) => q.eq("userId", clerkId))
+      .collect();
+
+    const inventoryMap = new Map(
+      existingInventory.map((inv) => [inv.cardId.toString(), inv])
+    );
+
     // Generate cards based on rarity weights
     const generatedCards: Array<{
       cardId: Id<"cards">;
       name: string;
       rarity: string;
     }> = [];
+
+    // Track cards to add (aggregate quantities before writing)
+    const cardsToAdd = new Map<string, { cardId: Id<"cards">; quantity: number }>();
 
     for (let i = 0; i < pack.cardCount; i++) {
       const rarity = rollRarity(pack.rarityWeights, luckMultiplier);
@@ -338,26 +351,31 @@ export const purchasePack = mutation({
           rarity: randomCard.rarity,
         });
 
-        // Add to inventory
-        const existingInventory = await ctx.db
-          .query("inventory")
-          .withIndex("by_userId_cardId", (q) =>
-            q.eq("userId", clerkId).eq("cardId", randomCard._id)
-          )
-          .first();
-
-        if (existingInventory) {
-          await ctx.db.patch(existingInventory._id, {
-            quantity: existingInventory.quantity + 1,
-          });
+        // Aggregate cards to add
+        const cardIdStr = randomCard._id.toString();
+        const existing = cardsToAdd.get(cardIdStr);
+        if (existing) {
+          existing.quantity += 1;
         } else {
-          await ctx.db.insert("inventory", {
-            userId: clerkId,
-            cardId: randomCard._id,
-            quantity: 1,
-            acquiredAt: now,
-          });
+          cardsToAdd.set(cardIdStr, { cardId: randomCard._id, quantity: 1 });
         }
+      }
+    }
+
+    // Batch update inventory
+    for (const [cardIdStr, { cardId, quantity }] of cardsToAdd) {
+      const existingInv = inventoryMap.get(cardIdStr);
+      if (existingInv) {
+        await ctx.db.patch(existingInv._id, {
+          quantity: existingInv.quantity + quantity,
+        });
+      } else {
+        await ctx.db.insert("inventory", {
+          userId: clerkId,
+          cardId,
+          quantity,
+          acquiredAt: now,
+        });
       }
     }
 

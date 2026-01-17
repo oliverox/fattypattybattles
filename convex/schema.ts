@@ -142,7 +142,8 @@ export default defineSchema({
     })),
   })
     .index("by_challengerId", ["challengerId", "status"])
-    .index("by_targetId", ["targetId", "status"]),
+    .index("by_targetId", ["targetId", "status"])
+    .index("by_challenger_target", ["challengerId", "targetId", "status"]),
 
   // Trade Requests - player-to-player trading
   tradeRequests: defineTable({

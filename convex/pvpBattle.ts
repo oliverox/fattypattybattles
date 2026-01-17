@@ -109,10 +109,9 @@ export const sendBattleRequest = mutation({
     // Check for existing pending requests between these players
     const existingRequest = await ctx.db
       .query("pvpBattleRequests")
-      .withIndex("by_challengerId", (q) =>
-        q.eq("challengerId", challengerId).eq("status", "pending")
+      .withIndex("by_challenger_target", (q) =>
+        q.eq("challengerId", challengerId).eq("targetId", targetUserId).eq("status", "pending")
       )
-      .filter((q) => q.eq(q.field("targetId"), targetUserId))
       .first();
 
     if (existingRequest) {

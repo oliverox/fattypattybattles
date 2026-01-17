@@ -162,17 +162,31 @@ export const sendMessage = mutation({
       timestamp: Date.now(),
     });
 
-    // Clean up old messages (keep only last 100)
-    const allMessages = await ctx.db
+    // Clean up old messages efficiently - only delete oldest if we have too many
+    // First, count messages by getting the oldest ones
+    const oldestMessages = await ctx.db
       .query("chatMessages")
       .withIndex("by_mapId", (q) => q.eq("mapId", mapId))
       .order("asc")
-      .collect();
+      .take(20); // Get oldest 20 messages
 
-    if (allMessages.length > 100) {
-      const toDelete = allMessages.slice(0, allMessages.length - 100);
-      for (const msg of toDelete) {
-        await ctx.db.delete(msg._id);
+    // Check if we need cleanup by seeing if there are messages beyond our limit
+    // We get newest 100 and if oldest message isn't in that set, we have >100
+    const newestMessages = await ctx.db
+      .query("chatMessages")
+      .withIndex("by_mapId", (q) => q.eq("mapId", mapId))
+      .order("desc")
+      .take(100);
+
+    if (newestMessages.length >= 100 && oldestMessages.length > 0) {
+      // Get the timestamp of the 100th newest message
+      const cutoffTimestamp = newestMessages[newestMessages.length - 1]?.timestamp ?? 0;
+
+      // Delete messages older than the cutoff (up to 20 at a time to limit work)
+      for (const msg of oldestMessages) {
+        if (msg.timestamp < cutoffTimestamp) {
+          await ctx.db.delete(msg._id);
+        }
       }
     }
   },
