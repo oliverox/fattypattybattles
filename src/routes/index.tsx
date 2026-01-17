@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { SignedIn, SignedOut, UserButton, useAuth } from '@clerk/tanstack-react-start'
 import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
@@ -51,6 +51,7 @@ function AuthScreen() {
 function GameScreen() {
   const currentUser = useQuery(api.users.getCurrentUser)
   const [showProfileForm, setShowProfileForm] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (currentUser === null) {
@@ -58,6 +59,20 @@ function GameScreen() {
       return () => clearTimeout(timer)
     }
   }, [currentUser])
+
+  // Press Enter to start playing
+  useEffect(() => {
+    if (!currentUser) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        navigate({ to: '/game' })
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [currentUser, navigate])
 
   if (currentUser === undefined) {
     return (
@@ -114,6 +129,7 @@ function GameScreen() {
         >
           Enter Game
         </Link>
+        <p className="text-white/60 mt-4 text-sm">Press Enter to start</p>
       </div>
     </div>
   )
