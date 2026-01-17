@@ -207,6 +207,7 @@ export default defineSchema({
       v.literal("prismatic"),
       v.literal("transcendent"),
       v.literal("holographic"),
+      v.literal("exclusive"),
       v.literal("admin")
     ),
     cost: v.number(),
@@ -259,6 +260,7 @@ export default defineSchema({
       prismatic: v.number(),
       transcendent: v.number(),
       holographic: v.number(),
+      exclusive: v.number(),
     }),
   }),
 
