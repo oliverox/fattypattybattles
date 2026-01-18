@@ -139,6 +139,51 @@ export const checkUsername = query({
   },
 });
 
+// Username prefixes for random generation (no underscores)
+const USERNAME_PREFIXES = [
+  "Cool", "Super", "Mega", "Epic", "Awesome", "Swift", "Brave", "Lucky",
+  "Mighty", "Cosmic", "Blazing", "Thunder", "Storm", "Shadow", "Golden",
+  "Silver", "Crystal", "Turbo", "Ultra", "Hyper", "Nitro", "Quantum",
+  "Pixel", "Cyber", "Neon", "Stellar", "Nova", "Astro", "Sonic", "Rapid",
+];
+
+const USERNAME_NOUNS = [
+  "Player", "Gamer", "Hero", "Knight", "Ninja", "Dragon", "Wolf", "Tiger",
+  "Phoenix", "Falcon", "Shark", "Bear", "Lion", "Panther", "Hawk", "Raven",
+  "Storm", "Blaze", "Frost", "Star", "Comet", "Bolt", "Flash", "Spark",
+  "Legend", "Champion", "Warrior", "Hunter", "Ranger", "Scout", "Ace",
+];
+
+// Generate a recommended available username
+export const getRecommendedUsername = query({
+  args: {},
+  handler: async (ctx) => {
+    const generateUsername = () => {
+      const prefix = USERNAME_PREFIXES[Math.floor(Math.random() * USERNAME_PREFIXES.length)];
+      const noun = USERNAME_NOUNS[Math.floor(Math.random() * USERNAME_NOUNS.length)];
+      const number = Math.floor(Math.random() * 900) + 100; // 100-999
+      return `${prefix}${noun}${number}`;
+    };
+
+    // Try to find an available username (max 20 attempts)
+    for (let i = 0; i < 20; i++) {
+      const username = generateUsername();
+      const existing = await ctx.db
+        .query("users")
+        .withIndex("by_username", (q) => q.eq("username", username))
+        .first();
+
+      if (!existing) {
+        return { username };
+      }
+    }
+
+    // Fallback: add more random digits
+    const fallbackUsername = `Player${Date.now().toString().slice(-8)}`;
+    return { username: fallbackUsername };
+  },
+});
+
 // Ensure user has starter pack (for existing users before this feature)
 export const ensureStarterPack = mutation({
   handler: async (ctx) => {

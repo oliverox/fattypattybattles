@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { Button } from '@/components/ui/Button';
@@ -31,6 +31,7 @@ export function ProfileForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [username, setUsername] = useState('');
+  const [hasSetInitialUsername, setHasSetInitialUsername] = useState(false);
   const [skinColor, setSkinColor] = useState<string>(DEFAULT_SKIN_COLOR);
   const [hairStyle, setHairStyle] = useState<string>(DEFAULT_HAIR_STYLE);
   const [hairColor, setHairColor] = useState<string>(DEFAULT_HAIR_COLOR);
@@ -38,9 +39,18 @@ export function ProfileForm() {
   const [mouthStyle, setMouthStyle] = useState<string>(DEFAULT_MOUTH_STYLE);
 
   const createUserProfile = useMutation(api.users.createUserProfile);
+  const recommendedUsername = useQuery(api.users.getRecommendedUsername);
   const checkUsername = useQuery(api.users.checkUsername,
     username ? { username } : "skip"
   );
+
+  // Set recommended username as initial value when it loads
+  useEffect(() => {
+    if (recommendedUsername?.username && !hasSetInitialUsername && !username) {
+      setUsername(recommendedUsername.username);
+      setHasSetInitialUsername(true);
+    }
+  }, [recommendedUsername, hasSetInitialUsername, username]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -109,7 +119,7 @@ export function ProfileForm() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
-            placeholder="CoolPlayer123"
+            placeholder={recommendedUsername?.username ?? "Loading..."}
             minLength={3}
             error={
               checkUsername && !checkUsername.available
