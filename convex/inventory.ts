@@ -58,8 +58,9 @@ const SAMPLE_CARDS = [
   // Transcendent cards (1)
   { name: "armor patty", rarity: "transcendent", cost: 12, attack: 13, defense: 12, description: "i'm better than kung-fu patty" },
 
-  // Holographic cards (1)
-  { name: "patty combinasion", rarity: "holographic", cost: 15, attack: 15, defense: 15, description: "5 in 1!?" },
+  // Holographic cards (2)
+  { name: "patty combinasion", rarity: "holographic", cost: 15, attack: 14, defense: 15, description: "5 in 1!?" },
+  { name: "digital patty", rarity: "holographic", cost: 15, attack: 15, defense: 14, description: "01101000 01101001" },
 
   // Exclusive cards (1)
   { name: "slimy patty", rarity: "exclusive", cost: 20, attack: 16, defense: 13, description: "slippery and rare..." },
@@ -73,6 +74,58 @@ export const clearCards = mutation({
       await ctx.db.delete(card._id);
     }
     return { cleared: true, count: allCards.length };
+  },
+});
+
+// Sync missing cards from SAMPLE_CARDS to the database
+export const syncNewCards = mutation({
+  handler: async (ctx) => {
+    const existingCards = await ctx.db.query("cards").collect();
+    const existingNames = new Set(existingCards.map((c) => c.name));
+
+    let added = 0;
+    for (const card of SAMPLE_CARDS) {
+      if (!existingNames.has(card.name)) {
+        await ctx.db.insert("cards", {
+          name: card.name,
+          rarity: card.rarity as any,
+          cost: card.cost,
+          attack: card.attack,
+          defense: card.defense,
+          description: card.description,
+        });
+        added++;
+      }
+    }
+
+    return { added };
+  },
+});
+
+// Update card stats (for existing cards)
+export const updateCardStats = mutation({
+  handler: async (ctx) => {
+    let updated = 0;
+    for (const sampleCard of SAMPLE_CARDS) {
+      const existingCard = await ctx.db
+        .query("cards")
+        .filter((q) => q.eq(q.field("name"), sampleCard.name))
+        .first();
+
+      if (existingCard) {
+        if (
+          existingCard.attack !== sampleCard.attack ||
+          existingCard.defense !== sampleCard.defense
+        ) {
+          await ctx.db.patch(existingCard._id, {
+            attack: sampleCard.attack,
+            defense: sampleCard.defense,
+          });
+          updated++;
+        }
+      }
+    }
+    return { updated };
   },
 });
 
