@@ -101,7 +101,7 @@ const PACK_DEFINITIONS = {
     cost: 500,
     cardCount: 20,
     rarityWeights: {
-      common: 20,
+      common: 19.95,
       uncommon: 22,
       rare: 22,
       legendary: 16,
@@ -110,7 +110,7 @@ const PACK_DEFINITIONS = {
       prismatic: 3,
       transcendent: 1.5,
       holographic: 0.5,
-      exclusive: 0,
+      exclusive: 0.05,
     },
   },
   metrolic: {
@@ -119,7 +119,7 @@ const PACK_DEFINITIONS = {
     cost: 5000,
     cardCount: 25,
     rarityWeights: {
-      common: 15,
+      common: 14.9,
       uncommon: 18,
       rare: 24,
       legendary: 18,
@@ -128,7 +128,7 @@ const PACK_DEFINITIONS = {
       prismatic: 4,
       transcendent: 2,
       holographic: 1,
-      exclusive: 0,
+      exclusive: 0.1,
     },
   },
   exclusive: {
