@@ -663,6 +663,11 @@ export const resolveBattle = mutation({
         questType: "win_battle",
         amount: 1,
       });
+
+      // Check for [1ST] leaderboard tag (wins changed)
+      await ctx.scheduler.runAfter(0, internal.chatTags.checkAndGrantLeaderboardTag, {
+        clerkId,
+      });
     }
 
     return {

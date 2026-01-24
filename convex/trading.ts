@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 
 // Trade timeout: 5 minutes
@@ -512,6 +513,15 @@ export const confirmTrade = mutation({
 
     if (bothConfirmed) {
       await executeTrade(ctx, requestId);
+
+      // Check for [EXCLUSIVER] tag for both parties (may have gained exclusive cards)
+      await ctx.scheduler.runAfter(0, internal.chatTags.checkAndGrantExclusiverTag, {
+        clerkId: request.senderId,
+      });
+      await ctx.scheduler.runAfter(0, internal.chatTags.checkAndGrantExclusiverTag, {
+        clerkId: request.receiverId,
+      });
+
       return { success: true, tradeCompleted: true };
     }
 

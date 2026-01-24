@@ -619,6 +619,18 @@ export const openPack = mutation({
       });
     }
 
+    // Check for [EXCLUSIVER] tag: 3+ exclusive cards in inventory
+    if (rarityCounts["exclusive"]) {
+      await ctx.scheduler.runAfter(0, internal.chatTags.checkAndGrantExclusiverTag, {
+        clerkId,
+      });
+    }
+
+    // Check for [1ST] leaderboard tag (cards changed)
+    await ctx.scheduler.runAfter(0, internal.chatTags.checkAndGrantLeaderboardTag, {
+      clerkId,
+    });
+
     return {
       success: true,
       cards: generatedCards,
@@ -714,6 +726,19 @@ export const sellCards = mutation({
       clerkId,
       questType: "sell_cards",
       amount: inventoryIds.length,
+    });
+
+    // Check for [INVERTED] tag: sell 500+ cards at once
+    if (inventoryIds.length >= 500) {
+      await ctx.scheduler.runAfter(0, internal.chatTags.grantTag, {
+        clerkId,
+        tag: "INVERTED",
+      });
+    }
+
+    // Check for [1ST] leaderboard tag (coins changed)
+    await ctx.scheduler.runAfter(0, internal.chatTags.checkAndGrantLeaderboardTag, {
+      clerkId,
     });
 
     return {

@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation, internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 
 // Daily login bonus rewards - 7-day cycle
 const DAILY_REWARDS = [
@@ -201,6 +202,14 @@ export const claimDailyReward = mutation({
       },
       timestamp: now,
     });
+
+    // Check for [DAILY] tag: reach 14-day streak
+    if (newStreak >= 14) {
+      await ctx.scheduler.runAfter(0, internal.chatTags.grantTag, {
+        clerkId: args.clerkId,
+        tag: "DAILY",
+      });
+    }
 
     return {
       coinsAwarded: reward.coins,

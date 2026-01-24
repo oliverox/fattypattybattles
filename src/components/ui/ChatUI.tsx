@@ -3,6 +3,7 @@ import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useGameStore } from '@/stores/gameStore'
 import { MULTIPLAYER } from '@/lib/game/constants'
+import { getTagDisplay, getTagColor } from '@/lib/chatTags'
 
 interface ChatUIProps {
   mapId: string
@@ -101,7 +102,7 @@ export function ChatUI({ mapId }: ChatUIProps) {
               {msg.type === "system" ? (
                 <><span className="text-yellow-400">server:</span> {msg.message}</>
               ) : (
-                <><span className="text-cyan-400">{msg.username}:</span> {msg.message}</>
+                <>{msg.equippedChatTag && <span style={{ color: getTagColor(msg.equippedChatTag) }} className="font-bold mr-1">{getTagDisplay(msg.equippedChatTag)}</span>}<span className="text-cyan-400">{msg.username}:</span> {msg.message}</>
               )}
             </div>
           ))}
@@ -139,6 +140,11 @@ export function ChatUI({ mapId }: ChatUIProps) {
                 </>
               ) : (
                 <>
+                  {msg.equippedChatTag && (
+                    <span style={{ color: getTagColor(msg.equippedChatTag) }} className="font-bold mr-1">
+                      {getTagDisplay(msg.equippedChatTag)}
+                    </span>
+                  )}
                   <span className="text-cyan-400 font-medium">{msg.username}: </span>
                   <span className="text-white">{msg.message}</span>
                 </>

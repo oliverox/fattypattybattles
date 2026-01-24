@@ -2,6 +2,14 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 
+const RESTRICTED_USERNAME_WORDS = ["owner", "admin", "dev", "developer"];
+
+function isUsernameRestricted(username: string): boolean {
+  const lower = username.toLowerCase();
+  if (lower.includes("[")) return true;
+  return RESTRICTED_USERNAME_WORDS.some((word) => lower.includes(word));
+}
+
 // Create or update user profile
 export const createUserProfile = mutation({
   args: {
@@ -30,6 +38,11 @@ export const createUserProfile = mutation({
 
     if (existingUser?.username) {
       throw new Error("User profile already exists");
+    }
+
+    // Check username restrictions
+    if (isUsernameRestricted(args.username)) {
+      throw new Error("Username contains a restricted word");
     }
 
     // Check if username is taken
@@ -69,6 +82,72 @@ export const createUserProfile = mutation({
       });
       return userId;
     }
+  },
+});
+
+// Check if current user has a restricted username
+export const hasRestrictedUsername = query({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return false;
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user?.username) return false;
+    return isUsernameRestricted(user.username);
+  },
+});
+
+// Change username (for users with restricted usernames)
+export const changeUsername = mutation({
+  args: {
+    newUsername: v.string(),
+  },
+  handler: async (ctx, { newUsername }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const clerkId = identity.subject;
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", clerkId))
+      .first();
+
+    if (!user) throw new Error("User not found");
+
+    // Validate new username
+    if (newUsername.trim().length < 3) {
+      throw new Error("Username must be at least 3 characters");
+    }
+    if (isUsernameRestricted(newUsername)) {
+      throw new Error("Username contains a restricted word");
+    }
+
+    // Check availability
+    const taken = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", newUsername))
+      .first();
+    if (taken && taken._id !== user._id) {
+      throw new Error("Username already taken");
+    }
+
+    // Update username
+    await ctx.db.patch(user._id, { username: newUsername });
+
+    // Update cached username in playerPositions
+    const position = await ctx.db
+      .query("playerPositions")
+      .withIndex("by_userId", (q) => q.eq("userId", clerkId))
+      .first();
+    if (position) {
+      await ctx.db.patch(position._id, { username: newUsername });
+    }
+
+    return { success: true };
   },
 });
 
@@ -318,6 +397,11 @@ export const updatePlayTime = mutation({
           amount: minutes,
         });
       }
+
+      // Check for [1ST] leaderboard tag
+      await ctx.scheduler.runAfter(0, internal.chatTags.checkAndGrantLeaderboardTag, {
+        clerkId,
+      });
     }
   },
 });

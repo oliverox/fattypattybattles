@@ -28,6 +28,7 @@ import { ChatUI } from '@/components/ui/ChatUI'
 import { Leaderboard } from '@/components/ui/Leaderboard'
 import { DailyRewardPopup } from '@/components/ui/DailyRewardPopup'
 import { QuestCompletePopup } from '@/components/ui/QuestCompletePopup'
+import { ChangeUsernameModal } from '@/components/ui/ChangeUsernameModal'
 import { usePlaytimeTracker } from '@/hooks/usePlaytimeTracker'
 import { useGameStore } from '@/stores/gameStore'
 import { MULTIPLAYER } from '@/lib/game/constants'
@@ -39,6 +40,7 @@ export const Route = createFileRoute('/game')({
 function GamePage() {
   const { isLoaded, isSignedIn } = useAuth()
   const currentUser = useQuery(api.users.getCurrentUser)
+  const hasRestrictedUsername = useQuery(api.users.hasRestrictedUsername)
   const ensureStarterPack = useMutation(api.users.ensureStarterPack)
   const seedCards = useMutation(api.inventory.seedCards)
   const refreshDailyQuests = useMutation(api.dailyRewards.refreshDailyQuests)
@@ -164,6 +166,7 @@ function GamePage() {
 
   return (
     <div className="w-screen h-screen relative">
+      {hasRestrictedUsername && <ChangeUsernameModal />}
       <div className="absolute top-4 right-4 z-50">
         <UserButton />
       </div>

@@ -32,6 +32,7 @@ export function RemotePlayersManager({ mapId }: RemotePlayersManagerProps) {
           position={{ x: player.x, y: player.y, z: player.z }}
           rotation={player.rotation}
           avatarConfig={player.avatarConfig}
+          equippedChatTag={player.equippedChatTag}
           onPlayerClick={handlePlayerClick}
         />
       ))}

@@ -28,6 +28,8 @@ export default defineSchema({
       acquiredAt: v.number(),
     }))),
     heldCardId: v.optional(v.string()),
+    chatTags: v.optional(v.array(v.string())),
+    equippedChatTag: v.optional(v.string()),
     battleWins: v.optional(v.number()),
     battleLosses: v.optional(v.number()),
     createdAt: v.optional(v.number()),
@@ -59,6 +61,7 @@ export default defineSchema({
       eyeColor: v.optional(v.string()),
       mouthStyle: v.optional(v.string()),
     })),
+    equippedChatTag: v.optional(v.string()),
     x: v.number(),
     y: v.number(),
     z: v.number(),
@@ -78,6 +81,7 @@ export default defineSchema({
     mapId: v.string(),
     timestamp: v.number(),
     type: v.optional(v.union(v.literal("player"), v.literal("system"))),
+    equippedChatTag: v.optional(v.string()),
   })
     .index("by_mapId", ["mapId", "timestamp"]),
 

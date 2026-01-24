@@ -53,6 +53,17 @@ export function ProfileForm() {
       return;
     }
 
+    const lowerUsername = username.toLowerCase();
+    const restrictedWords = ['owner', 'admin', 'dev', 'developer'];
+    if (restrictedWords.some((word) => lowerUsername.includes(word))) {
+      setError('Username contains a restricted word');
+      return;
+    }
+    if (username.includes('[')) {
+      setError('Username cannot contain "["');
+      return;
+    }
+
     if (checkUsername && !checkUsername.available) {
       setError('Username is already taken');
       return;

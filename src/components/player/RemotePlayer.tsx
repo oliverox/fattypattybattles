@@ -3,6 +3,7 @@ import { useFrame, ThreeEvent } from '@react-three/fiber'
 import { Text, Billboard } from '@react-three/drei'
 import { Group, Color, Vector3, MathUtils } from 'three'
 import { MULTIPLAYER, COLORS } from '@/lib/game/constants'
+import { getTagDisplay, getTagColor } from '@/lib/chatTags'
 
 interface AvatarConfig {
   skinColor: string
@@ -18,6 +19,7 @@ interface RemotePlayerProps {
   position: { x: number; y: number; z: number }
   rotation: number
   avatarConfig?: AvatarConfig
+  equippedChatTag?: string
   onPlayerClick?: (userId: string, username: string) => void
 }
 
@@ -193,6 +195,7 @@ export function RemotePlayer({
   position,
   rotation,
   avatarConfig,
+  equippedChatTag,
   onPlayerClick,
 }: RemotePlayerProps) {
   const groupRef = useRef<Group>(null)
@@ -254,7 +257,7 @@ export function RemotePlayer({
       </mesh>
 
       {/* Username tag - billboards to always face camera */}
-      <Billboard position={[0, 2.5, 0]}>
+      <Billboard position={[0, equippedChatTag ? 2.65 : 2.5, 0]}>
         <Text
           fontSize={0.3}
           color={COLORS.neonCyan}
@@ -266,6 +269,20 @@ export function RemotePlayer({
           {username}
         </Text>
       </Billboard>
+      {equippedChatTag && (
+        <Billboard position={[0, 2.3, 0]}>
+          <Text
+            fontSize={0.22}
+            color={getTagColor(equippedChatTag)}
+            anchorX="center"
+            anchorY="middle"
+            outlineWidth={0.015}
+            outlineColor="#000000"
+          >
+            {getTagDisplay(equippedChatTag)}
+          </Text>
+        </Billboard>
+      )}
 
       {/* Player body */}
       <group>

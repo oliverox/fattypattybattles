@@ -673,6 +673,11 @@ export const resolvePvpBattle = mutation({
       battleLog: rounds,
     });
 
+    // Check for [1ST] leaderboard tag for winner (wins changed)
+    await ctx.scheduler.runAfter(0, internal.chatTags.checkAndGrantLeaderboardTag, {
+      clerkId: winnerId,
+    });
+
     // Build result object
     const battleResult = {
       winnerId,

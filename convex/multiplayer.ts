@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { OWNER_USERNAMES, VALID_TAGS } from "./chatTags";
 
 const MAX_PLAYERS = 15;
 const CHAT_MAX_LENGTH = 500;
@@ -54,6 +55,7 @@ export const updatePosition = mutation({
         lastUpdate: now,
         username: user.username,
         avatarConfig: user.avatarConfig,
+        equippedChatTag: user.equippedChatTag,
       });
     } else {
       // Create new position record
@@ -61,6 +63,7 @@ export const updatePosition = mutation({
         userId: clerkId,
         username: user.username,
         avatarConfig: user.avatarConfig,
+        equippedChatTag: user.equippedChatTag,
         x: args.x,
         y: args.y,
         z: args.z,
@@ -178,6 +181,49 @@ export const sendMessage = mutation({
       throw new Error(`Message too long (max ${CHAT_MAX_LENGTH} characters)`);
     }
 
+    // Handle /granttag command (owner only)
+    if (trimmedMessage.startsWith("/granttag ")) {
+      if (!OWNER_USERNAMES.includes(user.username)) {
+        throw new Error("Only owners can use /granttag");
+      }
+      const parts = trimmedMessage.split(" ");
+      if (parts.length !== 3) {
+        throw new Error("Usage: /granttag <username> <TAG>");
+      }
+      const targetUsername = parts[1]!;
+      const tag = parts[2]!.toUpperCase();
+      if (tag === "OWNER") {
+        throw new Error("Cannot grant OWNER tag");
+      }
+      if (!VALID_TAGS.includes(tag as any)) {
+        throw new Error(`Invalid tag: ${tag}. Valid: ${VALID_TAGS.filter(t => t !== "OWNER").join(", ")}`);
+      }
+      const target = await ctx.db
+        .query("users")
+        .withIndex("by_username", (q) => q.eq("username", targetUsername))
+        .first();
+      if (!target) {
+        throw new Error(`User "${targetUsername}" not found`);
+      }
+      const currentTags = target.chatTags ?? [];
+      if (currentTags.includes(tag)) {
+        throw new Error(`${targetUsername} already has [${tag}]`);
+      }
+      await ctx.db.patch(target._id, {
+        chatTags: [...currentTags, tag],
+      });
+      // Send system confirmation message
+      await ctx.db.insert("chatMessages", {
+        userId: clerkId,
+        username: "server",
+        message: `${user.username} granted [${tag}] to ${targetUsername}!`,
+        mapId,
+        timestamp: Date.now(),
+        type: "system",
+      });
+      return;
+    }
+
     // Insert message
     await ctx.db.insert("chatMessages", {
       userId: clerkId,
@@ -185,6 +231,7 @@ export const sendMessage = mutation({
       message: trimmedMessage,
       mapId,
       timestamp: Date.now(),
+      equippedChatTag: user.equippedChatTag,
     });
 
     // Clean up old messages efficiently - only delete oldest if we have too many

@@ -9,6 +9,7 @@
  */
 
 import type * as battle from "../battle.js";
+import type * as chatTags from "../chatTags.js";
 import type * as dailyRewards from "../dailyRewards.js";
 import type * as inventory from "../inventory.js";
 import type * as leaderboard from "../leaderboard.js";
@@ -26,6 +27,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   battle: typeof battle;
+  chatTags: typeof chatTags;
   dailyRewards: typeof dailyRewards;
   inventory: typeof inventory;
   leaderboard: typeof leaderboard;
