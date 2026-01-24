@@ -193,10 +193,12 @@ export const sendMessage = mutation({
       const targetUsername = parts[1]!;
       const tag = parts[2]!.toUpperCase();
       if (tag === "OWNER") {
-        throw new Error("Cannot grant OWNER tag");
+        if (!OWNER_USERNAMES.includes(targetUsername)) {
+          throw new Error("Cannot grant OWNER tag to non-owners");
+        }
       }
       if (!VALID_TAGS.includes(tag as any)) {
-        throw new Error(`Invalid tag: ${tag}. Valid: ${VALID_TAGS.filter(t => t !== "OWNER").join(", ")}`);
+        throw new Error(`Invalid tag: ${tag}. Valid: ${VALID_TAGS.join(", ")}`);
       }
       const target = await ctx.db
         .query("users")

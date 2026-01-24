@@ -18,6 +18,7 @@ export function ChatUI({ mapId }: ChatUIProps) {
   const [message, setMessage] = useState('')
   const [showEmojis, setShowEmojis] = useState(false)
   const [isSending, setIsSending] = useState(false)
+  const [sendError, setSendError] = useState('')
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -55,12 +56,15 @@ export function ChatUI({ mapId }: ChatUIProps) {
   const handleSend = async () => {
     if (!message.trim() || isSending) return
 
+    setSendError('')
     setIsSending(true)
     try {
       await sendMessage({ message: message.trim(), mapId })
       setMessage('')
     } catch (err) {
-      console.error('Failed to send message:', err)
+      const errorMsg = err instanceof Error ? err.message : 'Failed to send message'
+      setSendError(errorMsg)
+      setTimeout(() => setSendError(''), 5000)
     } finally {
       setIsSending(false)
     }
@@ -169,6 +173,13 @@ export function ChatUI({ mapId }: ChatUIProps) {
           </div>
         )}
 
+        {/* Error */}
+        {sendError && (
+          <div className="px-2 py-1 text-xs text-red-400 bg-red-500/10 border-t border-red-500/30">
+            {sendError}
+          </div>
+        )}
+
         {/* Input */}
         <div className="flex items-center gap-2 p-2 border-t border-cyan-500/30">
           <button
@@ -184,7 +195,7 @@ export function ChatUI({ mapId }: ChatUIProps) {
             type="text"
             value={message}
             onChange={(e) => setMessage(e.target.value.slice(0, MULTIPLAYER.chatMaxLength))}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             placeholder="Type a message..."
             className="flex-1 bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm placeholder-white/40 focus:outline-none focus:border-cyan-500"
           />
