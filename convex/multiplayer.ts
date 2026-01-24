@@ -40,6 +40,8 @@ export const updatePosition = mutation({
 
     const now = Date.now();
 
+    const wasOffline = existingPosition ? !existingPosition.isOnline : true;
+
     if (existingPosition) {
       // Update existing position
       await ctx.db.patch(existingPosition._id, {
@@ -66,6 +68,18 @@ export const updatePosition = mutation({
         mapId: args.mapId,
         isOnline: true,
         lastUpdate: now,
+      });
+    }
+
+    // Send join message if player was offline and is now online
+    if (wasOffline) {
+      await ctx.db.insert("chatMessages", {
+        userId: clerkId,
+        username: user.username,
+        message: `${user.username} joined the game`,
+        mapId: args.mapId,
+        timestamp: now,
+        type: "system",
       });
     }
   },
@@ -111,10 +125,21 @@ export const setOffline = mutation({
       .withIndex("by_userId", (q) => q.eq("userId", clerkId))
       .first();
 
-    if (position) {
+    if (position && position.isOnline) {
+      const now = Date.now();
       await ctx.db.patch(position._id, {
         isOnline: false,
-        lastUpdate: Date.now(),
+        lastUpdate: now,
+      });
+
+      // Send leave message
+      await ctx.db.insert("chatMessages", {
+        userId: clerkId,
+        username: position.username,
+        message: `${position.username} left the game`,
+        mapId: position.mapId,
+        timestamp: now,
+        type: "system",
       });
     }
   },

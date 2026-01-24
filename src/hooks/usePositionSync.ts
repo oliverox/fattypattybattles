@@ -3,12 +3,14 @@ import { useMutation } from 'convex/react'
 import { Vector3 } from 'three'
 import { api } from '../../convex/_generated/api'
 import { MULTIPLAYER } from '@/lib/game/constants'
+import { useGameStore } from '@/stores/gameStore'
 
 export function usePositionSync(mapId: string) {
   const updatePosition = useMutation(api.multiplayer.updatePosition)
   const setOffline = useMutation(api.multiplayer.setOffline)
   const lastUpdateRef = useRef(0)
   const lastPositionRef = useRef<{ x: number; y: number; z: number } | null>(null)
+  const setShouldRespawn = useGameStore((state) => state.setShouldRespawn)
 
   const syncPosition = useCallback(
     (position: Vector3, rotation: number) => {
@@ -55,7 +57,7 @@ export function usePositionSync(mapId: string) {
     }
   }, [setOffline])
 
-  // Set offline on browser close/navigate away
+  // Set offline on browser close/navigate away or tab hidden
   useEffect(() => {
     const handleUnload = () => {
       // Use sendBeacon for reliable offline notification
@@ -65,8 +67,13 @@ export function usePositionSync(mapId: string) {
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        // Tab hidden - mark offline after a delay
-        // This helps with quick tab switches
+        // Tab hidden - immediately mark offline so others can't see us
+        setOffline().catch(() => {})
+      } else {
+        // Tab became visible again - trigger respawn to spawn point
+        setShouldRespawn(true)
+        // Reset last position so syncPosition fires immediately after respawn
+        lastPositionRef.current = null
       }
     }
 
@@ -77,7 +84,7 @@ export function usePositionSync(mapId: string) {
       window.removeEventListener('beforeunload', handleUnload)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [setOffline])
+  }, [setOffline, setShouldRespawn])
 
   return { syncPosition }
 }

@@ -77,6 +77,7 @@ export default defineSchema({
     message: v.string(),
     mapId: v.string(),
     timestamp: v.number(),
+    type: v.optional(v.union(v.literal("player"), v.literal("system"))),
   })
     .index("by_mapId", ["mapId", "timestamp"]),
 

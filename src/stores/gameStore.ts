@@ -99,6 +99,10 @@ interface QuestCompletionNotification {
 interface GameState {
   playerPosition: Vector3
   isMoving: boolean
+  // Respawn flag (set when returning to tab)
+  shouldRespawn: boolean
+  // Last movement timestamp for idle detection
+  lastMovementTime: number
   // Shop NPC
   nearNPC: boolean
   dialogueOpen: boolean
@@ -156,6 +160,8 @@ interface GameState {
   // Setters
   setPlayerPosition: (position: Vector3) => void
   setIsMoving: (moving: boolean) => void
+  setShouldRespawn: (respawn: boolean) => void
+  setLastMovementTime: (time: number) => void
   setNearNPC: (near: boolean) => void
   setDialogueOpen: (open: boolean) => void
   setShopOpen: (open: boolean) => void
@@ -215,6 +221,8 @@ interface GameState {
 export const useGameStore = create<GameState>((set) => ({
   playerPosition: new Vector3(0, 1, 0),
   isMoving: false,
+  shouldRespawn: false,
+  lastMovementTime: Date.now(),
   // Shop NPC
   nearNPC: false,
   dialogueOpen: false,
@@ -284,19 +292,21 @@ export const useGameStore = create<GameState>((set) => ({
   // Setters
   setPlayerPosition: (position) => set({ playerPosition: position }),
   setIsMoving: (moving) => set({ isMoving: moving }),
+  setShouldRespawn: (respawn) => set({ shouldRespawn: respawn }),
+  setLastMovementTime: (time) => set({ lastMovementTime: time }),
   setNearNPC: (near) => set({ nearNPC: near }),
-  setDialogueOpen: (open) => set({ dialogueOpen: open }),
-  setShopOpen: (open) => set({ shopOpen: open }),
+  setDialogueOpen: (open) => set({ dialogueOpen: open, ...(open && { lastMovementTime: Date.now() }) }),
+  setShopOpen: (open) => set({ shopOpen: open, ...(open && { lastMovementTime: Date.now() }) }),
   setActiveShop: (shop) => set({ activeShop: shop }),
   setNearSellNPC: (near) => set({ nearSellNPC: near }),
-  setSellDialogueOpen: (open) => set({ sellDialogueOpen: open }),
-  setSellShopOpen: (open) => set({ sellShopOpen: open }),
+  setSellDialogueOpen: (open) => set({ sellDialogueOpen: open, ...(open && { lastMovementTime: Date.now() }) }),
+  setSellShopOpen: (open) => set({ sellShopOpen: open, ...(open && { lastMovementTime: Date.now() }) }),
   setActiveSellView: (view) => set({ activeSellView: view }),
   // Battle NPC
   setNearBattleNPC: (near) => set({ nearBattleNPC: near }),
-  setBattleDialogueOpen: (open) => set({ battleDialogueOpen: open }),
-  setBattleCardSelectOpen: (open) => set({ battleCardSelectOpen: open }),
-  setBattleArenaOpen: (open) => set({ battleArenaOpen: open }),
+  setBattleDialogueOpen: (open) => set({ battleDialogueOpen: open, ...(open && { lastMovementTime: Date.now() }) }),
+  setBattleCardSelectOpen: (open) => set({ battleCardSelectOpen: open, ...(open && { lastMovementTime: Date.now() }) }),
+  setBattleArenaOpen: (open) => set({ battleArenaOpen: open, ...(open && { lastMovementTime: Date.now() }) }),
   setSelectedBattleCards: (cards) => set({ selectedBattleCards: cards }),
   setBattleData: (data) => set({ battleData: data }),
   setBattleResult: (result) => set({ battleResult: result }),
@@ -308,17 +318,17 @@ export const useGameStore = create<GameState>((set) => ({
     battleData: null,
     battleResult: null,
   }),
-  setInventoryOpen: (open) => set({ inventoryOpen: open }),
+  setInventoryOpen: (open) => set({ inventoryOpen: open, ...(open && { lastMovementTime: Date.now() }) }),
   setHeldCardId: (cardId) => set({ heldCardId: cardId }),
   setPackResultsOpen: (open) => set({ packResultsOpen: open }),
-  setChatOpen: (open) => set({ chatOpen: open }),
-  setLeaderboardOpen: (open) => set({ leaderboardOpen: open }),
+  setChatOpen: (open) => set({ chatOpen: open, ...(open && { lastMovementTime: Date.now() }) }),
+  setLeaderboardOpen: (open) => set({ leaderboardOpen: open, ...(open && { lastMovementTime: Date.now() }) }),
   setDailyRewardPopupOpen: (open) => set({ dailyRewardPopupOpen: open }),
   closeAllShopUI: () => set({ dialogueOpen: false, shopOpen: false, activeShop: null, packResultsOpen: false }),
   // PvP Battle
   setPvpTargetPlayer: (player) => set({ pvpTargetPlayer: player }),
-  setPvpRequestDialogOpen: (open) => set({ pvpRequestDialogOpen: open }),
-  setPvpIncomingDialogOpen: (open) => set({ pvpIncomingDialogOpen: open }),
+  setPvpRequestDialogOpen: (open) => set({ pvpRequestDialogOpen: open, ...(open && { lastMovementTime: Date.now() }) }),
+  setPvpIncomingDialogOpen: (open) => set({ pvpIncomingDialogOpen: open, ...(open && { lastMovementTime: Date.now() }) }),
   setPvpIncomingRequestId: (id) => set({ pvpIncomingRequestId: id }),
   setPvpWaitingForOpponent: (waiting) => set({ pvpWaitingForOpponent: waiting }),
   setPvpBattleRequestId: (id) => set({ pvpBattleRequestId: id }),

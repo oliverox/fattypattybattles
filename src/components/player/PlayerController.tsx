@@ -55,8 +55,17 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
       battleDialogueOpen, battleCardSelectOpen, battleArenaOpen,
       chatOpen, setChatOpen, leaderboardOpen, setLeaderboardOpen,
       pvpRequestDialogOpen, pvpIncomingDialogOpen, pvpWaitingForOpponent,
-      touchInput
+      touchInput,
+      shouldRespawn, setShouldRespawn, setLastMovementTime
     } = state
+
+    // Handle respawn when returning to tab
+    if (shouldRespawn) {
+      rigidBodyRef.current.setTranslation({ x: 0, y: 3, z: 0 }, true)
+      rigidBodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true)
+      orbitAngle.current = Math.PI // Face the shops
+      setShouldRespawn(false)
+    }
 
     // Combine keyboard and touch input
     const forward = keys.forward || touchInput.forward
@@ -208,6 +217,9 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
         },
         true
       )
+
+      // Update last movement time for idle tracking
+      setLastMovementTime(Date.now())
     }
   })
 

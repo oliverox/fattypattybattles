@@ -98,7 +98,11 @@ export function ChatUI({ mapId }: ChatUIProps) {
               key={msg._id}
               className="text-white/70 text-sm truncate"
             >
-              <span className="text-cyan-400">{msg.username}:</span> {msg.message}
+              {msg.type === "system" ? (
+                <span className="text-yellow-400/70 italic">{msg.message}</span>
+              ) : (
+                <><span className="text-cyan-400">{msg.username}:</span> {msg.message}</>
+              )}
             </div>
           ))}
         </div>
@@ -128,8 +132,14 @@ export function ChatUI({ mapId }: ChatUIProps) {
               <span className="text-white/50 text-xs mr-1">
                 {formatTime(msg.timestamp)}
               </span>
-              <span className="text-cyan-400 font-medium">{msg.username}: </span>
-              <span className="text-white">{msg.message}</span>
+              {msg.type === "system" ? (
+                <span className="text-yellow-400/70 italic">{msg.message}</span>
+              ) : (
+                <>
+                  <span className="text-cyan-400 font-medium">{msg.username}: </span>
+                  <span className="text-white">{msg.message}</span>
+                </>
+              )}
             </div>
           ))}
           <div ref={messagesEndRef} />
