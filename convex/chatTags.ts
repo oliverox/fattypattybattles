@@ -8,7 +8,7 @@ export const VALID_TAGS = [
 ] as const;
 
 // Usernames that are considered owners
-export const OWNER_USERNAMES = ["oliverox", "Andre1606_ipad"];
+export const OWNER_USERNAMES = ["oliverox", "AndreMO32_ipad"];
 
 // Grant a tag to a user (internal - called from trigger points)
 export const grantTag = internalMutation({
