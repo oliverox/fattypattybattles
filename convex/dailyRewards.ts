@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { query, mutation, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 
-// Daily login bonus rewards - 7-day cycle
+// Daily login bonus rewards - 14-day cycle
 const DAILY_REWARDS = [
   { day: 1, coins: 10 },
   { day: 2, coins: 15 },
@@ -10,7 +10,14 @@ const DAILY_REWARDS = [
   { day: 4, coins: 25 },
   { day: 5, coins: 30 },
   { day: 6, coins: 40 },
-  { day: 7, coins: 50, bonus: "common_pack" },
+  { day: 7, coins: 50, bonus: "small" },
+  { day: 8, coins: 55, bonus: "normal" },
+  { day: 9, coins: 60, bonus: "big" },
+  { day: 10, coins: 65, bonus: "premium" },
+  { day: 11, coins: 70, bonus: "deluxe" },
+  { day: 12, coins: 75, bonus: "cosmic" },
+  { day: 13, coins: 80, bonus: "metrolic" },
+  { day: 14, coins: 100, bonus: "daily_tag" },
 ];
 
 // Quest pool - 3 random quests selected daily
@@ -92,20 +99,18 @@ export const getDailyRewardStatus = query({
       willResetStreak = true;
     }
 
-    // Calculate what day of the 7-day cycle the user will claim (or has claimed today)
+    // Calculate what day of the 14-day cycle the user will claim (or has claimed today)
     let streakDay: number;
     if (claimedToday) {
       // Already claimed - show the day they claimed
-      streakDay = currentStreak % 7;
-      if (streakDay === 0 && currentStreak > 0) streakDay = 7;
+      streakDay = ((currentStreak - 1) % 14) + 1;
     } else if (currentStreak === 0 || willResetStreak) {
       // First time or streak reset - will claim day 1
       streakDay = 1;
     } else {
       // Consecutive day - will claim next day
       const nextStreak = currentStreak + 1;
-      streakDay = nextStreak % 7;
-      if (streakDay === 0) streakDay = 7;
+      streakDay = ((nextStreak - 1) % 14) + 1;
     }
 
     // Get today's reward (the reward they will claim or have claimed)
@@ -158,8 +163,8 @@ export const claimDailyReward = mutation({
       newStreak = 1;
     }
 
-    // Get reward for the streak day (1-7 cycle)
-    const streakDay = ((newStreak - 1) % 7) + 1;
+    // Get reward for the streak day (1-14 cycle)
+    const streakDay = ((newStreak - 1) % 14) + 1;
     const reward = DAILY_REWARDS[streakDay - 1];
 
     if (!reward) {
@@ -169,16 +174,17 @@ export const claimDailyReward = mutation({
     // Award coins
     const newCoins = (user.pattyCoins ?? 0) + reward.coins;
 
-    // Award bonus pack if day 7
+    // Award bonus pack if applicable
     let newPacks = user.unopenedPacks ?? [];
-    if (reward.bonus === "common_pack") {
-      const existingPack = newPacks.find((p) => p.packType === "common");
+    const packTypes = ["small", "normal", "big", "premium", "deluxe", "cosmic", "metrolic"];
+    if (reward.bonus && packTypes.includes(reward.bonus)) {
+      const existingPack = newPacks.find((p) => p.packType === reward.bonus);
       if (existingPack) {
         newPacks = newPacks.map((p) =>
-          p.packType === "common" ? { ...p, quantity: p.quantity + 1 } : p
+          p.packType === reward.bonus ? { ...p, quantity: p.quantity + 1 } : p
         );
       } else {
-        newPacks = [...newPacks, { packType: "common", quantity: 1, acquiredAt: now }];
+        newPacks = [...newPacks, { packType: reward.bonus, quantity: 1, acquiredAt: now }];
       }
     }
 
@@ -203,8 +209,8 @@ export const claimDailyReward = mutation({
       timestamp: now,
     });
 
-    // Check for [DAILY] tag: reach 14-day streak
-    if (newStreak >= 14) {
+    // Grant [DAILY] tag on day 14 of the cycle
+    if (reward.bonus === "daily_tag") {
       await ctx.scheduler.runAfter(0, internal.chatTags.grantTag, {
         clerkId: args.clerkId,
         tag: "DAILY",

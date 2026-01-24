@@ -119,8 +119,11 @@ export function DailyRewardPopup() {
             <p className="text-yellow-400 font-bold text-lg">
               +{claimResult.coins} PattyCoins!
             </p>
-            {claimResult.bonusPack && (
-              <p className="text-green-400 mt-1">+ 1 Common Pack!</p>
+            {claimResult.bonusPack && claimResult.bonusPack !== 'daily_tag' && (
+              <p className="text-green-400 mt-1">+ 1 {claimResult.bonusPack.charAt(0).toUpperCase() + claimResult.bonusPack.slice(1)} Pack!</p>
+            )}
+            {claimResult.bonusPack === 'daily_tag' && (
+              <p className="text-green-400 mt-1 font-bold">🏆 [DAILY] Chat Tag Unlocked!</p>
             )}
           </div>
         )}
@@ -136,7 +139,7 @@ export function DailyRewardPopup() {
             )}
           </div>
 
-          {/* 7-day calendar */}
+          {/* 14-day calendar */}
           <div className="grid grid-cols-7 gap-1 mb-4">
             {dailyStatus?.allRewards.map((reward: { day: number; coins: number; bonus?: string }, index: number) => {
               const day = index + 1
@@ -146,14 +149,15 @@ export function DailyRewardPopup() {
               const isCurrent = dailyStatus.claimedToday
                 ? false
                 : day === dailyStatus.streakDay
-              const isFuture = dailyStatus.claimedToday
-                ? day > dailyStatus.streakDay
-                : day > dailyStatus.streakDay
+
+              const packLabel = reward.bonus && reward.bonus !== 'daily_tag'
+                ? reward.bonus.charAt(0).toUpperCase() + reward.bonus.slice(1)
+                : null
 
               return (
                 <div
                   key={day}
-                  className={`relative p-2 rounded-lg text-center border-2 transition-all ${
+                  className={`relative p-1.5 rounded-lg text-center border-2 transition-all ${
                     isCurrent
                       ? 'border-yellow-400 bg-yellow-500/20 scale-105'
                       : isPast
@@ -161,18 +165,21 @@ export function DailyRewardPopup() {
                         : 'border-gray-600 bg-gray-800/50'
                   }`}
                 >
-                  <p className="text-xs text-gray-400 mb-1">Day {day}</p>
-                  <p className={`font-bold text-sm ${isCurrent ? 'text-yellow-400' : isPast ? 'text-green-400' : 'text-gray-400'}`}>
+                  <p className="text-[10px] text-gray-400">Day {day}</p>
+                  <p className={`font-bold text-xs ${isCurrent ? 'text-yellow-400' : isPast ? 'text-green-400' : 'text-gray-400'}`}>
                     {reward.coins}
                   </p>
-                  {reward.bonus && (
-                    <p className="text-xs mt-1">📦</p>
+                  {packLabel && (
+                    <p className="text-[9px] mt-0.5 text-cyan-400 truncate">{packLabel}</p>
+                  )}
+                  {reward.bonus === 'daily_tag' && (
+                    <p className="text-[9px] mt-0.5 text-green-400 font-bold">🏆TAG</p>
                   )}
                   {isPast && !isCurrent && (
-                    <span className="absolute top-1 right-1 text-green-400 text-xs">✓</span>
+                    <span className="absolute top-0.5 right-0.5 text-green-400 text-[10px]">✓</span>
                   )}
                   {isCurrent && (
-                    <span className="absolute top-1 right-1 text-yellow-400 text-xs">⭐</span>
+                    <span className="absolute top-0.5 right-0.5 text-yellow-400 text-[10px]">⭐</span>
                   )}
                 </div>
               )
@@ -186,7 +193,7 @@ export function DailyRewardPopup() {
               disabled={claimingDaily}
               className="w-full bg-yellow-500 hover:bg-yellow-400 disabled:bg-gray-600 text-black font-bold py-3 px-4 rounded-lg transition-colors"
             >
-              {claimingDaily ? 'Claiming...' : `Claim ${dailyStatus.todayReward?.coins ?? 0} Coins${dailyStatus.todayReward?.bonus ? ' + Pack' : ''}`}
+              {claimingDaily ? 'Claiming...' : `Claim ${dailyStatus.todayReward?.coins ?? 0} Coins${dailyStatus.todayReward?.bonus && dailyStatus.todayReward.bonus !== 'daily_tag' ? ` + ${dailyStatus.todayReward.bonus.charAt(0).toUpperCase() + dailyStatus.todayReward.bonus.slice(1)} Pack` : ''}${dailyStatus.todayReward?.bonus === 'daily_tag' ? ' + [DAILY] Tag' : ''}`}
             </button>
           ) : (
             <div className="w-full bg-gray-700 text-gray-400 font-bold py-3 px-4 rounded-lg text-center">
