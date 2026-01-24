@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 
-const RESTRICTED_WORDS = ['owner', 'admin', 'dev', 'developer']
+const RESTRICTED_WORDS = ['owner', 'admin', 'dev', 'developer', 'server']
 
 export function ChangeUsernameModal() {
   const [username, setUsername] = useState('')
@@ -44,7 +44,7 @@ export function ChangeUsernameModal() {
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
         <h2 className="text-xl font-bold text-red-600 mb-2">Username Change Required</h2>
         <p className="text-gray-600 text-sm mb-4">
-          Your current username contains a restricted word (owner, admin, dev, developer, or "[").
+          Your current username contains a restricted word (owner, admin, dev, developer, server, or "[").
           Please choose a new username to continue playing.
         </p>
 

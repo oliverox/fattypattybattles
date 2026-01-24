@@ -54,7 +54,7 @@ export function ProfileForm() {
     }
 
     const lowerUsername = username.toLowerCase();
-    const restrictedWords = ['owner', 'admin', 'dev', 'developer'];
+    const restrictedWords = ['owner', 'admin', 'dev', 'developer', 'server'];
     if (restrictedWords.some((word) => lowerUsername.includes(word))) {
       setError('Username contains a restricted word');
       return;

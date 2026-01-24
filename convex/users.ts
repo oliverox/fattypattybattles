@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 
-const RESTRICTED_USERNAME_WORDS = ["owner", "admin", "dev", "developer"];
+const RESTRICTED_USERNAME_WORDS = ["owner", "admin", "dev", "developer", "server"];
 
 function isUsernameRestricted(username: string): boolean {
   const lower = username.toLowerCase();
