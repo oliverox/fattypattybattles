@@ -99,7 +99,7 @@ export function ChatUI({ mapId }: ChatUIProps) {
               className="text-white/70 text-sm truncate"
             >
               {msg.type === "system" ? (
-                <span className="text-yellow-400/70 italic">{msg.message}</span>
+                <><span className="text-yellow-400">server:</span> {msg.message}</>
               ) : (
                 <><span className="text-cyan-400">{msg.username}:</span> {msg.message}</>
               )}
@@ -133,7 +133,10 @@ export function ChatUI({ mapId }: ChatUIProps) {
                 {formatTime(msg.timestamp)}
               </span>
               {msg.type === "system" ? (
-                <span className="text-yellow-400/70 italic">{msg.message}</span>
+                <>
+                  <span className="text-yellow-400 font-medium">server: </span>
+                  <span className="text-white">{msg.message}</span>
+                </>
               ) : (
                 <>
                   <span className="text-cyan-400 font-medium">{msg.username}: </span>

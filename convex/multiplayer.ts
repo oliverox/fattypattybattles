@@ -75,8 +75,8 @@ export const updatePosition = mutation({
     if (wasOffline) {
       await ctx.db.insert("chatMessages", {
         userId: clerkId,
-        username: user.username,
-        message: `${user.username} joined the game`,
+        username: "server",
+        message: `${user.username} joined the game!`,
         mapId: args.mapId,
         timestamp: now,
         type: "system",
@@ -135,8 +135,8 @@ export const setOffline = mutation({
       // Send leave message
       await ctx.db.insert("chatMessages", {
         userId: clerkId,
-        username: position.username,
-        message: `${position.username} left the game`,
+        username: "server",
+        message: `${position.username} left the game!`,
         mapId: position.mapId,
         timestamp: now,
         type: "system",
