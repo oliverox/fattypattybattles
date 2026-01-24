@@ -173,7 +173,7 @@ export function DailyRewardPopup() {
                     <p className="text-[9px] mt-0.5 text-cyan-400 truncate">{packLabel}</p>
                   )}
                   {reward.bonus === 'daily_tag' && (
-                    <p className="text-[9px] mt-0.5 text-green-400 font-bold">🏆TAG</p>
+                    <p className="text-[9px] mt-0.5 text-green-400 font-bold">[DAILY]</p>
                   )}
                   {isPast && !isCurrent && (
                     <span className="absolute top-0.5 right-0.5 text-green-400 text-[10px]">✓</span>
