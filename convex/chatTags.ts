@@ -58,7 +58,10 @@ export const adminGrantTag = mutation({
     }
 
     if (tag === "OWNER") {
-      throw new Error("Cannot grant OWNER tag");
+      // Only allow granting OWNER to other designated owners
+      if (!OWNER_USERNAMES.includes(targetUsername)) {
+        throw new Error("Cannot grant OWNER tag to non-owners");
+      }
     }
 
     if (!VALID_TAGS.includes(tag as any)) {
