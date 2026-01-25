@@ -104,7 +104,7 @@ export function ChatUI({ mapId }: ChatUIProps) {
               className="text-white/70 text-sm truncate"
             >
               {msg.type === "system" ? (
-                <><span className="text-yellow-400">server:</span> {msg.message}</>
+                <><span className="text-yellow-400">[SERVER]</span> {msg.message}</>
               ) : (
                 <>{msg.equippedChatTag && <span style={{ color: getTagColor(msg.equippedChatTag) }} className="font-bold mr-1">{getTagDisplay(msg.equippedChatTag)}</span>}<span className="text-cyan-400">{msg.username}:</span> {msg.message}</>
               )}
@@ -139,7 +139,7 @@ export function ChatUI({ mapId }: ChatUIProps) {
               </span>
               {msg.type === "system" ? (
                 <>
-                  <span className="text-yellow-400 font-medium">server: </span>
+                  <span className="text-yellow-400 font-medium">[SERVER] </span>
                   <span className="text-white">{msg.message}</span>
                 </>
               ) : (
