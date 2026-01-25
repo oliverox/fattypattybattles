@@ -39,7 +39,7 @@ export const PACK_PRICES = {
   normal: 60,
   big: 90,
   premium: 120,
-  deluxe: 150,
+  deluxe: 250,
   cosmic: 500,
   metrolic: 5000,
   exclusive: 10000,
