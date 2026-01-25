@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { OWNER_USERNAMES, VALID_TAGS } from "./chatTags";
+import { containsProfanity } from "./profanityFilter";
 
 const MAX_PLAYERS = 15;
 const CHAT_MAX_LENGTH = 500;
@@ -179,6 +180,9 @@ export const sendMessage = mutation({
     }
     if (trimmedMessage.length > CHAT_MAX_LENGTH) {
       throw new Error(`Message too long (max ${CHAT_MAX_LENGTH} characters)`);
+    }
+    if (containsProfanity(trimmedMessage)) {
+      throw new Error("Message contains inappropriate language");
     }
 
     // Handle /granttag command (owner only)

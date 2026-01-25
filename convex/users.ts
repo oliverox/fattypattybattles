@@ -1,12 +1,14 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { containsProfanity } from "./profanityFilter";
 
 const RESTRICTED_USERNAME_WORDS = ["owner", "admin", "dev", "developer", "server"];
 
 function isUsernameRestricted(username: string): boolean {
   const lower = username.toLowerCase();
   if (lower.includes("[")) return true;
+  if (containsProfanity(username)) return true;
   return RESTRICTED_USERNAME_WORDS.some((word) => lower.includes(word));
 }
 

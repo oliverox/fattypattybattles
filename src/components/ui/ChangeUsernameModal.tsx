@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
+import { containsProfanity } from '@/lib/profanityFilter'
 
 const RESTRICTED_WORDS = ['owner', 'admin', 'dev', 'developer', 'server']
 
@@ -26,6 +27,10 @@ export function ChangeUsernameModal() {
     }
     if (username.includes('[')) {
       setError('Username cannot contain "["')
+      return
+    }
+    if (containsProfanity(username)) {
+      setError('Username contains inappropriate language')
       return
     }
 

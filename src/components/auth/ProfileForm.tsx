@@ -4,6 +4,7 @@ import { api } from '../../../convex/_generated/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { AvatarPreview } from './AvatarPreview';
+import { containsProfanity } from '@/lib/profanityFilter';
 
 const SKIN_COLORS = [
   '#FFECD4', '#FFE0BD', '#FFD5B8', '#F1C27D', '#E0AC69',
@@ -61,6 +62,10 @@ export function ProfileForm() {
     }
     if (username.includes('[')) {
       setError('Username cannot contain "["');
+      return;
+    }
+    if (containsProfanity(username)) {
+      setError('Username contains inappropriate language');
       return;
     }
 
