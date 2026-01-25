@@ -130,7 +130,7 @@ export function SellShop() {
         <div className="flex-1 overflow-y-auto">
           {(!appraisedCards || appraisedCards.length === 0) ? (
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">No cards to sell</p>
+              <p className="text-gray-500 text-lg">No cards to {isAppraise ? 'appraise' : 'sell'}</p>
               <p className="text-gray-600 text-sm mt-2">
                 Open some packs from your inventory to get cards!
               </p>
