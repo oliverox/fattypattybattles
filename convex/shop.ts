@@ -80,7 +80,7 @@ const PACK_DEFINITIONS = {
   deluxe: {
     name: "Deluxe Pack",
     description: "Contains 15 cards with amazing odds!",
-    cost: 150,
+    cost: 250,
     cardCount: 15,
     rarityWeights: {
       common: 24.5,
