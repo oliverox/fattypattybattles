@@ -1,10 +1,10 @@
-import { useRef } from 'react'
+import { useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useKeyboardControls } from '@react-three/drei'
 import { RigidBody, CapsuleCollider, type RapierRigidBody, useRapier } from '@react-three/rapier'
 import { Vector3 } from 'three'
 import { Controls } from '@/lib/game/controls'
-import { PHYSICS, CAMERA, SHOP, SELL_NPC, BATTLE_NPC, MULTIPLAYER } from '@/lib/game/constants'
+import { PHYSICS, CAMERA, SHOP, SELL_NPC, BATTLE_NPC, MULTIPLAYER, SECRET_ROOM } from '@/lib/game/constants'
 import { PlayerMesh, type AvatarConfig } from './PlayerMesh'
 import { ThirdPersonCamera } from './ThirdPersonCamera'
 import { useGameStore } from '@/stores/gameStore'
@@ -41,6 +41,24 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
   const npcPosition = useRef(new Vector3(...SHOP.npcPosition))
   const sellNpcPosition = useRef(new Vector3(...SELL_NPC.npcPosition))
   const battleNpcPosition = useRef(new Vector3(...BATTLE_NPC.npcPosition))
+  // Note: not using useRef for secret entrance so it updates on hot reload during dev
+  const secretEntrancePosition = new Vector3(...SECRET_ROOM.entrancePosition)
+  // Track previous secret room state for exit teleportation
+  const wasInSecretRoom = useRef(false)
+
+  // Get insideSecretRoom state for exit handling
+  const insideSecretRoomState = useGameStore((state) => state.insideSecretRoom)
+
+  // Handle exiting the secret room - teleport back to entrance
+  useEffect(() => {
+    if (wasInSecretRoom.current && !insideSecretRoomState && rigidBodyRef.current) {
+      // Player just exited the secret room, teleport back behind the building (away from wall)
+      const [x, y, z] = SECRET_ROOM.entrancePosition
+      rigidBodyRef.current.setTranslation({ x, y: y + 1, z: z + 2 }, true)
+      rigidBodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true)
+    }
+    wasInSecretRoom.current = insideSecretRoomState
+  }, [insideSecretRoomState])
 
   useFrame(() => {
     if (!rigidBodyRef.current) return
@@ -56,7 +74,11 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
       chatOpen, setChatOpen, leaderboardOpen, setLeaderboardOpen,
       pvpRequestDialogOpen, pvpIncomingDialogOpen, pvpWaitingForOpponent,
       touchInput,
-      shouldRespawn, setShouldRespawn, setLastMovementTime
+      shouldRespawn, setShouldRespawn, setLastMovementTime,
+      insideSecretRoom, setInsideSecretRoom, setSecretRoomUIOpen,
+      nearSecretEntrance, setNearSecretEntrance,
+      setPlayerPosition,
+      triggerSecretRoomEntry, setTriggerSecretRoomEntry
     } = state
 
     // Handle respawn when returning to tab
@@ -85,6 +107,10 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
     // Check proximity to Shop NPC
     const position = rigidBodyRef.current.translation()
     const playerPos = new Vector3(position.x, position.y, position.z)
+
+    // Update player position in store (for debug display)
+    setPlayerPosition(playerPos)
+
     const distanceToNPC = playerPos.distanceTo(npcPosition.current)
     const isNearNPC = distanceToNPC < SHOP.interactionDistance
 
@@ -108,11 +134,19 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
       setNearBattleNPC(isNearBattleNPC)
     }
 
+    // Check proximity to secret entrance (behind battle arena)
+    const distanceToSecretEntrance = playerPos.distanceTo(secretEntrancePosition)
+    const isNearSecretEntrance = distanceToSecretEntrance < SECRET_ROOM.interactionDistance
+
+    if (isNearSecretEntrance !== nearSecretEntrance) {
+      setNearSecretEntrance(isNearSecretEntrance)
+    }
+
     // Sync position to server for multiplayer
     syncPosition(playerPos, orbitAngle.current)
 
     // Check if any UI is open
-    const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen || battleDialogueOpen || battleCardSelectOpen || battleArenaOpen || chatOpen || leaderboardOpen || pvpRequestDialogOpen || pvpIncomingDialogOpen || pvpWaitingForOpponent
+    const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen || battleDialogueOpen || battleCardSelectOpen || battleArenaOpen || chatOpen || leaderboardOpen || pvpRequestDialogOpen || pvpIncomingDialogOpen || pvpWaitingForOpponent || state.secretRoomUIOpen
 
     // Handle inventory key (B) - toggle inventory
     if (inventory && !inventoryPressed.current && !anyUIOpen) {
@@ -140,9 +174,29 @@ export function PlayerController({ avatarConfig }: PlayerControllerProps) {
         setSellDialogueOpen(true)
       } else if (isNearBattleNPC) {
         setBattleDialogueOpen(true)
+      } else if (isNearSecretEntrance && !insideSecretRoom) {
+        // Enter the secret room - teleport player
+        const [x, y, z] = SECRET_ROOM.interiorPosition
+        rigidBodyRef.current.setTranslation({ x, y: y + 2, z }, true)
+        rigidBodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true)
+        setInsideSecretRoom(true)
+        setSecretRoomUIOpen(true)
       }
     }
     interactPressed.current = interact
+
+    // Handle click/tap on secret room prompt (for mobile)
+    if (triggerSecretRoomEntry && isNearSecretEntrance && !insideSecretRoom) {
+      const [x, y, z] = SECRET_ROOM.interiorPosition
+      rigidBodyRef.current.setTranslation({ x, y: y + 2, z }, true)
+      rigidBodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true)
+      setInsideSecretRoom(true)
+      setSecretRoomUIOpen(true)
+      setTriggerSecretRoomEntry(false)
+    } else if (triggerSecretRoomEntry) {
+      // Reset trigger if conditions not met
+      setTriggerSecretRoomEntry(false)
+    }
 
     // Skip movement if any UI is open
     if (anyUIOpen) {

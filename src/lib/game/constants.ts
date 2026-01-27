@@ -93,3 +93,10 @@ export const MULTIPLAYER = {
   interpolationSpeed: 0.1, // lerp factor for remote player movement
   defaultMapId: 'main',
 }
+
+// Secret Room constants (behind battle arena - opposite side from battle bot)
+export const SECRET_ROOM = {
+  interactionDistance: 4,
+  entrancePosition: [-25, 1, 12] as [number, number, number], // Behind building, opposite side from battle NPC
+  interiorPosition: [0, 2, -500] as [number, number, number], // Far away hidden area
+}

@@ -4,6 +4,7 @@ export function InteractionPrompt() {
   const nearNPC = useGameStore((state) => state.nearNPC)
   const nearSellNPC = useGameStore((state) => state.nearSellNPC)
   const nearBattleNPC = useGameStore((state) => state.nearBattleNPC)
+  const nearSecretEntrance = useGameStore((state) => state.nearSecretEntrance)
   const dialogueOpen = useGameStore((state) => state.dialogueOpen)
   const shopOpen = useGameStore((state) => state.shopOpen)
   const sellDialogueOpen = useGameStore((state) => state.sellDialogueOpen)
@@ -13,8 +14,11 @@ export function InteractionPrompt() {
   const battleArenaOpen = useGameStore((state) => state.battleArenaOpen)
   const inventoryOpen = useGameStore((state) => state.inventoryOpen)
   const touchControlsVisible = useGameStore((state) => state.touchControlsVisible)
+  const insideSecretRoom = useGameStore((state) => state.insideSecretRoom)
+  const secretRoomUIOpen = useGameStore((state) => state.secretRoomUIOpen)
+  const setTriggerSecretRoomEntry = useGameStore((state) => state.setTriggerSecretRoomEntry)
 
-  const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen || battleDialogueOpen || battleCardSelectOpen || battleArenaOpen
+  const anyUIOpen = dialogueOpen || shopOpen || sellDialogueOpen || sellShopOpen || inventoryOpen || battleDialogueOpen || battleCardSelectOpen || battleArenaOpen || secretRoomUIOpen
 
   // Hide prompt when any UI is open or when touch controls are visible (mobile mode)
   if (anyUIOpen || touchControlsVisible) {
@@ -39,6 +43,23 @@ export function InteractionPrompt() {
         <div className="bg-black/80 border-2 border-orange-400 rounded-lg px-6 py-3 shadow-lg shadow-orange-400/20">
           <p className="text-orange-400 text-lg font-bold tracking-wide">
             Press <span className="text-yellow-400 bg-yellow-400/20 px-2 py-1 rounded mx-1">T</span> to talk to Merchant
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // Mysterious prompt for secret entrance - prioritize over battle NPC since it's hidden
+  if (nearSecretEntrance && !insideSecretRoom) {
+    return (
+      <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-50">
+        <div
+          className="bg-black/80 border-2 border-purple-500 rounded-lg px-6 py-3 shadow-lg shadow-purple-500/20 animate-pulse cursor-pointer hover:bg-purple-900/50 transition-colors"
+          onClick={() => setTriggerSecretRoomEntry(true)}
+        >
+          <p className="text-purple-400 text-lg font-bold tracking-wide">
+            <span className="text-purple-300">???</span>{' '}
+            <span className="text-purple-500 bg-purple-500/20 px-2 py-1 rounded mx-1">T</span>
           </p>
         </div>
       </div>

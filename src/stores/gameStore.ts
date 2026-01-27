@@ -157,6 +157,11 @@ interface GameState {
   pendingQuestCompletions: QuestCompletionNotification[]
   questCompletionPopupOpen: boolean
   currentQuestCompletion: QuestCompletionNotification | null
+  // Secret Room
+  nearSecretEntrance: boolean
+  insideSecretRoom: boolean
+  secretRoomUIOpen: boolean
+  triggerSecretRoomEntry: boolean
   // Setters
   setPlayerPosition: (position: Vector3) => void
   setIsMoving: (moving: boolean) => void
@@ -215,6 +220,12 @@ interface GameState {
   addQuestCompletion: (notification: QuestCompletionNotification) => void
   showNextQuestCompletion: () => void
   dismissQuestCompletion: () => void
+  // Secret Room
+  setNearSecretEntrance: (near: boolean) => void
+  setInsideSecretRoom: (inside: boolean) => void
+  setSecretRoomUIOpen: (open: boolean) => void
+  setTriggerSecretRoomEntry: (trigger: boolean) => void
+  exitSecretRoom: () => void
   isAnyUIOpen: () => boolean
 }
 
@@ -276,6 +287,11 @@ export const useGameStore = create<GameState>((set) => ({
   pendingQuestCompletions: [],
   questCompletionPopupOpen: false,
   currentQuestCompletion: null,
+  // Secret Room
+  nearSecretEntrance: false,
+  insideSecretRoom: false,
+  secretRoomUIOpen: false,
+  triggerSecretRoomEntry: false,
   touchInput: {
     forward: false,
     backward: false,
@@ -404,6 +420,9 @@ export const useGameStore = create<GameState>((set) => ({
     tradeRequestId: null,
     tradePartner: null,
     tradeResult: null,
+    // Secret Room
+    insideSecretRoom: false,
+    secretRoomUIOpen: false,
   }),
   // Touch Controls
   setTouchControlsVisible: (visible) => set({ touchControlsVisible: visible }),
@@ -440,6 +459,12 @@ export const useGameStore = create<GameState>((set) => ({
       currentQuestCompletion: null
     }
   }),
+  // Secret Room
+  setNearSecretEntrance: (near) => set({ nearSecretEntrance: near }),
+  setInsideSecretRoom: (inside) => set({ insideSecretRoom: inside }),
+  setSecretRoomUIOpen: (open) => set({ secretRoomUIOpen: open }),
+  setTriggerSecretRoomEntry: (trigger) => set({ triggerSecretRoomEntry: trigger }),
+  exitSecretRoom: () => set({ insideSecretRoom: false, secretRoomUIOpen: false }),
   isAnyUIOpen: () => {
     const state = useGameStore.getState()
     return (
@@ -461,7 +486,8 @@ export const useGameStore = create<GameState>((set) => ({
       state.tradeInitiateDialogOpen ||
       state.tradeIncomingDialogOpen ||
       state.tradeNegotiationOpen ||
-      state.tradeCompletedOpen
+      state.tradeCompletedOpen ||
+      state.secretRoomUIOpen
     )
   },
 }))

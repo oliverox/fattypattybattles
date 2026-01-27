@@ -14,6 +14,7 @@ import type * as dailyRewards from "../dailyRewards.js";
 import type * as inventory from "../inventory.js";
 import type * as leaderboard from "../leaderboard.js";
 import type * as multiplayer from "../multiplayer.js";
+import type * as profanityFilter from "../profanityFilter.js";
 import type * as pvpBattle from "../pvpBattle.js";
 import type * as shop from "../shop.js";
 import type * as trading from "../trading.js";
@@ -32,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   inventory: typeof inventory;
   leaderboard: typeof leaderboard;
   multiplayer: typeof multiplayer;
+  profanityFilter: typeof profanityFilter;
   pvpBattle: typeof pvpBattle;
   shop: typeof shop;
   trading: typeof trading;

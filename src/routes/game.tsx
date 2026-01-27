@@ -28,6 +28,7 @@ import { ChatUI } from '@/components/ui/ChatUI'
 import { Leaderboard } from '@/components/ui/Leaderboard'
 import { DailyRewardPopup } from '@/components/ui/DailyRewardPopup'
 import { QuestCompletePopup } from '@/components/ui/QuestCompletePopup'
+import { SecretRoomUI } from '@/components/ui/SecretRoomUI'
 import { ChangeUsernameModal } from '@/components/ui/ChangeUsernameModal'
 import { usePlaytimeTracker } from '@/hooks/usePlaytimeTracker'
 import { useGameStore } from '@/stores/gameStore'
@@ -216,6 +217,7 @@ function GamePage() {
       <Leaderboard />
       <DailyRewardPopup />
       <QuestCompletePopup />
+      <SecretRoomUI />
 
       {/* Mobile touch controls */}
       <MobileControls />

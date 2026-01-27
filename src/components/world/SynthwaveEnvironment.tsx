@@ -10,12 +10,16 @@ import { FloatingShapes } from './structures/FloatingShapes'
 import { ShopBuilding } from './structures/ShopBuilding'
 import { SellBuilding } from './structures/SellBuilding'
 import { BattleArenaStructure } from './structures/BattleArenaStructure'
+import { SecretRoom } from './structures/SecretRoom'
 import { Shopkeeper } from './npc/Shopkeeper'
 import { SellNPC } from './npc/SellNPC'
 import { BattleNPC } from './npc/BattleNPC'
 import { COLORS, SHOP, SELL_NPC, BATTLE_NPC } from '@/lib/game/constants'
+import { useGameStore } from '@/stores/gameStore'
 
 export function SynthwaveEnvironment() {
+  const insideSecretRoom = useGameStore((state) => state.insideSecretRoom)
+
   return (
     <group>
       {/* Sky and atmosphere */}
@@ -84,6 +88,9 @@ export function SynthwaveEnvironment() {
       {/* Battle arena and NPC */}
       <BattleArenaStructure position={[BATTLE_NPC.npcPosition[0], 0, BATTLE_NPC.npcPosition[2] + 6]} />
       <BattleNPC position={BATTLE_NPC.npcPosition} />
+
+      {/* Secret Room - only rendered when player is inside */}
+      {insideSecretRoom && <SecretRoom />}
     </group>
   )
 }

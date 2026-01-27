@@ -368,6 +368,38 @@ export const updateLastActive = mutation({
   },
 });
 
+// Discover the secret room and grant SECRET FINDER tag
+export const discoverSecret = mutation({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const clerkId = identity.subject;
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", clerkId))
+      .first();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const currentTags = user.chatTags ?? [];
+    if (currentTags.includes("SECRET FINDER")) {
+      return { alreadyDiscovered: true };
+    }
+
+    await ctx.scheduler.runAfter(0, internal.chatTags.grantTag, {
+      clerkId,
+      tag: "SECRET FINDER",
+    });
+
+    return { alreadyDiscovered: false };
+  },
+});
+
 // Update total play time (called periodically from client)
 export const updatePlayTime = mutation({
   args: { seconds: v.number() },

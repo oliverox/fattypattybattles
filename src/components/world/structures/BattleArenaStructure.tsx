@@ -1,7 +1,8 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Text } from '@react-three/drei'
-import { Group, Color } from 'three'
+import * as THREE from 'three'
+import { Group, Color, Mesh } from 'three'
 import { RigidBody, CuboidCollider } from '@react-three/rapier'
 import { COLORS } from '@/lib/game/constants'
 
@@ -12,15 +13,27 @@ interface BattleArenaStructureProps {
 
 export function BattleArenaStructure({ position = [0, 0, 0], rotation = [0, 0, 0] }: BattleArenaStructureProps) {
   const signRef = useRef<Group>(null)
+  const crackRef = useRef<Group>(null)
 
   const accentColor = '#ff3333'
   const darkMetal = '#222222'
+  const secretCrackColor = '#8844ff' // Subtle purple glow
 
   useFrame(({ clock }) => {
     if (signRef.current) {
       // Pulse the sign aggressively
       const pulse = 1 + Math.sin(clock.elapsedTime * 4) * 0.08
       signRef.current.scale.set(pulse, pulse, 1)
+    }
+    // Subtle pulse for the secret crack - very slow and faint
+    if (crackRef.current) {
+      const opacity = 0.15 + Math.sin(clock.elapsedTime * 0.8) * 0.1
+      crackRef.current.children.forEach((child) => {
+        if ((child as Mesh).material) {
+          const mat = (child as Mesh).material as THREE.MeshBasicMaterial
+          mat.opacity = opacity
+        }
+      })
     }
   })
 
@@ -150,6 +163,30 @@ export function BattleArenaStructure({ position = [0, 0, 0], rotation = [0, 0, 0
           <mesh position={[2.5, -1.25, 0]}>
             <cylinderGeometry args={[0.1, 0.1, 2.5]} />
             <meshBasicMaterial color={accentColor} />
+          </mesh>
+        </group>
+
+        {/* Secret crack on back wall (opposite side from battle bot) - subtle hint */}
+        <group ref={crackRef} position={[0, 3, 4.05]} rotation={[0, Math.PI, 0]}>
+          {/* Main vertical crack */}
+          <mesh position={[0, 0, 0]}>
+            <boxGeometry args={[0.08, 3, 0.02]} />
+            <meshBasicMaterial color={secretCrackColor} transparent opacity={0.2} />
+          </mesh>
+          {/* Branching crack left */}
+          <mesh position={[-0.3, 0.8, 0]} rotation={[0, 0, 0.4]}>
+            <boxGeometry args={[0.05, 1.2, 0.02]} />
+            <meshBasicMaterial color={secretCrackColor} transparent opacity={0.2} />
+          </mesh>
+          {/* Branching crack right */}
+          <mesh position={[0.25, -0.5, 0]} rotation={[0, 0, -0.3]}>
+            <boxGeometry args={[0.05, 0.8, 0.02]} />
+            <meshBasicMaterial color={secretCrackColor} transparent opacity={0.2} />
+          </mesh>
+          {/* Small branch */}
+          <mesh position={[-0.15, -0.9, 0]} rotation={[0, 0, 0.5]}>
+            <boxGeometry args={[0.04, 0.5, 0.02]} />
+            <meshBasicMaterial color={secretCrackColor} transparent opacity={0.2} />
           </mesh>
         </group>
       </group>

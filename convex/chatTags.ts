@@ -4,7 +4,7 @@ import { mutation, query, internalMutation } from "./_generated/server";
 // All valid chat tags
 export const VALID_TAGS = [
   "OWNER", "DEV", "ADMIN", "INSPIRER", "VIP",
-  "INVERTED", "DAILY", "1ST", "EXCLUSIVER",
+  "INVERTED", "DAILY", "1ST", "EXCLUSIVER", "SECRET FINDER",
 ] as const;
 
 // Usernames that are considered owners
