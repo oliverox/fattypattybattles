@@ -11,6 +11,8 @@ interface ChatUIProps {
 
 const EMOJIS = ['👋', '😊', '😂', '👍', '❤️', '🎮', '🔥', '✨', '💀', '😎', '😡', '😱', '🎉', '💥', '🤯']
 
+const INITIAL_HISTORY_LIMIT = 10
+
 export function ChatUI({ mapId }: ChatUIProps) {
   const chatOpen = useGameStore((state) => state.chatOpen)
   const setChatOpen = useGameStore((state) => state.setChatOpen)
@@ -22,9 +24,19 @@ export function ChatUI({ mapId }: ChatUIProps) {
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const joinTimestampRef = useRef<number>(Date.now())
 
-  const messages = useQuery(api.multiplayer.getRecentMessages, { mapId })
+  const allMessages = useQuery(api.multiplayer.getRecentMessages, { mapId })
   const sendMessage = useMutation(api.multiplayer.sendMessage)
+
+  // Filter messages: show only last 10 from before join, plus all messages after join
+  const messages = allMessages ? (() => {
+    const joinTime = joinTimestampRef.current
+    const beforeJoin = allMessages.filter(m => m.timestamp <= joinTime)
+    const afterJoin = allMessages.filter(m => m.timestamp > joinTime)
+    const limitedBefore = beforeJoin.slice(-INITIAL_HISTORY_LIMIT)
+    return [...limitedBefore, ...afterJoin]
+  })() : undefined
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
