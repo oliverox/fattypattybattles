@@ -11,6 +11,7 @@ import { ShopBuilding } from './structures/ShopBuilding'
 import { SellBuilding } from './structures/SellBuilding'
 import { BattleArenaStructure } from './structures/BattleArenaStructure'
 import { SecretRoom } from './structures/SecretRoom'
+import { MountainRange } from './structures/MountainRange'
 import { Shopkeeper } from './npc/Shopkeeper'
 import { SellNPC } from './npc/SellNPC'
 import { BattleNPC } from './npc/BattleNPC'
@@ -51,6 +52,16 @@ export function SynthwaveEnvironment() {
       <RigidBody type="fixed" position={[-100, 10, 0]}>
         <CuboidCollider args={[0.5, 10, 100]} />
       </RigidBody>
+
+      {/* Mountain ranges at borders */}
+      {/* North mountains */}
+      <MountainRange position={[0, 0, 90]} rotation={[0, 0, 0]} />
+      {/* South mountains */}
+      <MountainRange position={[0, 0, -90]} rotation={[0, Math.PI, 0]} />
+      {/* East mountains */}
+      <MountainRange position={[90, 0, 0]} rotation={[0, -Math.PI / 2, 0]} />
+      {/* West mountains */}
+      <MountainRange position={[-90, 0, 0]} rotation={[0, Math.PI / 2, 0]} />
 
       {/* Central Pyramid */}
       <NeonPyramid position={[0, 0, -30]} scale={3} />
