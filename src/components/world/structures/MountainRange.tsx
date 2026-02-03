@@ -23,9 +23,10 @@ function MountainPeak({
       <mesh position={[0, height / 2, 0]} castShadow receiveShadow>
         <coneGeometry args={[baseWidth, height, 6]} />
         <meshStandardMaterial
-          color="#1a0a2e"
-          roughness={0.9}
-          metalness={0.1}
+          color="#3d1a5c"
+          roughness={0.7}
+          metalness={0.2}
+          side={2}
         />
       </mesh>
 
@@ -33,11 +34,12 @@ function MountainPeak({
       <mesh position={[0, height * 0.75, 0]} castShadow>
         <coneGeometry args={[baseWidth * 0.4, height * 0.35, 6]} />
         <meshStandardMaterial
-          color="#e0e8ff"
-          roughness={0.8}
-          metalness={0.2}
-          emissive="#4040ff"
-          emissiveIntensity={0.05}
+          color="#ffffff"
+          roughness={0.5}
+          metalness={0.3}
+          emissive="#8080ff"
+          emissiveIntensity={0.2}
+          side={2}
         />
       </mesh>
 

@@ -38,6 +38,28 @@ export const Route = createFileRoute('/game')({
   component: GamePage,
 })
 
+// Debug component to show player coordinates (dev only)
+function DebugCoordinates() {
+  const playerPosition = useGameStore((state) => state.playerPosition)
+  const nearSecretEntrance = useGameStore((state) => state.nearSecretEntrance)
+  const nearBattleNPC = useGameStore((state) => state.nearBattleNPC)
+  const touchControlsVisible = useGameStore((state) => state.touchControlsVisible)
+  return (
+    <div className="absolute top-4 right-16 z-50 text-white bg-black/70 p-2 rounded font-mono text-xs">
+      <div>X: {playerPosition.x.toFixed(2)}</div>
+      <div>Y: {playerPosition.y.toFixed(2)}</div>
+      <div>Z: {playerPosition.z.toFixed(2)}</div>
+      <div className={nearSecretEntrance ? 'text-green-400' : 'text-red-400'}>
+        Secret: {nearSecretEntrance ? 'YES' : 'NO'}
+      </div>
+      <div className={nearBattleNPC ? 'text-yellow-400' : ''}>
+        Battle: {nearBattleNPC ? 'YES' : 'NO'}
+      </div>
+      <div>Touch: {touchControlsVisible ? 'ON' : 'OFF'}</div>
+    </div>
+  )
+}
+
 function GamePage() {
   const { isLoaded, isSignedIn } = useAuth()
   const currentUser = useQuery(api.users.getCurrentUser)
@@ -190,6 +212,9 @@ function GamePage() {
         </button>
       </div>
       <GameCanvas avatarConfig={currentUser.avatarConfig} />
+
+      {/* Debug coordinates - only in dev */}
+      {import.meta.env.DEV && <DebugCoordinates />}
 
       {/* UI overlays */}
       <InteractionPrompt />
