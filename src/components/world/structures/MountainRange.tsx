@@ -8,70 +8,22 @@ interface MountainRangeProps {
   length?: number
 }
 
-// Generate a single mountain peak
-function MountainPeak({
-  position,
-  height,
-  baseWidth
-}: {
-  position: [number, number, number]
-  height: number
-  baseWidth: number
-}) {
-  return (
-    <group position={position}>
-      {/* Main mountain body */}
-      <mesh position={[0, height / 2, 0]} castShadow receiveShadow>
-        <coneGeometry args={[baseWidth, height, 6]} />
-        <meshStandardMaterial
-          color="#3d1a5c"
-          roughness={0.7}
-          metalness={0.2}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-
-      {/* Snow cap */}
-      <mesh position={[0, height * 0.75, 0]} castShadow>
-        <coneGeometry args={[baseWidth * 0.4, height * 0.35, 6]} />
-        <meshStandardMaterial
-          color="#ffffff"
-          roughness={0.5}
-          metalness={0.3}
-          emissive="#8080ff"
-          emissiveIntensity={0.2}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-
-      {/* Neon accent line at base */}
-      <mesh position={[0, 0.5, 0]}>
-        <torusGeometry args={[baseWidth * 0.9, 0.15, 8, 24]} />
-        <meshBasicMaterial
-          color={COLORS.neonCyan}
-          transparent
-          opacity={0.6}
-        />
-      </mesh>
-    </group>
-  )
-}
-
 export function MountainRange({
   position = [0, 0, 0],
   rotation = [0, 0, 0],
   length = 200
 }: MountainRangeProps) {
-  // Generate procedural mountains along the range
+  // Generate mountain positions along the range
   const mountains = useMemo(() => {
     const peaks: { x: number; height: number; width: number }[] = []
-    let x = -length / 2
+    const count = 12
+    const spacing = length / count
 
-    while (x < length / 2) {
-      const height = 25 + Math.random() * 35 // 25-60 units tall
-      const width = 12 + Math.random() * 10 // 12-22 units wide
+    for (let i = 0; i < count; i++) {
+      const x = -length / 2 + i * spacing + spacing / 2
+      const height = 30 + Math.sin(i * 1.5) * 15 // 15-45 units tall
+      const width = 15 + Math.cos(i * 0.8) * 5 // 10-20 units wide
       peaks.push({ x, height, width })
-      x += width * 1.2 + Math.random() * 5 // Space between peaks
     }
 
     return peaks
@@ -79,39 +31,40 @@ export function MountainRange({
 
   return (
     <group position={position} rotation={rotation}>
-      {/* Background layer - distant mountains */}
-      <group position={[0, 0, 8]}>
-        {mountains.map((peak, i) => (
-          <MountainPeak
-            key={`bg-${i}`}
-            position={[peak.x + 5, 0, 0]}
-            height={peak.height * 0.7}
-            baseWidth={peak.width * 0.8}
-          />
-        ))}
-      </group>
-
-      {/* Main layer */}
       {mountains.map((peak, i) => (
-        <MountainPeak
-          key={`main-${i}`}
-          position={[peak.x, 0, 0]}
-          height={peak.height}
-          baseWidth={peak.width}
-        />
-      ))}
+        <group key={i} position={[peak.x, 0, 0]}>
+          {/* Main mountain body */}
+          <mesh position={[0, peak.height / 2, 0]} castShadow receiveShadow>
+            <coneGeometry args={[peak.width, peak.height, 5]} />
+            <meshStandardMaterial
+              color="#4a2070"
+              side={THREE.DoubleSide}
+            />
+          </mesh>
 
-      {/* Foreground layer - smaller peaks */}
-      <group position={[0, 0, -6]}>
-        {mountains.filter((_, i) => i % 2 === 0).map((peak, i) => (
-          <MountainPeak
-            key={`fg-${i}`}
-            position={[peak.x - 8, 0, 0]}
-            height={peak.height * 0.5}
-            baseWidth={peak.width * 0.6}
-          />
-        ))}
-      </group>
+          {/* Snow cap */}
+          <mesh position={[0, peak.height * 0.8, 0]}>
+            <coneGeometry args={[peak.width * 0.35, peak.height * 0.3, 5]} />
+            <meshStandardMaterial
+              color="#ffffff"
+              emissive="#6060ff"
+              emissiveIntensity={0.3}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+
+          {/* Neon glow at base */}
+          <mesh position={[0, 0.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[peak.width * 0.8, peak.width * 0.95, 16]} />
+            <meshBasicMaterial
+              color={COLORS.neonCyan}
+              transparent
+              opacity={0.7}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+        </group>
+      ))}
     </group>
   )
 }
