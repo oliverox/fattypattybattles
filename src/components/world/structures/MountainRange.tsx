@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import * as THREE from 'three'
 import { COLORS } from '@/lib/game/constants'
 
 interface MountainRangeProps {
@@ -26,7 +27,7 @@ function MountainPeak({
           color="#3d1a5c"
           roughness={0.7}
           metalness={0.2}
-          side={2}
+          side={THREE.DoubleSide}
         />
       </mesh>
 
@@ -39,7 +40,7 @@ function MountainPeak({
           metalness={0.3}
           emissive="#8080ff"
           emissiveIntensity={0.2}
-          side={2}
+          side={THREE.DoubleSide}
         />
       </mesh>
 
