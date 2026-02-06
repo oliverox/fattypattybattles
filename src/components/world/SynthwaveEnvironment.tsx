@@ -55,13 +55,13 @@ export function SynthwaveEnvironment() {
 
       {/* Mountain ranges at borders */}
       {/* North mountains */}
-      <MountainRange position={[0, 0, 60]} rotation={[0, 0, 0]} />
+      <MountainRange position={[0, 0, 85]} rotation={[0, 0, 0]} />
       {/* South mountains */}
-      <MountainRange position={[0, 0, -60]} rotation={[0, Math.PI, 0]} />
+      <MountainRange position={[0, 0, -85]} rotation={[0, Math.PI, 0]} />
       {/* East mountains */}
-      <MountainRange position={[60, 0, 0]} rotation={[0, -Math.PI / 2, 0]} />
+      <MountainRange position={[85, 0, 0]} rotation={[0, -Math.PI / 2, 0]} />
       {/* West mountains */}
-      <MountainRange position={[-60, 0, 0]} rotation={[0, Math.PI / 2, 0]} />
+      <MountainRange position={[-85, 0, 0]} rotation={[0, Math.PI / 2, 0]} />
 
       {/* Central Pyramid */}
       <NeonPyramid position={[0, 0, -30]} scale={3} />
