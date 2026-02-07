@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalQuery, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 
@@ -11,9 +11,15 @@ const BATTLE_CONFIG = {
   packChance: 0.15,
 };
 
-// Debug: Get all users battle stats
-export const debugAllBattleStats = query({
+// Debug: Get all users battle stats (internal only - not exposed to clients)
+export const debugAllBattleStats = internalQuery({
   args: {},
+  returns: v.array(v.object({
+    username: v.optional(v.string()),
+    battleWins: v.number(),
+    battleLosses: v.number(),
+    pattyCoins: v.number(),
+  })),
   handler: async (ctx) => {
     const users = await ctx.db.query("users").collect();
     return users.map(u => ({
@@ -25,18 +31,33 @@ export const debugAllBattleStats = query({
   },
 });
 
-// Debug: Get recent battle transactions
-export const debugRecentBattles = query({
+// Debug: Get recent battle transactions (internal only - not exposed to clients)
+export const debugRecentBattles = internalQuery({
   args: {},
+  returns: v.array(v.object({
+    _id: v.id("transactions"),
+    _creationTime: v.number(),
+    userId: v.string(),
+    type: v.string(),
+    amount: v.number(),
+    metadata: v.optional(v.any()),
+    timestamp: v.number(),
+  })),
   handler: async (ctx) => {
     const txns = await ctx.db.query("transactions").order("desc").take(20);
     return txns.filter(t => t.type === "battle_reward");
   },
 });
 
-// Debug: Manually set battle wins for testing
-export const debugSetBattleWins = mutation({
+// Debug: Manually set battle wins for testing (internal only - not exposed to clients)
+export const debugSetBattleWins = internalMutation({
   args: { username: v.string(), wins: v.number(), losses: v.number() },
+  returns: v.object({
+    success: v.boolean(),
+    username: v.string(),
+    wins: v.number(),
+    losses: v.number(),
+  }),
   handler: async (ctx, { username, wins, losses }) => {
     const user = await ctx.db
       .query("users")
@@ -59,6 +80,16 @@ export const debugSetBattleWins = mutation({
 // Check if player can battle
 export const canBattle = query({
   args: { clerkId: v.string() },
+  returns: v.object({
+    canBattle: v.boolean(),
+    reason: v.optional(v.string()),
+    battleWins: v.number(),
+    battleLosses: v.number(),
+    totalBattles: v.number(),
+    packChance: v.number(),
+    coins: v.optional(v.number()),
+    totalCards: v.optional(v.number()),
+  }),
   handler: async (ctx, { clerkId }) => {
     const user = await ctx.db
       .query("users")
@@ -107,6 +138,14 @@ export const canBattle = query({
 // Get player's cards for selection
 export const getPlayerCards = query({
   args: { clerkId: v.string() },
+  returns: v.array(v.object({
+    inventoryId: v.string(),
+    cardId: v.string(),
+    name: v.string(),
+    attack: v.number(),
+    defense: v.number(),
+    rarity: v.string(),
+  })),
   handler: async (ctx, { clerkId }) => {
     const inventory = await ctx.db
       .query("inventory")
@@ -144,6 +183,16 @@ export const getPlayerCards = query({
   },
 });
 
+// Card with position validator (reusable)
+const cardWithPositionValidator = v.object({
+  cardId: v.id("cards"),
+  name: v.string(),
+  attack: v.number(),
+  defense: v.number(),
+  rarity: v.string(),
+  position: v.number(),
+});
+
 // Start a battle - deduct coins and generate NPC cards
 export const startBattle = mutation({
   args: {
@@ -153,6 +202,11 @@ export const startBattle = mutation({
       position: v.number(), // 1, 2, or 3
     })),
   },
+  returns: v.object({
+    playerCards: v.array(cardWithPositionValidator),
+    npcCards: v.array(cardWithPositionValidator),
+    battleId: v.string(),
+  }),
   handler: async (ctx, { clerkId, selectedCards }) => {
     // Validate selection
     if (selectedCards.length !== 3) {
@@ -325,6 +379,19 @@ export const startBattle = mutation({
   },
 });
 
+// Battle round card validator
+const battleRoundCardValidator = v.object({
+  cardId: v.id("cards"),
+  name: v.string(),
+  attack: v.number(),
+  defense: v.number(),
+  rarity: v.string(),
+  position: v.number(),
+  currentDefense: v.number(),
+  startingDefense: v.number(),
+  isSurvivor: v.boolean(),
+});
+
 // Resolve battle and give rewards
 export const resolveBattle = mutation({
   args: {
@@ -346,6 +413,22 @@ export const resolveBattle = mutation({
       position: v.number(),
     })),
   },
+  returns: v.object({
+    winner: v.union(v.literal("player"), v.literal("npc")),
+    playerWins: v.number(),
+    npcWins: v.number(),
+    rounds: v.array(v.object({
+      round: v.number(),
+      playerCard: battleRoundCardValidator,
+      npcCard: battleRoundCardValidator,
+      winner: v.union(v.literal("player"), v.literal("npc"), v.literal("draw")),
+      damage: v.number(),
+      coinFlip: v.boolean(),
+    })),
+    coinsWon: v.number(),
+    packWon: v.union(v.string(), v.null()),
+    newBalance: v.number(),
+  }),
   handler: async (ctx, { clerkId, playerCards, npcCards }) => {
     const user = await ctx.db
       .query("users")

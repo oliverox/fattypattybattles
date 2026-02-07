@@ -14,6 +14,11 @@ const PVP_CONFIG = {
 // Check if player can participate in PvP (has 3+ cards)
 export const canPvpBattle = query({
   args: { clerkId: v.string() },
+  returns: v.object({
+    canBattle: v.boolean(),
+    reason: v.optional(v.string()),
+    totalCards: v.number(),
+  }),
   handler: async (ctx, { clerkId }) => {
     const inventory = await ctx.db
       .query("inventory")
@@ -37,6 +42,11 @@ export const canPvpBattle = query({
 // Check if target player can participate in PvP
 export const canTargetPvpBattle = query({
   args: { targetUserId: v.string() },
+  returns: v.object({
+    canBattle: v.boolean(),
+    reason: v.optional(v.string()),
+    totalCards: v.number(),
+  }),
   handler: async (ctx, { targetUserId }) => {
     const inventory = await ctx.db
       .query("inventory")
@@ -62,6 +72,10 @@ export const sendBattleRequest = mutation({
   args: {
     targetUserId: v.string(),
   },
+  returns: v.object({
+    requestId: v.id("pvpBattleRequests"),
+    expiresAt: v.number(),
+  }),
   handler: async (ctx, { targetUserId }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
@@ -135,9 +149,39 @@ export const sendBattleRequest = mutation({
   },
 });
 
+// PvP request validator
+const pvpRequestValidator = v.object({
+  _id: v.id("pvpBattleRequests"),
+  _creationTime: v.number(),
+  challengerId: v.string(),
+  challengerUsername: v.string(),
+  targetId: v.string(),
+  targetUsername: v.string(),
+  status: v.union(
+    v.literal("pending"),
+    v.literal("accepted"),
+    v.literal("declined"),
+    v.literal("expired"),
+    v.literal("cancelled")
+  ),
+  createdAt: v.number(),
+  expiresAt: v.number(),
+  challengerCards: v.optional(v.array(v.object({
+    cardId: v.id("cards"),
+    position: v.number(),
+  }))),
+  targetCards: v.optional(v.array(v.object({
+    cardId: v.id("cards"),
+    position: v.number(),
+  }))),
+  battleStartedAt: v.optional(v.number()),
+  battleResult: v.optional(v.any()),
+});
+
 // Get incoming battle requests for current user
 export const getIncomingRequests = query({
   args: {},
+  returns: v.array(pvpRequestValidator),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
@@ -159,6 +203,7 @@ export const getIncomingRequests = query({
 // Get outgoing pending request for current user
 export const getOutgoingRequest = query({
   args: {},
+  returns: v.union(pvpRequestValidator, v.null()),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
@@ -181,6 +226,7 @@ export const getOutgoingRequest = query({
 // Get request status (for polling/subscription)
 export const getBattleRequestStatus = query({
   args: { requestId: v.id("pvpBattleRequests") },
+  returns: v.union(pvpRequestValidator, v.null()),
   handler: async (ctx, { requestId }) => {
     const request = await ctx.db.get(requestId);
     return request;
@@ -190,6 +236,7 @@ export const getBattleRequestStatus = query({
 // Accept a battle request
 export const acceptBattleRequest = mutation({
   args: { requestId: v.id("pvpBattleRequests") },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, { requestId }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
@@ -211,6 +258,7 @@ export const acceptBattleRequest = mutation({
 // Decline a battle request
 export const declineBattleRequest = mutation({
   args: { requestId: v.id("pvpBattleRequests") },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, { requestId }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
@@ -230,6 +278,7 @@ export const declineBattleRequest = mutation({
 // Cancel own battle request
 export const cancelBattleRequest = mutation({
   args: { requestId: v.id("pvpBattleRequests") },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, { requestId }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
@@ -257,6 +306,7 @@ export const submitPvpCards = mutation({
       })
     ),
   },
+  returns: v.object({ bothReady: v.boolean() }),
   handler: async (ctx, { requestId, selectedCards }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
@@ -300,7 +350,7 @@ export const submitPvpCards = mutation({
 
     // Check if both players have submitted
     const updatedRequest = await ctx.db.get(requestId);
-    const bothReady = updatedRequest?.challengerCards && updatedRequest?.targetCards;
+    const bothReady = !!(updatedRequest?.challengerCards && updatedRequest?.targetCards);
 
     if (bothReady) {
       await ctx.db.patch(requestId, { battleStartedAt: Date.now() });
@@ -310,9 +360,26 @@ export const submitPvpCards = mutation({
   },
 });
 
+// PvP battle result validator
+// Note: rounds uses v.any() due to complex nested type inference issues
+const pvpBattleResultValidator = v.object({
+  winnerId: v.string(),
+  winnerUsername: v.string(),
+  loserId: v.string(),
+  loserUsername: v.string(),
+  winnerRole: v.union(v.literal("challenger"), v.literal("target")),
+  challengerWins: v.number(),
+  targetWins: v.number(),
+  rounds: v.array(v.any()),
+  coinsWon: v.number(),
+  packWon: v.union(v.string(), v.null()),
+  winnerNewBalance: v.number(),
+});
+
 // Resolve PvP battle and distribute rewards
 export const resolvePvpBattle = mutation({
   args: { requestId: v.id("pvpBattleRequests") },
+  returns: pvpBattleResultValidator,
   handler: async (ctx, { requestId }) => {
     const request = await ctx.db.get(requestId);
     if (!request) throw new Error("Request not found");
@@ -372,6 +439,7 @@ export const resolvePvpBattle = mutation({
     }) | null = null;
 
     type CardWithDefense = (typeof challengerCards)[0] & { currentDefense: number; startingDefense: number };
+    type RoundCard = CardWithDefense & { isSurvivor: boolean };
 
     // Track card indices separately - survivors don't consume the next card slot
     let challengerCardIndex = 0;
@@ -563,14 +631,15 @@ export const resolvePvpBattle = mutation({
 
       console.log(`[PVP DEBUG] After Round ${round + 1}: challengerSurvivor=${challengerSurvivor !== null}, targetSurvivor=${targetSurvivor !== null}`);
 
-      rounds.push({
+      const roundResult = {
         round: round + 1,
-        challengerCard: { ...cCard, startingDefense: challengerStartingDefense, isSurvivor: challengerIsSurvivor },
-        targetCard: { ...tCard, startingDefense: targetStartingDefense, isSurvivor: targetIsSurvivor },
+        challengerCard: { ...cCard, startingDefense: challengerStartingDefense, isSurvivor: challengerIsSurvivor } as RoundCard,
+        targetCard: { ...tCard, startingDefense: targetStartingDefense, isSurvivor: targetIsSurvivor } as RoundCard,
         winner: roundWinner,
         damage,
         coinFlip,
-      });
+      };
+      rounds.push(roundResult);
     }
 
     // Determine winner

@@ -16,6 +16,7 @@ export const grantTag = internalMutation({
     clerkId: v.string(),
     tag: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, { clerkId, tag }) => {
     if (!VALID_TAGS.includes(tag as any)) {
       return;
@@ -43,6 +44,7 @@ export const adminGrantTag = mutation({
     targetUsername: v.string(),
     tag: v.string(),
   },
+  returns: v.object({ success: v.boolean(), message: v.string() }),
   handler: async (ctx, { targetUsername, tag }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
@@ -95,6 +97,7 @@ export const equipChatTag = mutation({
   args: {
     tag: v.union(v.string(), v.null()),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, { tag }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
@@ -125,6 +128,14 @@ export const equipChatTag = mutation({
 
 // Get current user's tags
 export const getUserTags = query({
+  args: {},
+  returns: v.union(
+    v.object({
+      chatTags: v.array(v.string()),
+      equippedChatTag: v.union(v.string(), v.null()),
+    }),
+    v.null()
+  ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
@@ -149,6 +160,7 @@ export const checkAndGrantLeaderboardTag = internalMutation({
   args: {
     clerkId: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, { clerkId }) => {
     const user = await ctx.db
       .query("users")
@@ -223,6 +235,7 @@ export const checkAndGrantExclusiverTag = internalMutation({
   args: {
     clerkId: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, { clerkId }) => {
     const user = await ctx.db
       .query("users")

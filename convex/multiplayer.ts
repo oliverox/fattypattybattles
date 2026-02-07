@@ -16,6 +16,7 @@ export const updatePosition = mutation({
     rotation: v.number(),
     mapId: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -89,11 +90,38 @@ export const updatePosition = mutation({
   },
 });
 
+// Avatar config validator
+const avatarConfigValidator = v.object({
+  skinColor: v.string(),
+  hairStyle: v.string(),
+  hairColor: v.string(),
+  eyeColor: v.optional(v.string()),
+  mouthStyle: v.optional(v.string()),
+});
+
+// Player position validator
+const playerPositionValidator = v.object({
+  _id: v.id("playerPositions"),
+  _creationTime: v.number(),
+  userId: v.string(),
+  username: v.string(),
+  avatarConfig: v.optional(avatarConfigValidator),
+  equippedChatTag: v.optional(v.string()),
+  x: v.number(),
+  y: v.number(),
+  z: v.number(),
+  rotation: v.number(),
+  mapId: v.string(),
+  isOnline: v.boolean(),
+  lastUpdate: v.number(),
+});
+
 // Get all online players in a map (excluding the current user)
 export const getOnlinePlayers = query({
   args: {
     mapId: v.string(),
   },
+  returns: v.array(playerPositionValidator),
   handler: async (ctx, { mapId }) => {
     const identity = await ctx.auth.getUserIdentity();
     const currentUserId = identity?.subject;
@@ -116,6 +144,7 @@ export const getOnlinePlayers = query({
 // Mark player as offline
 export const setOffline = mutation({
   args: {},
+  returns: v.null(),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -155,6 +184,7 @@ export const sendMessage = mutation({
     message: v.string(),
     mapId: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, { message, mapId }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -270,11 +300,25 @@ export const sendMessage = mutation({
   },
 });
 
+// Chat message validator
+const chatMessageValidator = v.object({
+  _id: v.id("chatMessages"),
+  _creationTime: v.number(),
+  userId: v.string(),
+  username: v.string(),
+  message: v.string(),
+  mapId: v.string(),
+  timestamp: v.number(),
+  type: v.optional(v.union(v.literal("player"), v.literal("system"))),
+  equippedChatTag: v.optional(v.string()),
+});
+
 // Get recent chat messages
 export const getRecentMessages = query({
   args: {
     mapId: v.string(),
   },
+  returns: v.array(chatMessageValidator),
   handler: async (ctx, { mapId }) => {
     const messages = await ctx.db
       .query("chatMessages")

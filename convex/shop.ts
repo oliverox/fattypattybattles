@@ -182,9 +182,31 @@ const LUCK_BOOST_DEFINITIONS = [
   },
 ] as const;
 
+// Pack validator for shop
+const shopPackValidator = v.object({
+  type: v.string(),
+  name: v.string(),
+  description: v.string(),
+  cost: v.number(),
+  cardCount: v.number(),
+  rarityWeights: v.object({
+    common: v.number(),
+    uncommon: v.number(),
+    rare: v.number(),
+    legendary: v.number(),
+    mythical: v.number(),
+    divine: v.number(),
+    prismatic: v.number(),
+    transcendent: v.number(),
+    holographic: v.number(),
+    exclusive: v.number(),
+  }),
+});
+
 // Get all available packs
 export const getShopPacks = query({
   args: {},
+  returns: v.array(shopPackValidator),
   handler: async () => {
     return Object.entries(PACK_DEFINITIONS).map(([type, pack]) => ({
       type,
@@ -196,6 +218,7 @@ export const getShopPacks = query({
 // Get user's current balance
 export const getUserBalance = query({
   args: { clerkId: v.string() },
+  returns: v.number(),
   handler: async (ctx, { clerkId }) => {
     const user = await ctx.db
       .query("users")
@@ -205,17 +228,33 @@ export const getUserBalance = query({
   },
 });
 
+// Luck boost validator
+const luckBoostValidator = v.object({
+  id: v.string(),
+  name: v.string(),
+  description: v.string(),
+  cost: v.number(),
+  multiplier: v.number(),
+  durationHours: v.number(),
+});
+
 // Get luck boosts available for purchase
 export const getLuckBoosts = query({
   args: {},
+  returns: v.array(luckBoostValidator),
   handler: async () => {
-    return LUCK_BOOST_DEFINITIONS;
+    return [...LUCK_BOOST_DEFINITIONS];
   },
 });
 
 // Get user's active luck boosts
 export const getUserLuckBoosts = query({
   args: { clerkId: v.string() },
+  returns: v.array(v.object({
+    type: v.string(),
+    multiplier: v.number(),
+    expiresAt: v.number(),
+  })),
   handler: async (ctx, { clerkId }) => {
     const user = await ctx.db
       .query("users")
@@ -229,6 +268,13 @@ export const getUserLuckBoosts = query({
   },
 });
 
+// Generated card validator
+const generatedCardValidator = v.object({
+  cardId: v.id("cards"),
+  name: v.string(),
+  rarity: v.string(),
+});
+
 // Purchase a pack
 export const purchasePack = mutation({
   args: {
@@ -236,6 +282,12 @@ export const purchasePack = mutation({
     packType: v.string(),
     autoOpen: v.optional(v.boolean()), // If false, save to inventory instead of opening
   },
+  returns: v.object({
+    success: v.boolean(),
+    savedToInventory: v.optional(v.boolean()),
+    cards: v.array(generatedCardValidator),
+    newBalance: v.number(),
+  }),
   handler: async (ctx, { clerkId, packType, autoOpen = true }) => {
     // Get pack definition
     const pack = PACK_DEFINITIONS[packType as PackType];
@@ -442,6 +494,11 @@ export const purchaseLuckBoost = mutation({
     clerkId: v.string(),
     boostId: v.string(),
   },
+  returns: v.object({
+    success: v.boolean(),
+    newBalance: v.number(),
+    expiresAt: v.number(),
+  }),
   handler: async (ctx, { clerkId, boostId }) => {
     // Get boost definition
     const boost = LUCK_BOOST_DEFINITIONS.find((b) => b.id === boostId);

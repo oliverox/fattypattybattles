@@ -68,6 +68,8 @@ const SAMPLE_CARDS = [
 
 // Clear all cards from the database
 export const clearCards = mutation({
+  args: {},
+  returns: v.object({ cleared: v.boolean(), count: v.number() }),
   handler: async (ctx) => {
     const allCards = await ctx.db.query("cards").collect();
     for (const card of allCards) {
@@ -79,6 +81,8 @@ export const clearCards = mutation({
 
 // Sync missing cards from SAMPLE_CARDS to the database
 export const syncNewCards = mutation({
+  args: {},
+  returns: v.object({ added: v.number() }),
   handler: async (ctx) => {
     const existingCards = await ctx.db.query("cards").collect();
     const existingNames = new Set(existingCards.map((c) => c.name));
@@ -104,6 +108,8 @@ export const syncNewCards = mutation({
 
 // Update card stats (for existing cards)
 export const updateCardStats = mutation({
+  args: {},
+  returns: v.object({ updated: v.number() }),
   handler: async (ctx) => {
     let updated = 0;
     for (const sampleCard of SAMPLE_CARDS) {
@@ -131,6 +137,8 @@ export const updateCardStats = mutation({
 
 // Migration: Update secret rarity to holographic
 export const migrateSecretToHolographic = mutation({
+  args: {},
+  returns: v.object({ updated: v.number() }),
   handler: async (ctx) => {
     const allCards = await ctx.db.query("cards").collect();
     let updated = 0;
@@ -146,6 +154,12 @@ export const migrateSecretToHolographic = mutation({
 
 // Seed the cards table with sample cards
 export const seedCards = mutation({
+  args: {},
+  returns: v.object({
+    seeded: v.boolean(),
+    reason: v.optional(v.string()),
+    count: v.optional(v.number()),
+  }),
   handler: async (ctx) => {
     // Check if cards already exist
     const existingCards = await ctx.db.query("cards").first();
@@ -351,9 +365,29 @@ function calculateSellPrice(rarity: string, seed: number): number {
   return Math.floor(priceRange.min + random * (priceRange.max - priceRange.min));
 }
 
+// Inventory item validator
+const inventoryItemValidator = v.object({
+  inventoryId: v.string(),
+  cardId: v.id("cards"),
+  acquiredAt: v.number(),
+  card: v.union(
+    v.object({
+      name: v.string(),
+      rarity: v.string(),
+      attack: v.number(),
+      defense: v.number(),
+      cost: v.number(),
+      description: v.string(),
+      imageUrl: v.optional(v.string()),
+    }),
+    v.null()
+  ),
+});
+
 // Get user's inventory with card details
 export const getUserInventory = query({
   args: { clerkId: v.string() },
+  returns: v.array(inventoryItemValidator),
   handler: async (ctx, { clerkId }) => {
     const inventoryItems = await ctx.db
       .query("inventory")
@@ -406,6 +440,11 @@ export const getUserInventory = query({
 // Get user's unopened packs
 export const getUnopenedPacks = query({
   args: { clerkId: v.string() },
+  returns: v.array(v.object({
+    packType: v.string(),
+    quantity: v.number(),
+    acquiredAt: v.number(),
+  })),
   handler: async (ctx, { clerkId }) => {
     const user = await ctx.db
       .query("users")
@@ -416,10 +455,23 @@ export const getUnopenedPacks = query({
   },
 });
 
+// Appraisal validator
+const appraisalValidator = v.object({
+  inventoryId: v.string(),
+  instanceIndex: v.number(),
+  cardId: v.id("cards"),
+  name: v.string(),
+  rarity: v.string(),
+  attack: v.number(),
+  defense: v.number(),
+  sellPrice: v.number(),
+});
+
 // Appraise cards (calculate sell values without selling)
 // Returns one entry per card instance (expanded by quantity)
 export const appraiseCards = query({
   args: { clerkId: v.string() },
+  returns: v.array(appraisalValidator),
   handler: async (ctx, { clerkId }) => {
     const inventoryItems = await ctx.db
       .query("inventory")
@@ -464,12 +516,23 @@ export const appraiseCards = query({
   },
 });
 
+// Generated card from pack validator
+const packCardValidator = v.object({
+  cardId: v.id("cards"),
+  name: v.string(),
+  rarity: v.string(),
+});
+
 // Open a pack from inventory
 export const openPack = mutation({
   args: {
     clerkId: v.string(),
     packType: v.string(),
   },
+  returns: v.object({
+    success: v.boolean(),
+    cards: v.array(packCardValidator),
+  }),
   handler: async (ctx, { clerkId, packType }) => {
     const user = await ctx.db
       .query("users")
@@ -484,7 +547,7 @@ export const openPack = mutation({
     const packIndex = unopenedPacks.findIndex((p) => p.packType === packType && p.quantity > 0);
 
     if (packIndex === -1) {
-      throw new Error("Pack not found in inventory");
+      throw new Error("No packs of this type available");
     }
 
     const packDef = PACK_DEFINITIONS[packType];
@@ -645,6 +708,11 @@ export const sellCards = mutation({
     clerkId: v.string(),
     inventoryIds: v.array(v.string()),
   },
+  returns: v.object({
+    success: v.boolean(),
+    earned: v.number(),
+    newBalance: v.number(),
+  }),
   handler: async (ctx, { clerkId, inventoryIds }) => {
     const user = await ctx.db
       .query("users")
@@ -755,6 +823,7 @@ export const setHeldCard = mutation({
     clerkId: v.string(),
     cardId: v.optional(v.string()),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, { clerkId, cardId }) => {
     const user = await ctx.db
       .query("users")
@@ -776,6 +845,16 @@ export const setHeldCard = mutation({
 // Get held card details
 export const getHeldCard = query({
   args: { clerkId: v.string() },
+  returns: v.union(
+    v.object({
+      cardId: v.id("cards"),
+      name: v.string(),
+      rarity: v.string(),
+      attack: v.number(),
+      defense: v.number(),
+    }),
+    v.null()
+  ),
   handler: async (ctx, { clerkId }) => {
     const user = await ctx.db
       .query("users")

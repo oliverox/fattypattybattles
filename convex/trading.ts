@@ -8,6 +8,12 @@ const TRADE_TIMEOUT_MS = 5 * 60 * 1000;
 
 // ============== QUERIES ==============
 
+// Search result validator
+const userSearchResultValidator = v.object({
+  clerkId: v.string(),
+  username: v.string(),
+});
+
 // Search for users by username (autocomplete)
 // NOTE: Convex doesn't support partial text search with indexes.
 // For large user bases, consider using a dedicated search service.
@@ -16,6 +22,7 @@ export const searchUsersByUsername = query({
     clerkId: v.string(),
     searchQuery: v.string(),
   },
+  returns: v.array(userSearchResultValidator),
   handler: async (ctx, { clerkId, searchQuery }) => {
     if (searchQuery.length < 1) {
       return [];
@@ -45,9 +52,49 @@ export const searchUsersByUsername = query({
   },
 });
 
+// Trade card offer validator
+const tradeCardValidator = v.object({
+  inventoryId: v.string(),
+  cardId: v.id("cards"),
+  cardName: v.string(),
+  rarity: v.string(),
+});
+
+// Trade offer validator
+const tradeOfferValidator = v.object({
+  cards: v.array(tradeCardValidator),
+  coins: v.number(),
+});
+
+// Trade request validator
+const tradeRequestValidator = v.object({
+  _id: v.id("tradeRequests"),
+  _creationTime: v.number(),
+  senderId: v.string(),
+  senderUsername: v.string(),
+  receiverId: v.string(),
+  receiverUsername: v.string(),
+  senderOffer: tradeOfferValidator,
+  receiverOffer: tradeOfferValidator,
+  status: v.union(
+    v.literal("pending"),
+    v.literal("negotiating"),
+    v.literal("completed"),
+    v.literal("declined"),
+    v.literal("cancelled"),
+    v.literal("expired")
+  ),
+  senderConfirmed: v.boolean(),
+  receiverConfirmed: v.boolean(),
+  createdAt: v.number(),
+  expiresAt: v.number(),
+  completedAt: v.optional(v.number()),
+});
+
 // Get incoming trade requests for current user
 export const getIncomingTradeRequests = query({
   args: { clerkId: v.string() },
+  returns: v.array(tradeRequestValidator),
   handler: async (ctx, { clerkId }) => {
     const now = Date.now();
 
@@ -64,6 +111,7 @@ export const getIncomingTradeRequests = query({
 // Get outgoing trade request (only one active at a time)
 export const getOutgoingTradeRequest = query({
   args: { clerkId: v.string() },
+  returns: v.union(tradeRequestValidator, v.null()),
   handler: async (ctx, { clerkId }) => {
     const now = Date.now();
 
@@ -91,9 +139,36 @@ export const getOutgoingTradeRequest = query({
   },
 });
 
+// Active trade request with role validator
+const activeTradeRequestValidator = v.object({
+  _id: v.id("tradeRequests"),
+  _creationTime: v.number(),
+  senderId: v.string(),
+  senderUsername: v.string(),
+  receiverId: v.string(),
+  receiverUsername: v.string(),
+  senderOffer: tradeOfferValidator,
+  receiverOffer: tradeOfferValidator,
+  status: v.union(
+    v.literal("pending"),
+    v.literal("negotiating"),
+    v.literal("completed"),
+    v.literal("declined"),
+    v.literal("cancelled"),
+    v.literal("expired")
+  ),
+  senderConfirmed: v.boolean(),
+  receiverConfirmed: v.boolean(),
+  createdAt: v.number(),
+  expiresAt: v.number(),
+  completedAt: v.optional(v.number()),
+  role: v.union(v.literal("sender"), v.literal("receiver")),
+});
+
 // Get active trade request (for either sender or receiver)
 export const getActiveTradeRequest = query({
   args: { clerkId: v.string() },
+  returns: v.union(activeTradeRequestValidator, v.null()),
   handler: async (ctx, { clerkId }) => {
     const now = Date.now();
 
@@ -128,6 +203,7 @@ export const getActiveTradeRequest = query({
 // Get trade request status by ID
 export const getTradeRequestStatus = query({
   args: { requestId: v.id("tradeRequests") },
+  returns: v.union(tradeRequestValidator, v.null()),
   handler: async (ctx, { requestId }) => {
     const request = await ctx.db.get(requestId);
     return request;
@@ -137,6 +213,7 @@ export const getTradeRequestStatus = query({
 // Get user's coin balance
 export const getUserCoins = query({
   args: { clerkId: v.string() },
+  returns: v.number(),
   handler: async (ctx, { clerkId }) => {
     const user = await ctx.db
       .query("users")
@@ -164,6 +241,7 @@ export const sendTradeRequest = mutation({
       coins: v.number(),
     }),
   },
+  returns: v.object({ requestId: v.id("tradeRequests") }),
   handler: async (ctx, { clerkId, targetClerkId, initialOffer }) => {
     const now = Date.now();
 
@@ -267,6 +345,7 @@ export const acceptTradeRequest = mutation({
     clerkId: v.string(),
     requestId: v.id("tradeRequests"),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, { clerkId, requestId }) => {
     const request = await ctx.db.get(requestId);
 
@@ -302,6 +381,7 @@ export const declineTradeRequest = mutation({
     clerkId: v.string(),
     requestId: v.id("tradeRequests"),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, { clerkId, requestId }) => {
     const request = await ctx.db.get(requestId);
 
@@ -331,6 +411,7 @@ export const cancelTradeRequest = mutation({
     clerkId: v.string(),
     requestId: v.id("tradeRequests"),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, { clerkId, requestId }) => {
     const request = await ctx.db.get(requestId);
 
@@ -369,6 +450,7 @@ export const updateOffer = mutation({
       coins: v.number(),
     }),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, { clerkId, requestId, offer }) => {
     const request = await ctx.db.get(requestId);
 
@@ -445,11 +527,20 @@ export const confirmTrade = mutation({
     clerkId: v.string(),
     requestId: v.id("tradeRequests"),
   },
+  returns: v.object({
+    success: v.boolean(),
+    tradeCompleted: v.boolean(),
+  }),
   handler: async (ctx, { clerkId, requestId }) => {
     const request = await ctx.db.get(requestId);
 
     if (!request) {
       throw new Error("Trade request not found");
+    }
+
+    // Idempotency: if trade already completed, return success
+    if (request.status === "completed") {
+      return { success: true, tradeCompleted: true };
     }
 
     if (request.status !== "negotiating") {
@@ -535,6 +626,7 @@ export const unconfirmTrade = mutation({
     clerkId: v.string(),
     requestId: v.id("tradeRequests"),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, { clerkId, requestId }) => {
     const request = await ctx.db.get(requestId);
 
@@ -567,13 +659,23 @@ export const unconfirmTrade = mutation({
 });
 
 // Internal helper to execute the trade (transfer items)
+// This function is idempotent - if trade is already completed, it returns silently
 async function executeTrade(
   ctx: { db: any },
   requestId: Id<"tradeRequests">
 ) {
   const request = await ctx.db.get(requestId);
-  if (!request || request.status !== "negotiating") {
-    throw new Error("Invalid trade request");
+  if (!request) {
+    throw new Error("Trade request not found");
+  }
+
+  // Idempotency: if trade already completed, return silently
+  if (request.status === "completed") {
+    return;
+  }
+
+  if (request.status !== "negotiating") {
+    throw new Error("Trade is no longer active");
   }
 
   const now = Date.now();

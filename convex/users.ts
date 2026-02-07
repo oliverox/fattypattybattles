@@ -24,6 +24,7 @@ export const createUserProfile = mutation({
       mouthStyle: v.optional(v.string()),
     }),
   },
+  returns: v.id("users"),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -89,6 +90,8 @@ export const createUserProfile = mutation({
 
 // Check if current user has a restricted username
 export const hasRestrictedUsername = query({
+  args: {},
+  returns: v.boolean(),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return false;
@@ -108,6 +111,7 @@ export const changeUsername = mutation({
   args: {
     newUsername: v.string(),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, { newUsername }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
@@ -153,8 +157,58 @@ export const changeUsername = mutation({
   },
 });
 
+// Avatar config validator (reusable)
+const avatarConfigValidator = v.object({
+  skinColor: v.string(),
+  hairStyle: v.string(),
+  hairColor: v.string(),
+  eyeColor: v.optional(v.string()),
+  mouthStyle: v.optional(v.string()),
+});
+
+// User document validator
+const userValidator = v.object({
+  _id: v.id("users"),
+  _creationTime: v.number(),
+  clerkId: v.optional(v.string()),
+  email: v.string(),
+  username: v.optional(v.string()),
+  gender: v.optional(v.union(v.literal("male"), v.literal("female"), v.literal("other"))),
+  avatarConfig: v.optional(avatarConfigValidator),
+  pattyCoins: v.optional(v.number()),
+  luckBoosts: v.optional(v.array(v.object({
+    type: v.string(),
+    multiplier: v.number(),
+    expiresAt: v.number(),
+  }))),
+  unopenedPacks: v.optional(v.array(v.object({
+    packType: v.string(),
+    quantity: v.number(),
+    acquiredAt: v.number(),
+  }))),
+  heldCardId: v.optional(v.string()),
+  chatTags: v.optional(v.array(v.string())),
+  equippedChatTag: v.optional(v.string()),
+  battleWins: v.optional(v.number()),
+  battleLosses: v.optional(v.number()),
+  createdAt: v.optional(v.number()),
+  lastActiveAt: v.optional(v.number()),
+  totalPlayTime: v.optional(v.number()),
+  lastDailyClaimAt: v.optional(v.number()),
+  dailyStreak: v.optional(v.number()),
+  dailyQuests: v.optional(v.array(v.object({
+    questId: v.string(),
+    progress: v.number(),
+    completed: v.boolean(),
+    claimed: v.boolean(),
+  }))),
+  lastQuestResetAt: v.optional(v.number()),
+});
+
 // Get current user
 export const getCurrentUser = query({
+  args: {},
+  returns: v.union(userValidator, v.null()),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -179,6 +233,7 @@ export const getCurrentUser = query({
 // Store user on first sign-in (called automatically by Clerk webhook or on first query)
 export const storeUser = mutation({
   args: {},
+  returns: v.id("users"),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -210,6 +265,7 @@ export const storeUser = mutation({
 // Check if username is available
 export const checkUsername = query({
   args: { username: v.string() },
+  returns: v.object({ available: v.boolean() }),
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("users")
@@ -238,6 +294,7 @@ const USERNAME_NOUNS = [
 // Generate a recommended available username
 export const getRecommendedUsername = query({
   args: {},
+  returns: v.object({ username: v.string() }),
   handler: async (ctx) => {
     const generateUsername = () => {
       const prefix = USERNAME_PREFIXES[Math.floor(Math.random() * USERNAME_PREFIXES.length)];
@@ -267,6 +324,11 @@ export const getRecommendedUsername = query({
 
 // Ensure user has starter pack (for existing users before this feature)
 export const ensureStarterPack = mutation({
+  args: {},
+  returns: v.object({
+    granted: v.boolean(),
+    reason: v.optional(v.string()),
+  }),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -322,6 +384,7 @@ export const updateAvatarConfig = mutation({
       mouthStyle: v.optional(v.string()),
     }),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -348,6 +411,8 @@ export const updateAvatarConfig = mutation({
 
 // Update user's last active time
 export const updateLastActive = mutation({
+  args: {},
+  returns: v.null(),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -370,6 +435,8 @@ export const updateLastActive = mutation({
 
 // Discover the secret room and grant SECRET FINDER tag
 export const discoverSecret = mutation({
+  args: {},
+  returns: v.object({ alreadyDiscovered: v.boolean() }),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -403,6 +470,7 @@ export const discoverSecret = mutation({
 // Update total play time (called periodically from client)
 export const updatePlayTime = mutation({
   args: { seconds: v.number() },
+  returns: v.null(),
   handler: async (ctx, { seconds }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {

@@ -1,6 +1,14 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
 
+// Leaderboard entry validator
+const leaderboardEntryValidator = v.object({
+  rank: v.number(),
+  username: v.string(),
+  value: v.number(),
+  isCurrentUser: v.boolean(),
+});
+
 export const getLeaderboard = query({
   args: {
     category: v.union(
@@ -10,6 +18,10 @@ export const getLeaderboard = query({
       v.literal("time")
     ),
   },
+  returns: v.object({
+    entries: v.array(leaderboardEntryValidator),
+    userRank: v.union(v.object({ rank: v.number(), value: v.number() }), v.null()),
+  }),
   handler: async (ctx, { category }) => {
     const identity = await ctx.auth.getUserIdentity();
     const currentUserId = identity?.subject;

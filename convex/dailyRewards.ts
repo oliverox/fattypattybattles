@@ -73,9 +73,28 @@ function selectRandomQuests(seed: number): typeof QUEST_POOL {
   return shuffled.slice(0, 3);
 }
 
+// Daily reward entry validator
+const dailyRewardValidator = v.object({
+  day: v.number(),
+  coins: v.number(),
+  bonus: v.optional(v.string()),
+});
+
 // Get daily reward status
 export const getDailyRewardStatus = query({
   args: { clerkId: v.string() },
+  returns: v.union(
+    v.object({
+      canClaim: v.boolean(),
+      claimedToday: v.boolean(),
+      currentStreak: v.number(),
+      streakDay: v.number(),
+      willResetStreak: v.boolean(),
+      todayReward: v.optional(dailyRewardValidator),
+      allRewards: v.array(dailyRewardValidator),
+    }),
+    v.null()
+  ),
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
@@ -131,6 +150,13 @@ export const getDailyRewardStatus = query({
 // Claim daily login reward
 export const claimDailyReward = mutation({
   args: { clerkId: v.string() },
+  returns: v.object({
+    coinsAwarded: v.number(),
+    bonusPack: v.union(v.string(), v.null()),
+    newStreak: v.number(),
+    streakDay: v.number(),
+    newBalance: v.number(),
+  }),
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
@@ -227,9 +253,27 @@ export const claimDailyReward = mutation({
   },
 });
 
+// Quest status validator
+const questStatusValidator = v.object({
+  id: v.string(),
+  name: v.string(),
+  target: v.number(),
+  reward: v.number(),
+  progress: v.number(),
+  completed: v.boolean(),
+  claimed: v.boolean(),
+});
+
 // Get daily quests
 export const getDailyQuests = query({
   args: { clerkId: v.string() },
+  returns: v.union(
+    v.object({
+      quests: v.array(questStatusValidator),
+      needsRefresh: v.boolean(),
+    }),
+    v.null()
+  ),
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
@@ -285,6 +329,7 @@ export const getDailyQuests = query({
 // Refresh daily quests (call on game load if needed)
 export const refreshDailyQuests = mutation({
   args: { clerkId: v.string() },
+  returns: v.object({ refreshed: v.boolean() }),
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
@@ -329,6 +374,7 @@ export const updateQuestProgress = internalMutation({
     questType: v.string(), // "win_battle", "open_pack", "sell_cards", "pvp_battle"
     amount: v.number(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
@@ -405,6 +451,10 @@ export const claimQuestReward = mutation({
     clerkId: v.string(),
     questId: v.string(),
   },
+  returns: v.object({
+    coinsAwarded: v.number(),
+    newBalance: v.number(),
+  }),
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
@@ -477,6 +527,11 @@ export const claimQuestReward = mutation({
 // Check if any rewards are claimable (for auto-popup)
 export const hasClaimableRewards = query({
   args: { clerkId: v.string() },
+  returns: v.object({
+    hasRewards: v.boolean(),
+    canClaimDaily: v.boolean(),
+    hasClaimableQuest: v.boolean(),
+  }),
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
@@ -484,7 +539,7 @@ export const hasClaimableRewards = query({
       .first();
 
     if (!user) {
-      return { hasRewards: false };
+      return { hasRewards: false, canClaimDaily: false, hasClaimableQuest: false };
     }
 
     const now = Date.now();
